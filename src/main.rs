@@ -3,6 +3,11 @@ use dotenv::dotenv;
 use serde::Serialize;
 use std::env;
 use std::sync::{Arc, Mutex};
+use log::info;
+
+mod routes;
+mod utils;
+mod models;
 
 // 配置结构体
 #[derive(Clone, Debug)]
@@ -55,6 +60,9 @@ async fn status(data: web::Data<Arc<AppState>>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     // 加载环境变量
     dotenv().ok();
+
+    //设置 logger
+    env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
     
     // 从环境变量读取配置
     let config = Config {
@@ -65,7 +73,7 @@ async fn main() -> std::io::Result<()> {
     };
     
     let bind_address = format!("{}:{}", config.server_host, config.server_port);
-    println!("启动服务器，监听 {}", bind_address);
+    info!("启动服务器，监听 {}", bind_address);
     
     // 创建应用状态并使用 Arc 包装以便共享
     let app_state = Arc::new(AppState {
@@ -77,6 +85,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
+            .configure(routes::configure)
             .service(status)
     })
     .bind(bind_address)?
