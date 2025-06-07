@@ -3,8 +3,7 @@
 ## 1. Authentication
 
 ### Login
-- **Endpoint:** `/api/v1/auth/login`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/auth/login`
 - **Description:** 用户登录
 - **Request Body:**
 ```json
@@ -32,8 +31,7 @@
 ## 2. Homework Management
 
 ### Create Homework
-- **Endpoint:** `/api/v1/homework/create`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/homeworks`
 - **Description:** 创建新作业
 - **Request Body:**
 ```json
@@ -45,62 +43,46 @@
 ```
 
 ### List Homework
-- **Endpoint:** `/api/v1/homework/list`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/homeworks`
 - **Description:** 列出所有作业
 - **Query Params:** `page=1&size=10`
 
 ### View Homework
-- **Endpoint:** `/api/v1/homework/view`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/homeworks/{homework_id}`
 - **Description:** 查看作业详情
-- **Query Params:** `homework_id=1001`
 
 ### Modify Homework
-- **Endpoint:** `/api/v1/homework/modify`
-- **Method:** PUT
+- **Endpoint:** `PUT /api/v1/homeworks/{homework_id}`
 - **Description:** 修改作业
 - **Request Body:**
 ```json
 {
-  "homework_id": 1001,
   "title": "更新后的标题",
   "content": "更新后的内容"
 }
 ```
 
 ### Delete Homework
-- **Endpoint:** `/api/v1/homework/delete`
-- **Method:** DELETE
+- **Endpoint:** `DELETE /api/v1/homeworks/{homework_id}`
 - **Description:** 删除作业
-- **Request Body:**
-```json
-{
-  "homework_id": 1001
-}
-```
 
 ### Submit Homework
-- **Endpoint:** `/api/v1/homework/submit`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/homeworks/{homework_id}/submissions`
 - **Description:** 提交作业
 - **Request Body:**
 ```json
 {
-  "homework_id": 1001,
   "content": "作业内容...",
   "attachments": ["file1.pdf", "file2.jpg"]
 }
 ```
 
 ### Reply to Homework
-- **Endpoint:** `/api/v1/homework/reply`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/submissions/{submission_id}/feedback`
 - **Description:** 批改作业
 - **Request Body:**
 ```json
 {
-  "submission_id": 5001,
   "score": 95,
   "feedback": "完成得很好！"
 }
@@ -109,45 +91,34 @@
 ## 3. Submission Management
 
 ### List Submissions by Time
-- **Endpoint:** `/api/v1/submission/list/time`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/homeworks/{homework_id}/submissions`
 - **Description:** 按时间排序提交
-- **Query Params:** `homework_id=1001&order=desc`
+- **Query Params:** `order=desc`
 
 ### List All Submissions
-- **Endpoint:** `/api/v1/submission/list/all`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/homeworks/{homework_id}/submissions`
 - **Description:** 按学生姓名排序提交
-- **Query Params:** `homework_id=1001`
+- **Query Params:** `order=asc`
 
 ### Export Submissions
-- **Endpoint:** `/api/v1/submission/export`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/homeworks/{homework_id}/submissions/export`
 - **Description:** 导出提交统计
 - **Request Body:**
 ```json
 {
-  "homework_id": 1001,
-  "export_type": "excel"
+  "students": [1001, 1002, 1003, ...]
 }
 ```
 
 ## 4. System Management
 
 ### View Logs
-- **Endpoint:** `/api/v1/logs/view`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/logs`
 - **Description:** 查看系统日志
 - **Query Params:** `type=error&date=2023-10-01`
 
-### Export Logs
-- **Endpoint:** `/api/v1/logs/export`
-- **Method:** GET
-- **Description:** 导出系统日志
-
 ### Modify System Settings
-- **Endpoint:** `/api/v1/system/modify`
-- **Method:** PUT
+- **Endpoint:** `PUT /api/v1/system/settings`
 - **Description:** 修改系统设置
 - **Request Body:**
 ```json
@@ -161,14 +132,12 @@
 ## 5. User Management
 
 ### List Users
-- **Endpoint:** `/api/v1/users/list`
-- **Method:** GET
+- **Endpoint:** `GET /api/v1/users`
 - **Description:** 列出所有用户
 - **Query Params:** `role=student`
 
 ### Add User
-- **Endpoint:** `/api/v1/users/add`
-- **Method:** POST
+- **Endpoint:** `POST /api/v1/users`
 - **Description:** 添加用户
 - **Request Body:**
 ```json
@@ -181,24 +150,15 @@
 ```
 
 ### Delete User
-- **Endpoint:** `/api/v1/users/delete`
-- **Method:** DELETE
+- **Endpoint:** `DELETE /api/v1/users/{user_id}`
 - **Description:** 删除用户
-- **Request Body:**
-```json
-{
-  "user_id": 1002
-}
-```
 
 ### Modify User
-- **Endpoint:** `/api/v1/users/modify`
-- **Method:** PUT
+- **Endpoint:** `PUT /api/v1/users/{user_id}`
 - **Description:** 修改用户信息
 - **Request Body:**
 ```json
 {
-  "user_id": 1002,
   "role": "admin",
   "status": "active"
 }
