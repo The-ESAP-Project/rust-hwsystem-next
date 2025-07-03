@@ -3,8 +3,11 @@ use dotenv::dotenv;
 use std::env;
 use tracing::{debug, warn};
 
+mod api_models;
 mod errors;
 mod models;
+mod routes;
+mod services;
 mod storages;
 mod system;
 
@@ -81,6 +84,7 @@ async fn main() -> std::io::Result<()> {
                     .add(("Keep-Alive", "timeout=30, max=1000"))
                     .add(("Cache-Control", "no-cache, no-store, must-revalidate")),
             )
+            .configure(routes::configure_user_routes)
     })
     .keep_alive(std::time::Duration::from_secs(30)) // 启用长连接
     .client_request_timeout(std::time::Duration::from_millis(5000)) // 客户端超时

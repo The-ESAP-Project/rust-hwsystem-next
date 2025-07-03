@@ -151,5 +151,23 @@ pub fn get_all_migrations() -> Vec<Migration> {
             name: "create_users_role_index".to_string(),
             up_sql: "CREATE INDEX idx_users_role ON users(role)".to_string(),
         },
+        Migration {
+            version: 5,
+            name: "add_user_profile_fields".to_string(),
+            up_sql: "ALTER TABLE users ADD COLUMN profile_name TEXT;
+                     ALTER TABLE users ADD COLUMN student_id TEXT;
+                     ALTER TABLE users ADD COLUMN class TEXT;
+                     ALTER TABLE users ADD COLUMN avatar_url TEXT;
+                     ALTER TABLE users ADD COLUMN last_login TEXT;
+                     ALTER TABLE users ADD COLUMN password_hash TEXT;"
+                .to_string(),
+        },
+        Migration {
+            version: 6,
+            name: "create_user_profile_indexes".to_string(),
+            up_sql: "CREATE INDEX idx_users_student_id ON users(student_id);
+                     CREATE INDEX idx_users_last_login ON users(last_login);"
+                .to_string(),
+        },
     ]
 }

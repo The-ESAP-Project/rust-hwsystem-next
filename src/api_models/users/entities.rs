@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-// 用户相关模型
+// 用户角色
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UserRole {
     #[serde(rename = "teacher")]
@@ -38,12 +38,15 @@ impl std::str::FromStr for UserRole {
     }
 }
 
+// 用户状态
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UserStatus {
     #[serde(rename = "active")]
     Active, // 活跃
     #[serde(rename = "inactive")]
     Inactive, // 非活跃
+    #[serde(rename = "suspended")]
+    Suspended, // 暂停
 }
 
 impl std::fmt::Display for UserStatus {
@@ -51,6 +54,7 @@ impl std::fmt::Display for UserStatus {
         match self {
             UserStatus::Active => write!(f, "active"),
             UserStatus::Inactive => write!(f, "inactive"),
+            UserStatus::Suspended => write!(f, "suspended"),
         }
     }
 }
@@ -62,34 +66,31 @@ impl std::str::FromStr for UserStatus {
         match s {
             "active" => Ok(UserStatus::Active),
             "inactive" => Ok(UserStatus::Inactive),
+            "suspended" => Ok(UserStatus::Suspended),
             _ => Err(format!("Invalid user status: {s}")),
         }
     }
 }
 
+// 用户资料
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserProfile {
+    pub name: String,
+    pub student_id: Option<String>,
+    pub class: Option<String>,
+    pub avatar_url: Option<String>,
+}
+
+// 用户实体
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
     pub username: String,
-    pub role: UserRole,
     pub email: String,
+    pub role: UserRole,
     pub status: UserStatus,
+    pub profile: Option<UserProfile>,
+    pub last_login: Option<chrono::DateTime<chrono::Utc>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateUserRequest {
-    pub username: String,
-    pub role: UserRole,
-    pub email: String,
-    pub status: Option<UserStatus>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateUserRequest {
-    pub username: Option<String>,
-    pub role: Option<UserRole>,
-    pub email: Option<String>,
-    pub status: Option<UserStatus>,
 }

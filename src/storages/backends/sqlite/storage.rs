@@ -3,8 +3,12 @@ use std::env;
 use tracing::warn;
 
 use super::migrations::SqliteMigrationManager;
+use crate::api_models::{
+    CreateUserRequest, PaginationInfo, UpdateUserRequest, User, UserListQuery, UserListResponse,
+    UserProfile, UserRole, UserStatus,
+};
 use crate::errors::{HWSystemError, Result};
-use crate::storages::{CreateUserRequest, Storage, UpdateUserRequest, User, UserRole, UserStatus};
+use crate::storages::Storage;
 use async_trait::async_trait;
 
 // 注册 SQLite 存储插件
@@ -47,11 +51,6 @@ impl SqliteStorage {
         Ok(storage)
     }
 
-    /// 获取迁移管理器
-    pub fn get_migration_manager(&self) -> SqliteMigrationManager {
-        SqliteMigrationManager::new(self.pool.clone())
-    }
-
     fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<User> {
         let id: i64 = row.get("id");
         let username: String = row.get("username");
@@ -60,6 +59,13 @@ impl SqliteStorage {
         let status_str: String = row.get("status");
         let created_at_str: String = row.get("created_at");
         let updated_at_str: String = row.get("updated_at");
+
+        // 获取可选字段
+        let profile_name: Option<String> = row.try_get("profile_name").ok();
+        let student_id: Option<String> = row.try_get("student_id").ok();
+        let class: Option<String> = row.try_get("class").ok();
+        let avatar_url: Option<String> = row.try_get("avatar_url").ok();
+        let last_login_str: Option<String> = row.try_get("last_login").ok();
 
         let role = role_str
             .parse::<UserRole>()
@@ -76,12 +82,45 @@ impl SqliteStorage {
             .map_err(|e| HWSystemError::date_parse(format!("更新时间解析失败: {e}")))?
             .with_timezone(&chrono::Utc);
 
+        let last_login = if let Some(last_login_str) = last_login_str {
+            if last_login_str.trim().is_empty() {
+                None
+            } else {
+                Some(
+                    chrono::DateTime::parse_from_rfc3339(&last_login_str)
+                        .map_err(|e| {
+                            HWSystemError::date_parse(format!("最后登录时间解析失败: {e}"))
+                        })?
+                        .with_timezone(&chrono::Utc),
+                )
+            }
+        } else {
+            None
+        };
+
+        let profile = if profile_name.is_some()
+            || student_id.is_some()
+            || class.is_some()
+            || avatar_url.is_some()
+        {
+            Some(UserProfile {
+                name: profile_name.unwrap_or_default(),
+                student_id,
+                class,
+                avatar_url,
+            })
+        } else {
+            None
+        };
+
         Ok(User {
             id,
             username,
-            role,
             email,
+            role,
             status,
+            profile,
+            last_login,
             created_at,
             updated_at,
         })
@@ -92,16 +131,23 @@ impl SqliteStorage {
 impl Storage for SqliteStorage {
     async fn create_user(&self, user: CreateUserRequest) -> Result<User> {
         let now = chrono::Utc::now();
-        let status = user.status.unwrap_or(UserStatus::Active);
+
+        // 密码哈希（这里先简单使用MD5，实际应该用bcrypt等安全哈希）
+        let password_hash = format!("{:x}", md5::compute(&user.password));
 
         let result = sqlx::query(
-            "INSERT INTO users (username, role, email, status, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
+            "INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         )
         .bind(&user.username)
-        .bind(user.role.to_string())
         .bind(&user.email)
-        .bind(status.to_string())
+        .bind(&password_hash)
+        .bind(user.role.to_string())
+        .bind(UserStatus::Active.to_string())
+        .bind(user.profile.as_ref().map(|p| &p.name))
+        .bind(user.profile.as_ref().and_then(|p| p.student_id.as_deref()))
+        .bind(user.profile.as_ref().and_then(|p| p.class.as_deref()))
+        .bind(user.profile.as_ref().and_then(|p| p.avatar_url.as_deref()))
         .bind(now.to_rfc3339())
         .bind(now.to_rfc3339())
         .fetch_one(&self.pool)
@@ -113,9 +159,11 @@ impl Storage for SqliteStorage {
         Ok(User {
             id,
             username: user.username,
-            role: user.role,
             email: user.email,
-            status,
+            role: user.role,
+            status: UserStatus::Active,
+            profile: user.profile,
+            last_login: None,
             created_at: now,
             updated_at: now,
         })
@@ -123,7 +171,7 @@ impl Storage for SqliteStorage {
 
     async fn get_user_by_id(&self, id: i64) -> Result<Option<User>> {
         let result = sqlx::query(
-            "SELECT id, username, role, email, status, created_at, updated_at 
+            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
              FROM users WHERE id = ?",
         )
         .bind(id)
@@ -137,75 +185,86 @@ impl Storage for SqliteStorage {
         }
     }
 
-    async fn search_users(
-        &self,
-        query: &str,
-        role: Option<UserRole>,
-        status: Option<UserStatus>,
-    ) -> Result<Vec<User>> {
-        let mut sql = "SELECT id, username, role, email, status, created_at, updated_at 
-                       FROM users WHERE (username LIKE ? OR email LIKE ?)"
-            .to_string();
-        let mut params = vec![format!("%{}%", query), format!("%{}%", query)];
+    async fn get_user_by_username(&self, username: &str) -> Result<Option<User>> {
+        let result = sqlx::query(
+            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+             FROM users WHERE username = ?",
+        )
+        .bind(username)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("根据用户名查询用户失败: {e}")))?;
 
-        if let Some(role) = role {
-            sql.push_str(" AND role = ?");
-            params.push(role.to_string());
+        match result {
+            Some(row) => Ok(Some(Self::user_from_row(&row)?)),
+            None => Ok(None),
         }
-
-        if let Some(status) = status {
-            sql.push_str(" AND status = ?");
-            params.push(status.to_string());
-        }
-
-        sql.push_str(" ORDER BY created_at DESC");
-
-        let mut query_builder = sqlx::query(&sql);
-        for param in params {
-            query_builder = query_builder.bind(param);
-        }
-
-        let rows = query_builder
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| HWSystemError::database_operation(format!("搜索用户失败: {e}")))?;
-
-        let mut users = Vec::new();
-        for row in rows {
-            users.push(Self::user_from_row(&row)?);
-        }
-
-        Ok(users)
     }
 
-    async fn list_users(
-        &self,
-        role: Option<UserRole>,
-        status: Option<UserStatus>,
-    ) -> Result<Vec<User>> {
-        let mut sql = "SELECT id, username, role, email, status, created_at, updated_at 
-                       FROM users WHERE 1=1"
-            .to_string();
+    async fn list_users_with_pagination(&self, query: UserListQuery) -> Result<UserListResponse> {
+        let page = query.page.unwrap_or(1).max(1);
+        let size = query.size.unwrap_or(10).max(1).min(100);
+        let offset = (page - 1) * size;
+
+        // 构建基本查询
+        let mut conditions = Vec::new();
         let mut params = Vec::new();
 
-        if let Some(role) = role {
-            sql.push_str(" AND role = ?");
+        // 搜索条件
+        if let Some(search) = &query.search {
+            if !search.trim().is_empty() {
+                conditions.push("(username LIKE ? OR email LIKE ? OR profile_name LIKE ?)");
+                let search_pattern = format!("%{}%", search.trim());
+                params.push(search_pattern.clone());
+                params.push(search_pattern.clone());
+                params.push(search_pattern);
+            }
+        }
+
+        // 角色筛选
+        if let Some(role) = &query.role {
+            conditions.push("role = ?");
             params.push(role.to_string());
         }
 
-        if let Some(status) = status {
-            sql.push_str(" AND status = ?");
+        // 状态筛选
+        if let Some(status) = &query.status {
+            conditions.push("status = ?");
             params.push(status.to_string());
         }
 
-        sql.push_str(" ORDER BY created_at DESC");
+        let where_clause = if conditions.is_empty() {
+            "".to_string()
+        } else {
+            format!(" WHERE {}", conditions.join(" AND "))
+        };
 
-        let mut query_builder = sqlx::query(&sql);
-        for param in params {
-            query_builder = query_builder.bind(param);
+        // 查询总数
+        let count_sql = format!("SELECT COUNT(*) as total FROM users{where_clause}");
+        let mut count_query = sqlx::query(&count_sql);
+        for param in &params {
+            count_query = count_query.bind(param);
         }
 
-        let rows = query_builder
+        let total_row = count_query
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| HWSystemError::database_operation(format!("查询用户总数失败: {e}")))?;
+        let total: i64 = total_row.get("total");
+
+        // 查询数据
+        let data_sql = format!(
+            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+             FROM users{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        );
+
+        let mut data_query = sqlx::query(&data_sql);
+        for param in &params {
+            data_query = data_query.bind(param);
+        }
+        data_query = data_query.bind(size).bind(offset);
+
+        let rows = data_query
             .fetch_all(&self.pool)
             .await
             .map_err(|e| HWSystemError::database_operation(format!("查询用户列表失败: {e}")))?;
@@ -215,7 +274,30 @@ impl Storage for SqliteStorage {
             users.push(Self::user_from_row(&row)?);
         }
 
-        Ok(users)
+        let pages = (total + size - 1) / size; // 向上取整
+
+        Ok(UserListResponse {
+            items: users,
+            pagination: PaginationInfo {
+                page,
+                size,
+                total,
+                pages,
+            },
+        })
+    }
+
+    async fn update_last_login(&self, id: i64) -> Result<bool> {
+        let now = chrono::Utc::now();
+
+        let result = sqlx::query("UPDATE users SET last_login = ? WHERE id = ?")
+            .bind(now.to_rfc3339())
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| HWSystemError::database_operation(format!("更新最后登录时间失败: {e}")))?;
+
+        Ok(result.rows_affected() > 0)
     }
 
     async fn update_user(&self, id: i64, update: UpdateUserRequest) -> Result<Option<User>> {
@@ -228,9 +310,9 @@ impl Storage for SqliteStorage {
         let mut updates = Vec::new();
         let mut params = Vec::new();
 
-        if let Some(username) = &update.username {
-            updates.push("username = ?");
-            params.push(username.clone());
+        if let Some(email) = &update.email {
+            updates.push("email = ?");
+            params.push(email.clone());
         }
 
         if let Some(role) = &update.role {
@@ -238,14 +320,20 @@ impl Storage for SqliteStorage {
             params.push(role.to_string());
         }
 
-        if let Some(email) = &update.email {
-            updates.push("email = ?");
-            params.push(email.clone());
-        }
-
         if let Some(status) = &update.status {
             updates.push("status = ?");
             params.push(status.to_string());
+        }
+
+        if let Some(profile) = &update.profile {
+            updates.push("profile_name = ?");
+            updates.push("student_id = ?");
+            updates.push("class = ?");
+            updates.push("avatar_url = ?");
+            params.push(profile.name.clone());
+            params.push(profile.student_id.clone().unwrap_or_default());
+            params.push(profile.class.clone().unwrap_or_default());
+            params.push(profile.avatar_url.clone().unwrap_or_default());
         }
 
         if updates.is_empty() {
@@ -280,15 +368,5 @@ impl Storage for SqliteStorage {
             .map_err(|e| HWSystemError::database_operation(format!("删除用户失败: {e}")))?;
 
         Ok(result.rows_affected() > 0)
-    }
-
-    async fn run_migrations(&self) -> Result<()> {
-        let migration_manager = self.get_migration_manager();
-        migration_manager.migrate_up().await
-    }
-
-    async fn get_schema_version(&self) -> Result<i32> {
-        let migration_manager = self.get_migration_manager();
-        migration_manager.get_current_version().await
     }
 }

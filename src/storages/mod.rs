@@ -5,13 +5,13 @@ use std::env;
 use std::sync::Arc;
 use tracing::error;
 
+use crate::api_models::{
+    CreateUserRequest, UpdateUserRequest, User, UserListQuery, UserListResponse,
+};
 use crate::errors::{HWSystemError, Result};
 
 pub mod backends;
-pub mod models;
 pub mod register;
-
-pub use models::{CreateUserRequest, UpdateUserRequest, User, UserRole, UserStatus};
 use register::get_storage_plugin;
 
 #[async_trait::async_trait]
@@ -19,23 +19,11 @@ pub trait Storage: Send + Sync {
     // 用户管理方法
     async fn create_user(&self, user: CreateUserRequest) -> Result<User>;
     async fn get_user_by_id(&self, id: i64) -> Result<Option<User>>;
-    async fn search_users(
-        &self,
-        query: &str,
-        role: Option<UserRole>,
-        status: Option<UserStatus>,
-    ) -> Result<Vec<User>>;
-    async fn list_users(
-        &self,
-        role: Option<UserRole>,
-        status: Option<UserStatus>,
-    ) -> Result<Vec<User>>;
+    async fn get_user_by_username(&self, username: &str) -> Result<Option<User>>;
+    async fn list_users_with_pagination(&self, query: UserListQuery) -> Result<UserListResponse>;
     async fn update_user(&self, id: i64, update: UpdateUserRequest) -> Result<Option<User>>;
     async fn delete_user(&self, id: i64) -> Result<bool>;
-
-    // 数据库迁移方法
-    async fn run_migrations(&self) -> Result<()>;
-    async fn get_schema_version(&self) -> Result<i32>;
+    async fn update_last_login(&self, id: i64) -> Result<bool>;
 }
 
 pub struct StorageFactory;
