@@ -5,8 +5,10 @@ use std::env;
 use std::sync::Arc;
 use tracing::error;
 
-use crate::api_models::{
-    CreateUserRequest, UpdateUserRequest, User, UserListQuery, UserListResponse,
+use crate::api_models::users::{
+    entities::User,
+    requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
+    responses::UserListResponse,
 };
 use crate::errors::{HWSystemError, Result};
 

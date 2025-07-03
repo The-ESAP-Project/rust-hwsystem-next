@@ -1,4 +1,5 @@
 use crate::errors::{HWSystemError, Result};
+use sha2::{Digest, Sha256};
 use sqlx::{Row, SqlitePool};
 use tracing::info;
 
@@ -24,7 +25,7 @@ impl SqliteMigrationManager {
             "CREATE TABLE IF NOT EXISTS schema_migrations (
                 version INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
-                applied_at TEXT NOT NULL,
+                applied_at INTEGER NOT NULL,
                 checksum TEXT
             )",
         )
@@ -73,11 +74,13 @@ impl SqliteMigrationManager {
             })?;
 
         // 记录迁移
-        let checksum = format!("{:x}", md5::compute(&migration.up_sql));
+        let mut hasher = Sha256::new();
+        hasher.update(&migration.up_sql);
+        let checksum = format!("{:x}", hasher.finalize());
         sqlx::query("INSERT INTO schema_migrations (version, name, applied_at, checksum) VALUES (?, ?, ?, ?)")
             .bind(migration.version)
             .bind(&migration.name)
-            .bind(chrono::Utc::now().to_rfc3339())
+            .bind(chrono::Utc::now().timestamp())
             .bind(&checksum)
             .execute(&mut *tx)
             .await
@@ -124,50 +127,37 @@ pub fn get_all_migrations() -> Vec<Migration> {
     vec![
         Migration {
             version: 1,
-            name: "create_users_table".to_string(),
-            up_sql: "CREATE TABLE users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL UNIQUE,
-                role TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                status TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )"
-            .to_string(),
-        },
-        Migration {
-            version: 2,
-            name: "create_users_username_index".to_string(),
-            up_sql: "CREATE INDEX idx_users_username ON users(username)".to_string(),
-        },
-        Migration {
-            version: 3,
-            name: "create_users_email_index".to_string(),
-            up_sql: "CREATE INDEX idx_users_email ON users(email)".to_string(),
-        },
-        Migration {
-            version: 4,
-            name: "create_users_role_index".to_string(),
-            up_sql: "CREATE INDEX idx_users_role ON users(role)".to_string(),
-        },
-        Migration {
-            version: 5,
-            name: "add_user_profile_fields".to_string(),
-            up_sql: "ALTER TABLE users ADD COLUMN profile_name TEXT;
-                     ALTER TABLE users ADD COLUMN student_id TEXT;
-                     ALTER TABLE users ADD COLUMN class TEXT;
-                     ALTER TABLE users ADD COLUMN avatar_url TEXT;
-                     ALTER TABLE users ADD COLUMN last_login TEXT;
-                     ALTER TABLE users ADD COLUMN password_hash TEXT;"
-                .to_string(),
-        },
-        Migration {
-            version: 6,
-            name: "create_user_profile_indexes".to_string(),
-            up_sql: "CREATE INDEX idx_users_student_id ON users(student_id);
-                     CREATE INDEX idx_users_last_login ON users(last_login);"
-                .to_string(),
+            name: "create_users_table_with_indexes".to_string(),
+            up_sql: "
+                -- 创建用户表
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    profile_name TEXT,
+                    student_id TEXT,
+                    class TEXT,
+                    avatar_url TEXT,
+                    last_login INTEGER,
+                    created_at INTEGER NOT NULL,
+                    updated_at INTEGER NOT NULL
+                );
+
+                -- 插入初始管理员用户 (用户名: admin, 密码: admin123)
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at)
+                VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', '000001', 'Admin', NULL, NULL, 1704067200, 1704067200);
+
+                -- 创建索引
+                CREATE INDEX idx_users_username ON users(username);
+                CREATE INDEX idx_users_email ON users(email);
+                CREATE INDEX idx_users_role ON users(role);
+                CREATE INDEX idx_users_status ON users(status);
+                CREATE INDEX idx_users_student_id ON users(student_id);
+                CREATE INDEX idx_users_last_login ON users(last_login);
+            ".to_string(),
         },
     ]
 }

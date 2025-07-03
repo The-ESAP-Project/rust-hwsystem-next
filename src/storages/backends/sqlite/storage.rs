@@ -1,11 +1,19 @@
+use argon2::{
+    Argon2, PasswordHasher,
+    password_hash::{SaltString, rand_core::OsRng},
+};
 use sqlx::{Row, SqlitePool, sqlite, sqlite::SqliteConnectOptions};
 use std::env;
 use tracing::warn;
 
 use super::migrations::SqliteMigrationManager;
 use crate::api_models::{
-    CreateUserRequest, PaginationInfo, UpdateUserRequest, User, UserListQuery, UserListResponse,
-    UserProfile, UserRole, UserStatus,
+    PaginationInfo,
+    users::{
+        entities::{User, UserProfile, UserRole, UserStatus},
+        requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
+        responses::UserListResponse,
+    },
 };
 use crate::errors::{HWSystemError, Result};
 use crate::storages::Storage;
@@ -132,8 +140,13 @@ impl Storage for SqliteStorage {
     async fn create_user(&self, user: CreateUserRequest) -> Result<User> {
         let now = chrono::Utc::now();
 
-        // 密码哈希（这里先简单使用MD5，实际应该用bcrypt等安全哈希）
-        let password_hash = format!("{:x}", md5::compute(&user.password));
+        // 使用 Argon2 进行密码哈希
+        let argon2 = Argon2::default();
+        let salt = SaltString::generate(&mut OsRng);
+        let password_hash = argon2
+            .hash_password(user.password.as_bytes(), &salt)
+            .map_err(|e| HWSystemError::validation(format!("密码哈希失败: {e}")))?
+            .to_string();
 
         let result = sqlx::query(
             "INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, created_at, updated_at) 
@@ -203,7 +216,7 @@ impl Storage for SqliteStorage {
 
     async fn list_users_with_pagination(&self, query: UserListQuery) -> Result<UserListResponse> {
         let page = query.page.unwrap_or(1).max(1);
-        let size = query.size.unwrap_or(10).max(1).min(100);
+        let size = query.size.unwrap_or(10).clamp(1, 100);
         let offset = (page - 1) * size;
 
         // 构建基本查询

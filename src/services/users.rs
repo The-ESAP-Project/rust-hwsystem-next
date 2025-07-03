@@ -2,7 +2,8 @@ use actix_web::{HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
 use crate::api_models::{
-    ApiResponse, CreateUserRequest, UpdateUserRequest, UserListQuery, UserQueryParams,
+    ApiResponse, ErrorCode,
+    users::requests::{CreateUserRequest, UpdateUserRequest, UserListQuery, UserQueryParams},
 };
 use crate::storages::Storage;
 
@@ -32,7 +33,7 @@ impl UserService {
             }
             Err(e) => Ok(
                 HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                    500,
+                    ErrorCode::InternalServerError,
                     format!("获取用户列表失败: {e}"),
                 )),
             ),
@@ -46,7 +47,7 @@ impl UserService {
                 Ok(HttpResponse::Created().json(ApiResponse::success(user, "用户创建成功")))
             }
             Err(e) => Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-                400,
+                ErrorCode::BadRequest,
                 format!("用户创建失败: {e}"),
             ))),
         }
@@ -58,12 +59,11 @@ impl UserService {
             Ok(Some(user)) => {
                 Ok(HttpResponse::Ok().json(ApiResponse::success(user, "获取用户信息成功")))
             }
-            Ok(None) => {
-                Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(404, "用户不存在")))
-            }
+            Ok(None) => Ok(HttpResponse::NotFound()
+                .json(ApiResponse::error_empty(ErrorCode::NotFound, "用户不存在"))),
             Err(e) => Ok(
                 HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                    500,
+                    ErrorCode::InternalServerError,
                     format!("获取用户信息失败: {e}"),
                 )),
             ),
@@ -80,11 +80,10 @@ impl UserService {
             Ok(Some(user)) => {
                 Ok(HttpResponse::Ok().json(ApiResponse::success(user, "用户信息更新成功")))
             }
-            Ok(None) => {
-                Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(404, "用户不存在")))
-            }
+            Ok(None) => Ok(HttpResponse::NotFound()
+                .json(ApiResponse::error_empty(ErrorCode::NotFound, "用户不存在"))),
             Err(e) => Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-                400,
+                ErrorCode::BadRequest,
                 format!("用户信息更新失败: {e}"),
             ))),
         }
@@ -94,12 +93,11 @@ impl UserService {
     pub async fn delete_user(&self, user_id: i64) -> ActixResult<HttpResponse> {
         match self.storage.delete_user(user_id).await {
             Ok(true) => Ok(HttpResponse::Ok().json(ApiResponse::success_empty("用户删除成功"))),
-            Ok(false) => {
-                Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(404, "用户不存在")))
-            }
+            Ok(false) => Ok(HttpResponse::NotFound()
+                .json(ApiResponse::error_empty(ErrorCode::NotFound, "用户不存在"))),
             Err(e) => Ok(
                 HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                    500,
+                    ErrorCode::InternalServerError,
                     format!("用户删除失败: {e}"),
                 )),
             ),

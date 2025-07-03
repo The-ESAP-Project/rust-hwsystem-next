@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Result as ActixResult, web};
 use std::sync::Arc;
 
-use crate::api_models::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
+use crate::api_models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
 use crate::services::UserService;
 use crate::storages::Storage;
 
@@ -52,7 +52,7 @@ pub async fn delete_user(
 // 配置路由
 pub fn configure_user_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/users")
+        web::scope("/api/v1/users")
             .route("", web::get().to(list_users))
             .route("", web::post().to(create_user))
             .route("/{id}", web::get().to(get_user))
