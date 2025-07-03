@@ -1,16 +1,31 @@
 use serde::{Deserialize, Serialize};
 
 // 用户角色
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum UserRole {
-    #[serde(rename = "teacher")]
-    Teacher, // 教师
-    #[serde(rename = "student")]
-    Student, // 学生
-    #[serde(rename = "admin")]
-    Admin, // 管理员
-    #[serde(rename = "class_representative")]
+    Teacher,             // 教师
+    Student,             // 学生
+    Admin,               // 管理员
     ClassRepresentative, // 课代表
+}
+
+impl<'de> Deserialize<'de> for UserRole {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "teacher" => Ok(UserRole::Teacher),
+            "student" => Ok(UserRole::Student),
+            "admin" => Ok(UserRole::Admin),
+            "class_representative" => Ok(UserRole::ClassRepresentative),
+            _ => Err(serde::de::Error::custom(format!(
+                "无效的用户角色: '{s}'. 支持的角色: teacher, student, admin, class_representative"
+            ))),
+        }
+    }
 }
 
 impl std::fmt::Display for UserRole {
@@ -39,14 +54,29 @@ impl std::str::FromStr for UserRole {
 }
 
 // 用户状态
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum UserStatus {
-    #[serde(rename = "active")]
-    Active, // 活跃
-    #[serde(rename = "inactive")]
-    Inactive, // 非活跃
-    #[serde(rename = "suspended")]
+    Active,    // 活跃
+    Inactive,  // 非活跃
     Suspended, // 暂停
+}
+
+impl<'de> Deserialize<'de> for UserStatus {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "active" => Ok(UserStatus::Active),
+            "inactive" => Ok(UserStatus::Inactive),
+            "suspended" => Ok(UserStatus::Suspended),
+            _ => Err(serde::de::Error::custom(format!(
+                "无效的用户状态: '{s}'. 支持的状态: active, inactive, suspended"
+            ))),
+        }
+    }
 }
 
 impl std::fmt::Display for UserStatus {

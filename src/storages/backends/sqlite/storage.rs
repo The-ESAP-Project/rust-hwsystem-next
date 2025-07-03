@@ -65,15 +65,15 @@ impl SqliteStorage {
         let role_str: String = row.get("role");
         let email: String = row.get("email");
         let status_str: String = row.get("status");
-        let created_at_str: String = row.get("created_at");
-        let updated_at_str: String = row.get("updated_at");
+        let created_at_ts: i64 = row.get("created_at");
+        let updated_at_ts: i64 = row.get("updated_at");
 
         // 获取可选字段
         let profile_name: Option<String> = row.try_get("profile_name").ok();
         let student_id: Option<String> = row.try_get("student_id").ok();
         let class: Option<String> = row.try_get("class").ok();
         let avatar_url: Option<String> = row.try_get("avatar_url").ok();
-        let last_login_str: Option<String> = row.try_get("last_login").ok();
+        let last_login_ts: Option<i64> = row.try_get("last_login").ok();
 
         let role = role_str
             .parse::<UserRole>()
@@ -82,26 +82,19 @@ impl SqliteStorage {
             .parse::<UserStatus>()
             .map_err(|e| HWSystemError::validation(format!("状态解析失败: {e}")))?;
 
-        let created_at = chrono::DateTime::parse_from_rfc3339(&created_at_str)
-            .map_err(|e| HWSystemError::date_parse(format!("创建时间解析失败: {e}")))?
-            .with_timezone(&chrono::Utc);
+        // 从时间戳转换为DateTime
+        let created_at = chrono::DateTime::from_timestamp(created_at_ts, 0)
+            .ok_or_else(|| HWSystemError::date_parse("无效的创建时间时间戳".to_string()))?;
 
-        let updated_at = chrono::DateTime::parse_from_rfc3339(&updated_at_str)
-            .map_err(|e| HWSystemError::date_parse(format!("更新时间解析失败: {e}")))?
-            .with_timezone(&chrono::Utc);
+        let updated_at = chrono::DateTime::from_timestamp(updated_at_ts, 0)
+            .ok_or_else(|| HWSystemError::date_parse("无效的更新时间时间戳".to_string()))?;
 
-        let last_login = if let Some(last_login_str) = last_login_str {
-            if last_login_str.trim().is_empty() {
-                None
-            } else {
-                Some(
-                    chrono::DateTime::parse_from_rfc3339(&last_login_str)
-                        .map_err(|e| {
-                            HWSystemError::date_parse(format!("最后登录时间解析失败: {e}"))
-                        })?
-                        .with_timezone(&chrono::Utc),
-                )
-            }
+        let last_login = if let Some(last_login_ts) = last_login_ts {
+            Some(
+                chrono::DateTime::from_timestamp(last_login_ts, 0).ok_or_else(|| {
+                    HWSystemError::date_parse("无效的最后登录时间时间戳".to_string())
+                })?,
+            )
         } else {
             None
         };
@@ -161,8 +154,8 @@ impl Storage for SqliteStorage {
         .bind(user.profile.as_ref().and_then(|p| p.student_id.as_deref()))
         .bind(user.profile.as_ref().and_then(|p| p.class.as_deref()))
         .bind(user.profile.as_ref().and_then(|p| p.avatar_url.as_deref()))
-        .bind(now.to_rfc3339())
-        .bind(now.to_rfc3339())
+        .bind(now.timestamp()) // 使用时间戳
+        .bind(now.timestamp()) // 使用时间戳
         .fetch_one(&self.pool)
         .await
         .map_err(|e| HWSystemError::database_operation(format!("创建用户失败: {e}")))?;
