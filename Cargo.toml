@@ -1,0 +1,31 @@
+[package]
+name = "rust-hwsystem-next"
+version = "0.0.1"
+description = "A next-generation hardware system for Rust"
+authors = ["AptS-1547 <apts-1547@esaps.net>"]
+edition = "2024"
+
+# 优化配置
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release-debug]
+inherits = "release"
+debug = true
+strip = false
+lto = false
+
+[dependencies]
+actix-web = "4.0"
+dotenv = "0.15"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing-subscriber = { version = "0.3.19", default-features = false, features = ["env-filter", "fmt", "ansi"] }
+tracing-appender = "0.2.3"
+jsonwebtoken = "9.3.1"
+num_cpus = "1.17.0"
+tokio = { version = "1.45.1", default-features = false, features = ["rt-multi-thread", "macros"] }
