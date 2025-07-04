@@ -22,6 +22,8 @@ pub trait Storage: Send + Sync {
     async fn create_user(&self, user: CreateUserRequest) -> Result<User>;
     async fn get_user_by_id(&self, id: i64) -> Result<Option<User>>;
     async fn get_user_by_username(&self, username: &str) -> Result<Option<User>>;
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>>;
+    async fn get_user_by_username_or_email(&self, identifier: &str) -> Result<Option<User>>;
     async fn list_users_with_pagination(&self, query: UserListQuery) -> Result<UserListResponse>;
     async fn update_user(&self, id: i64, update: UpdateUserRequest) -> Result<Option<User>>;
     async fn delete_user(&self, id: i64) -> Result<bool>;

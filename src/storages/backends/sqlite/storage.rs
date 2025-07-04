@@ -1,7 +1,3 @@
-use argon2::{
-    Argon2, PasswordHasher,
-    password_hash::{SaltString, rand_core::OsRng},
-};
 use sqlx::{Row, SqlitePool, sqlite, sqlite::SqliteConnectOptions};
 use std::env;
 use tracing::warn;
@@ -62,6 +58,7 @@ impl SqliteStorage {
     fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<User> {
         let id: i64 = row.get("id");
         let username: String = row.get("username");
+        let password_hash: String = row.get("password_hash");
         let role_str: String = row.get("role");
         let email: String = row.get("email");
         let status_str: String = row.get("status");
@@ -118,6 +115,7 @@ impl SqliteStorage {
             id,
             username,
             email,
+            password_hash,
             role,
             status,
             profile,
@@ -133,13 +131,9 @@ impl Storage for SqliteStorage {
     async fn create_user(&self, user: CreateUserRequest) -> Result<User> {
         let now = chrono::Utc::now();
 
-        // 使用 Argon2 进行密码哈希
-        let argon2 = Argon2::default();
-        let salt = SaltString::generate(&mut OsRng);
-        let password_hash = argon2
-            .hash_password(user.password.as_bytes(), &salt)
-            .map_err(|e| HWSystemError::validation(format!("密码哈希失败: {e}")))?
-            .to_string();
+        // 注意：这里期望接收到的 password 字段已经是哈希后的密码
+        // 实际的密码哈希应该在 Service 层完成
+        let password_hash = user.password; // 假设已经是哈希后的密码
 
         let result = sqlx::query(
             "INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, created_at, updated_at) 
@@ -166,6 +160,7 @@ impl Storage for SqliteStorage {
             id,
             username: user.username,
             email: user.email,
+            password_hash,
             role: user.role,
             status: UserStatus::Active,
             profile: user.profile,
@@ -177,7 +172,7 @@ impl Storage for SqliteStorage {
 
     async fn get_user_by_id(&self, id: i64) -> Result<Option<User>> {
         let result = sqlx::query(
-            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+            "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
              FROM users WHERE id = ?",
         )
         .bind(id)
@@ -193,13 +188,46 @@ impl Storage for SqliteStorage {
 
     async fn get_user_by_username(&self, username: &str) -> Result<Option<User>> {
         let result = sqlx::query(
-            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+            "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
              FROM users WHERE username = ?",
         )
         .bind(username)
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| HWSystemError::database_operation(format!("根据用户名查询用户失败: {e}")))?;
+
+        match result {
+            Some(row) => Ok(Some(Self::user_from_row(&row)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>> {
+        let result = sqlx::query(
+            "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+             FROM users WHERE email = ?",
+        )
+        .bind(email)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("根据邮箱查询用户失败: {e}")))?;
+
+        match result {
+            Some(row) => Ok(Some(Self::user_from_row(&row)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn get_user_by_username_or_email(&self, identifier: &str) -> Result<Option<User>> {
+        let result = sqlx::query(
+            "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+             FROM users WHERE username = ? OR email = ?",
+        )
+        .bind(identifier)
+        .bind(identifier)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("根据用户名或邮箱查询用户失败: {e}")))?;
 
         match result {
             Some(row) => Ok(Some(Self::user_from_row(&row)?)),

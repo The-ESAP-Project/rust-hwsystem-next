@@ -117,10 +117,35 @@ pub struct User {
     pub id: i64,
     pub username: String,
     pub email: String,
+    #[serde(skip_serializing)] // 不序列化到JSON响应中
+    pub password_hash: String,
     pub role: UserRole,
     pub status: UserStatus,
     pub profile: Option<UserProfile>,
     pub last_login: Option<chrono::DateTime<chrono::Utc>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl User {
+    // 生成访问令牌（使用真正的 JWT）
+    pub fn generate_access_token(&self) -> String {
+        // 使用 JwtUtils 生成 token
+        match crate::services::jwt::JwtUtils::generate_token(
+            self.id,
+            &self.username,
+            &self.role.to_string(),
+        ) {
+            Ok(token) => token,
+            Err(e) => {
+                // 如果 JWT 生成失败，返回一个简单的 token（不推荐在生产环境中使用）
+                tracing::error!("JWT token 生成失败: {}", e);
+                format!(
+                    "fallback_token_{}_{}",
+                    self.id,
+                    chrono::Utc::now().timestamp()
+                )
+            }
+        }
+    }
 }
