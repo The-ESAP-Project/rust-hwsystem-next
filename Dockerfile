@@ -1,53 +1,60 @@
-# 使用官方 Rust 镜像作为构建环境
-FROM rust:1.86-slim AS builder
+# 多阶段构建 - 构建阶段
+FROM rust:1.88-slim AS builder
 
-# 创建新的空项目
-WORKDIR /usr/src/app
-RUN cargo init
+# 安装构建依赖，包含完整的 OpenSSL 开发库
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    libssl3 \
+    openssl \
+    ca-certificates \
+    musl-tools \
+    musl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 首先复制 Cargo.toml 和 Cargo.lock (如果存在)
-COPY Cargo.toml ./
-# 尝试复制 Cargo.lock，如果不存在则忽略
-COPY Cargo.lock* ./
-
-# 构建一个空项目以缓存依赖
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo build --release && \
-    rm src/*.rs
-
-# 复制源代码
-COPY src/ ./src/
-
-# 构建实际应用
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    touch src/main.rs && \
-    cargo build --release
-
-# 第二阶段：创建运行环境
-FROM debian:bookworm-slim
-
-# 安装运行时依赖
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-# 创建非特权用户
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# 添加 musl 目标
+RUN rustup target add x86_64-unknown-linux-musl
 
 # 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制编译好的二进制文件
-COPY --from=builder /usr/src/app/target/release/rust-hwsystem-next /app/rust-hwsystem-next
+# 复制源代码
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
 
-# 切换到非特权用户
-USER appuser
+# 设置 OpenSSL 环境变量和编译选项
+ENV PKG_CONFIG_ALLOW_CROSS=1
+ENV OPENSSL_STATIC=1
+ENV OPENSSL_DIR=/usr
+ENV RUSTFLAGS="-C link-arg=-s -C opt-level=z -C target-feature=+crt-static"
 
-# 设置环境变量
-ENV RUST_LOG=info
+# 静态链接编译 - 使用 musl 目标
+RUN touch src/main.rs && \
+    cargo build --release --target x86_64-unknown-linux-musl
 
-# 暴露应用端口
+# 运行阶段 - 使用scratch
+FROM scratch
+
+LABEL maintainer="AptS:1547 <apts-1547@esaps.net>"
+LABEL description="A next-generation hardware system for Rust"
+LABEL version="0.0.1"
+LABEL homepage="https://github.com/The-ESAP-Project/rust-hwsystem-next"
+LABEL license="MIT"
+
+# 从构建阶段复制二进制文件 (使用 musl 目标路径)
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/rust-hwsystem-next /rust-hwsystem-next
+
+VOLUME ["/data", "/socket"]
+
+# 暴露端口
 EXPOSE 8080
 
-# 运行应用
-CMD ["./rust-hwsystem-next"]
+# 设置环境变量
+ENV DOCKER_ENV=1
+ENV SERVER_HOST=0.0.0.0
+ENV SERVER_PORT=8080
+ENV DATABASE_URL=/data/hwsystem.db
+ENV RUST_LOG=info
+
+# 启动命令
+ENTRYPOINT ["/rust-hwsystem-next"]
