@@ -1,36 +1,35 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, web};
-use std::sync::Arc;
+use once_cell::sync::Lazy;
 
 use crate::api_models::auth::requests::LoginRequest;
 use crate::api_models::users::requests::CreateUserRequest;
 use crate::services::AuthService;
-use crate::storages::Storage;
+
+// 懒加载的全局 AuthService 实例
+static AUTH_SERVICE: Lazy<AuthService> = Lazy::new(AuthService::new_lazy);
 
 pub async fn login(
-    storage: web::Data<Arc<dyn Storage>>,
+    req: HttpRequest,
     user_data: web::Json<LoginRequest>,
 ) -> ActixResult<HttpResponse> {
-    let service = AuthService::new(storage.get_ref().clone());
-    service.login(user_data.into_inner()).await
+    AUTH_SERVICE.login(user_data.into_inner(), Some(&req)).await
 }
 
 pub async fn refresh_token(request: HttpRequest) -> ActixResult<HttpResponse> {
-    let service = AuthService::new(
-        request
-            .app_data::<web::Data<Arc<dyn Storage>>>()
-            .unwrap()
-            .get_ref()
-            .clone(),
-    );
-    service.refresh_token(request).await
+    AUTH_SERVICE.refresh_token(request).await
 }
 
 pub async fn register(
-    storage: web::Data<Arc<dyn Storage>>,
+    req: HttpRequest,
     user_data: web::Json<CreateUserRequest>,
 ) -> ActixResult<HttpResponse> {
-    let service = AuthService::new(storage.get_ref().clone());
-    service.register(user_data.into_inner()).await
+    AUTH_SERVICE
+        .register(user_data.into_inner(), Some(&req))
+        .await
+}
+
+pub async fn verify_token() -> ActixResult<HttpResponse> {
+    AUTH_SERVICE.verify_token().await
 }
 
 // 配置路由
@@ -39,6 +38,7 @@ pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/api/v1/auth")
             .route("/login", web::post().to(login))
             .route("/refresh", web::post().to(refresh_token))
-            .route("/register", web::post().to(register)),
+            .route("/register", web::post().to(register))
+            .route("/verify-token", web::get().to(verify_token)),
     );
 }

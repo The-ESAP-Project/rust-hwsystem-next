@@ -8,4 +8,7 @@ pub enum ErrorCode {
     NotFound = 1004,            // 未找到资源
     Conflict = 1009,            // 冲突 (资源已存在)
     InternalServerError = 1005, // 内部服务器错误
+
+    // Auth 错误
+    AuthFailed = 2000, // 身份验证失败
 }

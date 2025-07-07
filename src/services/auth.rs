@@ -10,19 +10,36 @@ use crate::api_models::{
 use crate::storages::Storage;
 
 pub struct AuthService {
-    storage: Arc<dyn Storage>,
+    storage: Option<Arc<dyn Storage>>,
 }
 
 impl AuthService {
-    pub fn new(storage: Arc<dyn Storage>) -> Self {
-        Self { storage }
+    pub fn new_lazy() -> Self {
+        Self { storage: None }
+    }
+
+    fn get_storage(&self, request: Option<&HttpRequest>) -> Arc<dyn Storage> {
+        if let Some(storage) = &self.storage {
+            storage.clone()
+        } else if let Some(req) = request {
+            req.app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
+                .expect("Storage not found in app data")
+                .get_ref()
+                .clone()
+        } else {
+            panic!("No storage available")
+        }
     }
 
     // 登录验证
-    pub async fn login(&self, login_request: LoginRequest) -> ActixResult<HttpResponse> {
+    pub async fn login(
+        &self,
+        login_request: LoginRequest,
+        request: Option<&HttpRequest>,
+    ) -> ActixResult<HttpResponse> {
+        let storage = self.get_storage(request);
         // 1. 根据用户名或邮箱获取用户信息
-        match self
-            .storage
+        match storage
             .get_user_by_username_or_email(&login_request.username)
             .await
         {
@@ -30,7 +47,7 @@ impl AuthService {
                 // 2. 验证密码
                 if self.verify_password(&login_request.password, &user.password_hash) {
                     // 3. 更新最后登录时间
-                    let _ = self.storage.update_last_login(user.id).await;
+                    let _ = storage.update_last_login(user.id).await;
 
                     let response = LoginResponse {
                         access_token: user.generate_access_token(),
@@ -41,13 +58,13 @@ impl AuthService {
                     Ok(HttpResponse::Ok().json(ApiResponse::success(response, "登录成功")))
                 } else {
                     Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-                        ErrorCode::Unauthorized,
+                        ErrorCode::AuthFailed,
                         "用户名或密码错误",
                     )))
                 }
             }
             Ok(None) => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-                ErrorCode::Unauthorized,
+                ErrorCode::AuthFailed,
                 "用户名或密码错误",
             ))),
             Err(e) => Ok(
@@ -62,6 +79,11 @@ impl AuthService {
     pub async fn refresh_token(&self, _request: HttpRequest) -> ActixResult<HttpResponse> {
         // 刷新令牌逻辑尚未实现
         Ok(HttpResponse::NotImplemented().json("刷新令牌功能尚未实现"))
+    }
+
+    pub async fn verify_token(&self) -> ActixResult<HttpResponse> {
+        // 从 Authorization header 中提取 token
+        Ok(HttpResponse::Ok().json(ApiResponse::success_empty("Verified")))
     }
 
     // 验证密码
@@ -90,13 +112,11 @@ impl AuthService {
     pub async fn register(
         &self,
         mut create_request: CreateUserRequest,
+        request: Option<&HttpRequest>,
     ) -> ActixResult<HttpResponse> {
+        let storage = self.get_storage(request);
         // 1. 检查用户名是否已存在
-        match self
-            .storage
-            .get_user_by_username(&create_request.username)
-            .await
-        {
+        match storage.get_user_by_username(&create_request.username).await {
             Ok(Some(_)) => {
                 return Ok(HttpResponse::Conflict().json(ApiResponse::error_empty(
                     ErrorCode::Conflict,
@@ -117,7 +137,7 @@ impl AuthService {
         }
 
         // 2. 检查邮箱是否已存在
-        match self.storage.get_user_by_email(&create_request.email).await {
+        match storage.get_user_by_email(&create_request.email).await {
             Ok(Some(_)) => {
                 return Ok(HttpResponse::Conflict()
                     .json(ApiResponse::error_empty(ErrorCode::Conflict, "邮箱已存在")));
@@ -142,7 +162,7 @@ impl AuthService {
                 create_request.password = password_hash;
 
                 // 4. 创建用户
-                match self.storage.create_user(create_request).await {
+                match storage.create_user(create_request).await {
                     Ok(user) => {
                         Ok(HttpResponse::Created().json(ApiResponse::success(user, "注册成功")))
                     }
