@@ -7,15 +7,20 @@ use crate::api_models::{
     auth::{LoginRequest, LoginResponse},
     users::requests::CreateUserRequest,
 };
+use crate::cache::{ObjectCache, TypedObjectCache};
 use crate::storages::Storage;
 
 pub struct AuthService {
     storage: Option<Arc<dyn Storage>>,
+    cache: Option<Arc<dyn ObjectCache>>,
 }
 
 impl AuthService {
     pub fn new_lazy() -> Self {
-        Self { storage: None }
+        Self {
+            storage: None,
+            cache: None,
+        }
     }
 
     fn get_storage(&self, request: Option<&HttpRequest>) -> Arc<dyn Storage> {
@@ -31,6 +36,19 @@ impl AuthService {
         }
     }
 
+    fn get_cache(&self, request: Option<&HttpRequest>) -> Arc<dyn ObjectCache> {
+        if let Some(cache) = &self.cache {
+            cache.clone()
+        } else if let Some(req) = request {
+            req.app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
+                .expect("Cache not found in app data")
+                .get_ref()
+                .clone()
+        } else {
+            panic!("No cache available")
+        }
+    }
+
     // 登录验证
     pub async fn login(
         &self,
@@ -38,6 +56,8 @@ impl AuthService {
         request: Option<&HttpRequest>,
     ) -> ActixResult<HttpResponse> {
         let storage = self.get_storage(request);
+        let cache = self.get_cache(request);
+
         // 1. 根据用户名或邮箱获取用户信息
         match storage
             .get_user_by_username_or_email(&login_request.username)
@@ -55,6 +75,16 @@ impl AuthService {
                         user,
                         created_at: chrono::Utc::now(),
                     };
+
+                    // 4. 缓存 AccessToken (15分钟)
+                    cache
+                        .insert(
+                            response.access_token.clone(),
+                            response.user.clone(),
+                            900, // 设置缓存过期时间为15分钟
+                        )
+                        .await;
+
                     Ok(HttpResponse::Ok().json(ApiResponse::success(response, "登录成功")))
                 } else {
                     Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(

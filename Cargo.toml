@@ -44,3 +44,5 @@ serde_with = "3.14.0"
 base64 = "0.22.1"
 futures-util = "0.3.31"
 actix-cors = "0.7.1"
+dashmap = "6.1.0"
+moka = { version = "0.12.10", features = ["future"] }

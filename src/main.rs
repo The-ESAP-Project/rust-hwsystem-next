@@ -6,6 +6,7 @@ use std::env;
 use tracing::{debug, warn};
 
 mod api_models;
+mod cache;
 mod errors;
 mod models;
 mod routes;
@@ -46,6 +47,7 @@ async fn main() -> std::io::Result<()> {
     let startup = lifetime::startup::prepare_server_startup().await;
 
     let storage = startup.storage.clone();
+    let cache = startup.cache.clone();
 
     // 输出预处理时间
     debug!(
@@ -96,6 +98,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::QueryConfig::default().error_handler(query_error_handler)) // 设置查询参数错误处理器
             .app_data(web::JsonConfig::default().error_handler(json_error_handler)) // 设置JSON错误处理器
             .app_data(web::Data::new(storage.clone()))
+            .app_data(web::Data::new(cache.clone()))
             .app_data(web::Data::new(app_start_time.clone()))
             .app_data(web::PayloadConfig::new(1024 * 1024)) // 设置最大请求体大小为1MB
             .configure(routes::configure_auth_routes) // 配置认证相关路由
