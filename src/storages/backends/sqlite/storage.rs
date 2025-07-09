@@ -1,5 +1,4 @@
 use sqlx::{Row, SqlitePool, sqlite, sqlite::SqliteConnectOptions};
-use std::env;
 use tracing::warn;
 
 use super::migrations::SqliteMigrationManager;
@@ -13,6 +12,7 @@ use crate::api_models::{
 };
 use crate::errors::{HWSystemError, Result};
 use crate::storages::Storage;
+use crate::system::config::AppConfig;
 use async_trait::async_trait;
 
 // 注册 SQLite 存储插件
@@ -25,16 +25,17 @@ pub struct SqliteStorage {
 
 impl SqliteStorage {
     pub async fn new_async() -> Result<Self> {
-        let db_path = env::var("DATABASE_URL").unwrap_or_else(|_| "hwsystem.db".into());
+        let config = AppConfig::get();
+        let db_path = &config.database.url;
 
         // 创建连接池
         let pool = SqlitePool::connect_with(
             SqliteConnectOptions::new()
-                .filename(&db_path)
+                .filename(db_path)
                 .create_if_missing(true)
                 .journal_mode(sqlite::SqliteJournalMode::Wal)
                 .synchronous(sqlite::SqliteSynchronous::Normal)
-                .busy_timeout(std::time::Duration::from_secs(5))
+                .busy_timeout(std::time::Duration::from_secs(config.database.timeout))
                 .pragma("cache_size", "-64000")
                 .pragma("temp_store", "memory")
                 .pragma("mmap_size", "536870912")

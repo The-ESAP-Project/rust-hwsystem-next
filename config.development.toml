@@ -1,0 +1,21 @@
+# 开发环境配置
+
+[app]
+environment = "development"
+log_level = "debug"
+
+[server]
+host = "127.0.0.1"
+port = 3000
+
+[jwt]
+# 开发环境使用较短的过期时间便于测试
+access_token_expiry = 5
+refresh_token_expiry = 1
+
+[database]
+# 开发环境使用独立的数据库文件
+url = "hwsystem_dev.db"
+
+[cache]
+type = "moka"

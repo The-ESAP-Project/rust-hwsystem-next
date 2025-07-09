@@ -2,7 +2,6 @@ use actix_cors::Cors;
 use actix_web::middleware::{Compress, DefaultHeaders};
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
-use std::env;
 use tracing::{debug, warn};
 
 mod api_models;
@@ -16,8 +15,8 @@ mod storages;
 mod system;
 mod utils;
 
-use crate::models::{AppConfig, AppStartTime};
-use crate::system::lifetime;
+use crate::models::AppStartTime;
+use crate::system::{config::AppConfig, lifetime};
 use crate::utils::{json_error_handler, query_error_handler};
 
 #[actix_web::main]
@@ -32,12 +31,15 @@ async fn main() -> std::io::Result<()> {
     // 启动前预处理 //
 
     debug!("Starting pre-startup processing...");
+
+    // 初始化配置
+    AppConfig::init().expect("Failed to initialize configuration");
+    let config = AppConfig::get();
+
     // 初始化日志
     let stdout_log = std::io::stdout();
     let (non_blocking_writer, _guard) = tracing_appender::non_blocking(stdout_log);
-    let filter = tracing_subscriber::EnvFilter::new(
-        env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string()),
-    );
+    let filter = tracing_subscriber::EnvFilter::new(&config.app.log_level);
     tracing_subscriber::fmt()
         .with_writer(non_blocking_writer)
         .with_env_filter(filter)
@@ -60,24 +62,7 @@ async fn main() -> std::io::Result<()> {
 
     // 预处理完成 //
 
-    // Load env configurations
-    let config = AppConfig {
-        server_host: env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
-        server_port: env::var("SERVER_PORT")
-            .unwrap_or_else(|_| "8080".to_string())
-            .parse()
-            .unwrap(),
-        #[cfg(unix)]
-        unix_socket_path: env::var("UNIX_SOCKET").ok(),
-    };
-
-    let cpu_count = env::var("CPU_COUNT")
-        .unwrap_or_else(|_| num_cpus::get().to_string())
-        .parse::<usize>()
-        .unwrap_or_else(|_| num_cpus::get())
-        .min(32);
-
-    warn!("Using {} CPU cores for the server", cpu_count);
+    warn!("Using {} CPU cores for the server", config.server.workers);
 
     // Start the HTTP server
     let server = HttpServer::new(move || {
@@ -87,13 +72,16 @@ async fn main() -> std::io::Result<()> {
                     .allow_any_origin()
                     .allow_any_method()
                     .allow_any_header()
-                    .max_age(3600),
+                    .max_age(config.cors.max_age),
             )
             .wrap(Compress::default())
             .wrap(
                 DefaultHeaders::new()
                     .add(("Connection", "keep-alive"))
-                    .add(("Keep-Alive", "timeout=30, max=1000"))
+                    .add((
+                        "Keep-Alive",
+                        format!("timeout={}, max=1000", config.server.timeouts.keep_alive),
+                    ))
                     .add(("Cache-Control", "no-cache, no-store, must-revalidate")),
             )
             .app_data(web::QueryConfig::default().error_handler(query_error_handler)) // 设置查询参数错误处理器
@@ -101,26 +89,34 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(storage.clone()))
             .app_data(web::Data::new(cache.clone()))
             .app_data(web::Data::new(app_start_time.clone()))
-            .app_data(web::PayloadConfig::new(1024 * 1024)) // 设置最大请求体大小为1MB
+            .app_data(web::PayloadConfig::new(
+                config.server.limits.max_payload_size,
+            )) // 设置最大请求体大小
             .configure(routes::configure_auth_routes) // 配置认证相关路由
             .configure(routes::configure_user_routes)
     })
-    .keep_alive(std::time::Duration::from_secs(30)) // 启用长连接
-    .client_request_timeout(std::time::Duration::from_millis(5000)) // 客户端超时
-    .client_disconnect_timeout(std::time::Duration::from_millis(1000)) // 断连超时
-    .workers(cpu_count);
+    .keep_alive(std::time::Duration::from_secs(
+        config.server.timeouts.keep_alive,
+    )) // 启用长连接
+    .client_request_timeout(std::time::Duration::from_millis(
+        config.server.timeouts.client_request,
+    )) // 客户端超时
+    .client_disconnect_timeout(std::time::Duration::from_millis(
+        config.server.timeouts.client_disconnect,
+    )) // 断连超时
+    .workers(config.server.workers);
 
     let server = {
         #[cfg(unix)]
         {
-            if let Some(ref socket_path) = config.unix_socket_path {
+            if let Some(socket_path) = config.unix_socket_path() {
                 warn!("Starting server on Unix socket: {}", socket_path);
                 if std::path::Path::new(socket_path).exists() {
                     std::fs::remove_file(socket_path)?;
                 }
                 Some(server.bind_uds(socket_path)?)
             } else {
-                let bind_address = format!("{}:{}", config.server_host, config.server_port);
+                let bind_address = config.server_bind_address();
                 warn!("Starting server at http://{}", bind_address);
                 Some(server.bind(bind_address)?)
             }
@@ -128,7 +124,7 @@ async fn main() -> std::io::Result<()> {
 
         #[cfg(not(unix))]
         {
-            let bind_address = format!("{}:{}", config.server_host, config.server_port);
+            let bind_address = config.server_bind_address();
             warn!("Starting server at http://{}", bind_address);
             Some(server.bind(bind_address)?)
         }

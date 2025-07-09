@@ -1,0 +1,79 @@
+# 硬件系统配置文件
+
+[app]
+# 应用环境: development, production
+environment = "development"
+# 日志级别
+log_level = "info"
+
+[server]
+# 服务器主机地址
+host = "127.0.0.1"
+# 服务器端口
+port = 8080
+# Unix 套接字路径 (仅 Unix 系统)
+unix_socket_path = ""
+# 工作线程数 (0 表示自动检测 CPU 核心数)
+workers = 0
+# 最大工作线程数
+max_workers = 32
+
+[server.timeouts]
+# 客户端请求超时 (毫秒)
+client_request = 5000
+# 客户端断连超时 (毫秒)
+client_disconnect = 1000
+# Keep-Alive 超时 (秒)
+keep_alive = 30
+
+[server.limits]
+# 最大请求体大小 (字节)
+max_payload_size = 1048576  # 1MB
+
+[jwt]
+# JWT 密钥
+secret = "default_secret_key"
+# Access Token 有效期 (分钟)
+access_token_expiry = 15
+# Refresh Token 有效期 (天)
+refresh_token_expiry = 7
+
+[database]
+# 数据库后端: sqlite, postgres, mysql
+backend = "sqlite"
+# 数据库连接 URL
+url = "hwsystem.db"
+# 连接池大小
+pool_size = 10
+# 连接超时 (秒)
+timeout = 30
+
+[cache]
+# 缓存类型: moka, redis
+type = "moka"
+
+[cache.redis]
+# Redis 连接 URL
+url = "redis://127.0.0.1:6379/"
+# Redis 键前缀
+key_prefix = "hwsystem:"
+# 默认 TTL (秒)
+default_ttl = 3600
+# 连接池大小
+pool_size = 10
+
+[cache.memory]
+# 内存缓存大小限制 (moka)
+max_capacity = 10000
+# 默认 TTL (秒)
+default_ttl = 3600
+
+[cors]
+# 允许的源 (空数组表示允许所有)
+allowed_origins = []
+# 允许的方法
+allowed_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+# 允许的头部
+allowed_headers = ["*"]
+# 预检请求缓存时间 (秒)
+max_age = 3600

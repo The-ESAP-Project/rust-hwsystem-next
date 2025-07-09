@@ -1,7 +1,6 @@
 #[macro_use]
 mod macros;
 
-use std::env;
 use std::sync::Arc;
 use tracing::error;
 
@@ -11,6 +10,7 @@ use crate::api_models::users::{
     responses::UserListResponse,
 };
 use crate::errors::{HWSystemError, Result};
+use crate::system::config::AppConfig;
 
 pub mod backends;
 pub mod register;
@@ -34,9 +34,10 @@ pub struct StorageFactory;
 
 impl StorageFactory {
     pub async fn create() -> Result<Arc<dyn Storage>> {
-        let backend = env::var("STORAGE_BACKEND").unwrap_or_else(|_| "sqlite".into());
+        let config = AppConfig::get();
+        let backend = &config.database.backend;
 
-        if let Some(ctor) = get_storage_plugin(&backend) {
+        if let Some(ctor) = get_storage_plugin(backend) {
             let storage = ctor().await?;
             Ok(Arc::from(storage))
         } else {

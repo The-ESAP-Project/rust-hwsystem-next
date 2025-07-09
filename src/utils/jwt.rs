@@ -1,9 +1,7 @@
+use crate::system::config::AppConfig;
 use actix_web::cookie::{Cookie, SameSite};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
-use std::{env, sync::OnceLock};
-
-static JWT_SECRET: OnceLock<String> = OnceLock::new();
 
 // JWT Claims 结构体
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,11 +25,7 @@ pub struct JwtUtils;
 impl JwtUtils {
     // 获取 JWT 密钥
     fn get_secret() -> String {
-        JWT_SECRET
-            .get_or_init(|| {
-                env::var("JWT_SECRET").unwrap_or_else(|_| "default_secret_key".to_string())
-            })
-            .clone()
+        AppConfig::get().jwt.secret.clone()
     }
 
     // 生成 Access Token
@@ -39,7 +33,13 @@ impl JwtUtils {
         user_id: i64,
         role: &str,
     ) -> Result<String, jsonwebtoken::errors::Error> {
-        Self::generate_token_with_expiry(user_id, role, "access", chrono::Duration::minutes(15))
+        let config = AppConfig::get();
+        Self::generate_token_with_expiry(
+            user_id,
+            role,
+            "access",
+            chrono::Duration::minutes(config.jwt.access_token_expiry),
+        )
     }
 
     // 生成 Refresh Token
@@ -47,7 +47,13 @@ impl JwtUtils {
         user_id: i64,
         role: &str,
     ) -> Result<String, jsonwebtoken::errors::Error> {
-        Self::generate_token_with_expiry(user_id, role, "refresh", chrono::Duration::days(7))
+        let config = AppConfig::get();
+        Self::generate_token_with_expiry(
+            user_id,
+            role,
+            "refresh",
+            chrono::Duration::days(config.jwt.refresh_token_expiry),
+        )
     }
 
     // 生成带自定义过期时间的 Token
@@ -135,23 +141,27 @@ impl JwtUtils {
 
     /// 创建 Refresh Token Cookie
     pub fn create_refresh_token_cookie(refresh_token: &str) -> Cookie<'static> {
+        let config = AppConfig::get();
         Cookie::build("refresh_token", refresh_token.to_string())
             .path("/")
-            .max_age(actix_web::cookie::time::Duration::days(7))
+            .max_age(actix_web::cookie::time::Duration::days(
+                config.jwt.refresh_token_expiry,
+            ))
             .same_site(SameSite::Strict)
             .http_only(true)
-            .secure(Self::is_production()) // 生产环境下使用 HTTPS
+            .secure(config.is_production()) // 生产环境下使用 HTTPS
             .finish()
     }
 
     /// 创建空的 Refresh Token Cookie（用于注销）
     pub fn create_empty_refresh_token_cookie() -> Cookie<'static> {
+        let config = AppConfig::get();
         Cookie::build("refresh_token", "")
             .path("/")
             .max_age(actix_web::cookie::time::Duration::seconds(0))
             .same_site(SameSite::Strict)
             .http_only(true)
-            .secure(Self::is_production())
+            .secure(config.is_production())
             .finish()
     }
 
@@ -159,10 +169,5 @@ impl JwtUtils {
     pub fn extract_refresh_token_from_cookie(req: &actix_web::HttpRequest) -> Option<String> {
         req.cookie("refresh_token")
             .map(|cookie| cookie.value().to_string())
-    }
-
-    /// 检查是否为生产环境
-    fn is_production() -> bool {
-        env::var("APP_ENV").unwrap_or_else(|_| "development".to_string()) == "production"
     }
 }

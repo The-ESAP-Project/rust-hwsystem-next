@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use redis::{AsyncCommands, aio::MultiplexedConnection};
-use std::env;
 use tracing::{debug, error, warn};
 
 use crate::cache::{CacheResult, ObjectCache};
 use crate::declare_object_cache_plugin;
+use crate::system::config::AppConfig;
 
 declare_object_cache_plugin!("redis", RedisObjectCache);
 
@@ -16,21 +16,16 @@ pub struct RedisObjectCache {
 
 impl RedisObjectCache {
     pub fn new() -> Self {
-        let redis_url =
-            env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379/".to_string());
-        let key_prefix = env::var("REDIS_KEY_PREFIX").unwrap_or_else(|_| "hwsystem:".to_string());
-        let ttl = env::var("REDIS_TTL")
-            .unwrap_or_else(|_| "3600".to_string()) // 默认1小时
-            .parse()
-            .unwrap_or(3600);
+        let config = AppConfig::get();
+        let redis_config = &config.cache.redis;
 
         debug!(
             "RedisObjectCache created with prefix: '{}', TTL: {}s",
-            key_prefix, ttl
+            redis_config.key_prefix, redis_config.default_ttl
         );
 
-        let client = redis::Client::open(redis_url.clone())
-            .expect("Failed to create Redis client. Check REDIS_URL.");
+        let client = redis::Client::open(redis_config.url.clone())
+            .expect("Failed to create Redis client. Check Redis URL in config.");
 
         // 测试 Redis 连接 - 使用同步连接进行简单测试
         match client.get_connection() {
@@ -40,21 +35,23 @@ impl RedisObjectCache {
                 }
                 Err(e) => {
                     panic!(
-                        "Redis PING command failed: {e}. Check Redis server status and REDIS_URL: {redis_url}"
+                        "Redis PING command failed: {e}. Check Redis server status and URL: {}",
+                        redis_config.url
                     );
                 }
             },
             Err(e) => {
                 panic!(
-                    "Failed to connect to Redis: {e}. Check Redis server status and REDIS_URL: {redis_url}"
+                    "Failed to connect to Redis: {e}. Check Redis server status and URL: {}",
+                    redis_config.url
                 );
             }
         }
 
         Self {
             client,
-            key_prefix,
-            ttl,
+            key_prefix: redis_config.key_prefix.clone(),
+            ttl: redis_config.default_ttl,
         }
     }
 

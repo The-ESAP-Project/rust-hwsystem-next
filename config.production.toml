@@ -1,0 +1,28 @@
+# 生产环境配置
+
+[app]
+environment = "production"
+log_level = "warn"
+
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 0  # 自动检测
+
+[jwt]
+# 生产环境使用更安全的配置
+access_token_expiry = 15
+refresh_token_expiry = 7
+
+[database]
+# 生产环境配置
+url = "hwsystem.db"
+pool_size = 20
+timeout = 10
+
+[cache]
+type = "redis"
+
+[cache.redis]
+url = "redis://localhost:6379/"
+pool_size = 20

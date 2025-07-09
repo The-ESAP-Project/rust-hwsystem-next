@@ -43,6 +43,8 @@ use futures_util::future::{LocalBoxFuture, Ready, ready};
 use std::rc::Rc;
 use tracing::info;
 
+use crate::api_models::ErrorCode;
+
 #[derive(Clone)]
 pub struct RequireRole {
     required_roles: Vec<String>,
@@ -80,8 +82,9 @@ fn create_error_response(status: StatusCode, message: &str) -> HttpResponse {
     HttpResponse::build(status)
         .insert_header((CONTENT_TYPE, "application/json; charset=utf-8"))
         .json(serde_json::json!({
-            "code": status.as_u16(),
-            "data": { "error": message }
+            "code": ErrorCode::Unauthorized as i32,
+            "message": message,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
         }))
 }
 

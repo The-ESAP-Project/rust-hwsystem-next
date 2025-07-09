@@ -21,7 +21,6 @@ impl MokaCacheWrapper {
         let inner = Cache::builder()
             .max_capacity(10_000)
             .time_to_live(std::time::Duration::from_secs(900))
-            .time_to_idle(std::time::Duration::from_secs(300))
             .build();
         Self { inner }
     }

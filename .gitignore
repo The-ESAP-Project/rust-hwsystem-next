@@ -1,4 +1,4 @@
 /target
 .env
 .DS_Store
-hwsystem.db*
+hwsystem*.db*
