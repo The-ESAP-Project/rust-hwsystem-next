@@ -122,7 +122,7 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
             Ok(user) => Ok(user),
             Err(_) => Err("Invalid JWT claims format".to_string()),
         },
-        _ => Err("JWT token Expired".to_string()),
+        _ => Err("JWT token not found or expired".to_string()),
     }
 }
 

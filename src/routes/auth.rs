@@ -3,7 +3,7 @@ use once_cell::sync::Lazy;
 
 use crate::api_models::auth::requests::LoginRequest;
 use crate::api_models::users::requests::CreateUserRequest;
-use crate::middlewares::require_jwt::RequireJWT;
+use crate::middlewares;
 use crate::services::AuthService;
 
 // 懒加载的全局 AuthService 实例
@@ -36,7 +36,6 @@ pub async fn verify_token(request: HttpRequest) -> ActixResult<HttpResponse> {
 pub async fn get_user(request: HttpRequest) -> ActixResult<HttpResponse> {
     AUTH_SERVICE.get_user(request).await
 }
-
 // 配置路由
 pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -44,10 +43,11 @@ pub fn configure_auth_routes(cfg: &mut web::ServiceConfig) {
             .route("/login", web::post().to(login))
             .route("/register", web::post().to(register))
             .route("/refresh", web::post().to(refresh_token))
-            .route(
-                "/verify-token",
-                web::get().to(verify_token).wrap(RequireJWT),
-            )
-            .route("/me", web::get().to(get_user).wrap(RequireJWT)),
+            .service(
+                web::scope("")
+                    .wrap(middlewares::RequireJWT)
+                    .route("/verify-token", web::get().to(verify_token))
+                    .route("/me", web::get().to(get_user)),
+            ),
     );
 }
