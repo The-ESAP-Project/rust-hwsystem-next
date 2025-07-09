@@ -74,4 +74,11 @@ impl AuthService {
     pub async fn verify_token(&self, request: HttpRequest) -> ActixResult<HttpResponse> {
         token::handle_verify_token(self, request).await
     }
+
+    // 获取用户信息
+    pub async fn get_user(&self, request: HttpRequest) -> ActixResult<HttpResponse> {
+        // 这里可以实现获取用户信息的逻辑
+        // 例如从数据库或缓存中获取用户信息
+        token::handle_get_user(self, request).await
+    }
 }

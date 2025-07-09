@@ -62,7 +62,8 @@
  * 确保在环境变量中设置了 `JWT_SECRET`，JWT服务将使用此密钥来验证令牌。
  */
 
-use crate::utils::jwt::JwtUtils;
+use crate::api_models::{ErrorCode, users::entities};
+use crate::cache::{CacheResult, ObjectCache};
 use actix_service::{Service, Transform};
 use actix_web::{
     Error, HttpMessage, HttpResponse,
@@ -72,7 +73,7 @@ use actix_web::{
     http::header::CONTENT_TYPE,
 };
 use futures_util::future::{LocalBoxFuture, Ready, ready};
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 use tracing::{debug, info};
 
 const BEARER_PREFIX: &str = "Bearer ";
@@ -93,14 +94,15 @@ fn create_error_response(status: StatusCode, message: &str) -> HttpResponse {
         _ => HttpResponse::build(status)
             .insert_header((CONTENT_TYPE, "application/json; charset=utf-8"))
             .json(serde_json::json!({
-                "code": status.as_u16(),
-                "data": { "error": message }
+                "code": ErrorCode::Unauthorized as i32,
+                "message": message,
+                "timestamp": chrono::Utc::now().to_rfc3339(),
             })),
     }
 }
 
 // 辅助函数：提取并验证 JWT access token
-fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<crate::utils::jwt::Claims, String> {
+async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User, String> {
     let token = req
         .headers()
         .get(AUTHORIZATION_HEADER)
@@ -108,7 +110,20 @@ fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<crate::utils::jwt::C
         .and_then(|s| s.strip_prefix(BEARER_PREFIX))
         .ok_or_else(|| "Missing or invalid Authorization header".to_string())?;
 
-    JwtUtils::verify_access_token(token).map_err(|e| format!("Invalid JWT access token: {e}"))
+    let cache = req
+        .app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
+        .expect("Cache not found in app data")
+        .get_ref()
+        .clone();
+
+    let result = cache.get_raw(token).await;
+    match result {
+        CacheResult::Found(json) => match serde_json::from_str::<entities::User>(&json) {
+            Ok(user) => Ok(user),
+            Err(_) => Err("Invalid JWT claims format".to_string()),
+        },
+        _ => Err("JWT token Expired".to_string()),
+    }
 }
 
 impl<S, B> Transform<S, ServiceRequest> for RequireJWT
@@ -160,11 +175,11 @@ where
             }
 
             // 验证 JWT token
-            match extract_and_validate_jwt(&req) {
-                Ok(claims) => {
-                    debug!("JWT authentication successful for ID: {}", claims.sub);
+            match extract_and_validate_jwt(&req).await {
+                Ok(user) => {
+                    debug!("JWT authentication successful for ID: {}", user.id);
                     // 可以在这里将用户信息添加到请求扩展中，供后续处理程序使用
-                    req.extensions_mut().insert(claims);
+                    req.extensions_mut().insert(user);
                     let res = srv.call(req).await?.map_into_left_body();
                     Ok(res)
                 }
@@ -203,32 +218,30 @@ impl RequireJWT {
 
     /// 从请求扩展中提取用户Claims信息
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn extract_user_claims(req: &actix_web::HttpRequest) -> Option<crate::utils::jwt::Claims> {
-        req.extensions().get::<crate::utils::jwt::Claims>().cloned()
+    pub fn extract_user_claims(req: &actix_web::HttpRequest) -> Option<entities::User> {
+        req.extensions().get::<entities::User>().cloned()
     }
 
     /// 从请求扩展中提取用户ID
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn extract_user_id(req: &actix_web::HttpRequest) -> Option<i64> {
-        req.extensions()
-            .get::<crate::utils::jwt::Claims>()
-            .and_then(|claims| claims.sub.parse::<i64>().ok())
+        req.extensions().get::<entities::User>().map(|user| user.id)
     }
 
     /// 从请求扩展中提取用户角色
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn extract_user_role(req: &actix_web::HttpRequest) -> Option<String> {
         req.extensions()
-            .get::<crate::utils::jwt::Claims>()
-            .map(|claims| claims.role.clone())
+            .get::<entities::User>()
+            .map(|user| user.role.to_string())
     }
 
     /// 检查用户是否具有指定角色
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn has_role(req: &actix_web::HttpRequest, required_role: &str) -> bool {
         req.extensions()
-            .get::<crate::utils::jwt::Claims>()
-            .map(|claims| claims.role == required_role)
+            .get::<entities::User>()
+            .map(|user| user.role.to_string() == required_role)
             .unwrap_or(false)
     }
 
@@ -236,8 +249,8 @@ impl RequireJWT {
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn has_any_role(req: &actix_web::HttpRequest, roles: &[&str]) -> bool {
         req.extensions()
-            .get::<crate::utils::jwt::Claims>()
-            .map(|claims| roles.contains(&claims.role.as_str()))
+            .get::<entities::User>()
+            .map(|user| roles.contains(&user.role.to_string().as_str()))
             .unwrap_or(false)
     }
 }

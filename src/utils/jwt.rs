@@ -165,13 +165,4 @@ impl JwtUtils {
     fn is_production() -> bool {
         env::var("APP_ENV").unwrap_or_else(|_| "development".to_string()) == "production"
     }
-
-    // 提取 token 中的用户 ID
-    pub fn extract_user_id(token: &str) -> Result<i64, Box<dyn std::error::Error>> {
-        let claims = Self::verify_token(token)?;
-        claims
-            .sub
-            .parse::<i64>()
-            .map_err(|e| format!("Invalid user ID in token: {e}").into())
-    }
 }

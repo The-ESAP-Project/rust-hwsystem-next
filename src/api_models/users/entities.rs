@@ -117,7 +117,7 @@ pub struct User {
     pub id: i64,
     pub username: String,
     pub email: String,
-    #[serde(skip_serializing)] // 不序列化到JSON响应中
+    #[serde(skip_serializing, default)] // 不序列化到JSON响应中
     pub password_hash: String,
     pub role: UserRole,
     pub status: UserStatus,

@@ -50,16 +50,51 @@ pub async fn handle_verify_token(
     request: HttpRequest,
 ) -> ActixResult<HttpResponse> {
     // 从 Authorization header 中提取 token
-    // 这里应该从请求头中获取 token 并验证，暂时返回简单响应
     match RequireJWT::extract_access_token(&request) {
         Some(token) => {
             if jwt::JwtUtils::verify_token(&token).is_ok() {
-                Ok(HttpResponse::Ok().json(ApiResponse::success("令牌验证成功", "Token is valid")))
+                Ok(HttpResponse::Ok().json(ApiResponse::success_empty("Token is valid")))
             } else {
                 Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
                     crate::api_models::ErrorCode::Unauthorized,
                     "令牌无效",
                 )))
+            }
+        }
+        None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
+            crate::api_models::ErrorCode::Unauthorized,
+            "未提供令牌",
+        ))),
+    }
+}
+
+pub async fn handle_get_user(
+    service: &AuthService,
+    request: HttpRequest,
+) -> ActixResult<HttpResponse> {
+    // 从 Authorization header 中提取 token
+    match RequireJWT::extract_user_id(&request) {
+        Some(user_id) => {
+            // 这里可以实现获取用户信息的逻辑
+            // 例如从数据库或缓存中获取用户信息
+            let storage = service.get_storage(Some(&request));
+            match storage.get_user_by_id(user_id).await {
+                Ok(Some(user)) => {
+                    Ok(HttpResponse::Ok().json(ApiResponse::success(user, "用户信息获取成功")))
+                }
+                Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
+                    crate::api_models::ErrorCode::NotFound,
+                    "用户不存在",
+                ))),
+                Err(e) => {
+                    tracing::error!("获取用户信息失败: {}", e);
+                    Ok(
+                        HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+                            crate::api_models::ErrorCode::InternalServerError,
+                            "获取用户信息失败",
+                        )),
+                    )
+                }
             }
         }
         None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
