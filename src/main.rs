@@ -8,6 +8,7 @@ use tracing::{debug, warn};
 mod api_models;
 mod cache;
 mod errors;
+mod middlewares;
 mod models;
 mod routes;
 mod services;

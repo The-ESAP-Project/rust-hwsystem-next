@@ -28,8 +28,8 @@ pub async fn register(
         .await
 }
 
-pub async fn verify_token() -> ActixResult<HttpResponse> {
-    AUTH_SERVICE.verify_token().await
+pub async fn verify_token(request: HttpRequest) -> ActixResult<HttpResponse> {
+    AUTH_SERVICE.verify_token(request).await
 }
 
 // 配置路由

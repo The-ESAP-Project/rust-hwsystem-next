@@ -2121,6 +2121,7 @@ name = "rust-hwsystem-next"
 version = "0.0.1"
 dependencies = [
  "actix-cors",
+ "actix-service",
  "actix-web",
  "argon2",
  "async-trait",

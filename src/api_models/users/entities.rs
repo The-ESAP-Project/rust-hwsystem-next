@@ -129,13 +129,9 @@ pub struct User {
 
 impl User {
     // 生成访问令牌（使用真正的 JWT）
-    pub fn generate_access_token(&self) -> String {
-        // 使用 JwtUtils 生成 token
-        match crate::services::jwt::JwtUtils::generate_token(
-            self.id,
-            &self.username,
-            &self.role.to_string(),
-        ) {
+    pub async fn generate_access_token(&self) -> String {
+        // 使用 JwtUtils 生成 access token
+        match crate::utils::jwt::JwtUtils::generate_access_token(self.id, &self.role.to_string()) {
             Ok(token) => token,
             Err(e) => {
                 // 如果 JWT 生成失败，返回一个简单的 token（不推荐在生产环境中使用）
@@ -147,5 +143,26 @@ impl User {
                 )
             }
         }
+    }
+
+    // 生成刷新令牌
+    pub async fn generate_refresh_token(&self) -> String {
+        match crate::utils::jwt::JwtUtils::generate_refresh_token(self.id, &self.role.to_string()) {
+            Ok(token) => token,
+            Err(e) => {
+                tracing::error!("JWT refresh token 生成失败: {}", e);
+                format!(
+                    "fallback_refresh_token_{}_{}",
+                    self.id,
+                    chrono::Utc::now().timestamp()
+                )
+            }
+        }
+    }
+
+    // 生成 token 对（access + refresh）
+    pub async fn generate_token_pair(&self) -> Result<crate::utils::jwt::TokenPair, String> {
+        crate::utils::jwt::JwtUtils::generate_token_pair(self.id, &self.role.to_string())
+            .map_err(|e| format!("生成 token 对失败: {e}"))
     }
 }
