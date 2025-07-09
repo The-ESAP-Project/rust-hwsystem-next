@@ -1,4 +1,4 @@
-use crate::system::config::AppConfig;
+use crate::system::app_config::AppConfig;
 use actix_web::cookie::{Cookie, SameSite};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
@@ -46,14 +46,18 @@ impl JwtUtils {
     pub fn generate_refresh_token(
         user_id: i64,
         role: &str,
+        token_expiry: Option<chrono::Duration>,
     ) -> Result<String, jsonwebtoken::errors::Error> {
         let config = AppConfig::get();
-        Self::generate_token_with_expiry(
-            user_id,
-            role,
-            "refresh",
-            chrono::Duration::days(config.jwt.refresh_token_expiry),
-        )
+        match token_expiry {
+            Some(expiry) => Self::generate_token_with_expiry(user_id, role, "refresh", expiry),
+            None => Self::generate_token_with_expiry(
+                user_id,
+                role,
+                "refresh",
+                chrono::Duration::days(config.jwt.refresh_token_expiry),
+            ),
+        }
     }
 
     // 生成带自定义过期时间的 Token
@@ -84,9 +88,10 @@ impl JwtUtils {
     pub fn generate_token_pair(
         user_id: i64,
         role: &str,
+        refresh_token_expiry: Option<chrono::Duration>,
     ) -> Result<TokenPair, jsonwebtoken::errors::Error> {
         let access_token = Self::generate_access_token(user_id, role)?;
-        let refresh_token = Self::generate_refresh_token(user_id, role)?;
+        let refresh_token = Self::generate_refresh_token(user_id, role, refresh_token_expiry)?;
 
         Ok(TokenPair {
             access_token,

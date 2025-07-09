@@ -3,6 +3,7 @@ use moka::future::Cache;
 
 use crate::cache::{CacheResult, ObjectCache};
 use crate::declare_object_cache_plugin;
+use crate::system::app_config::AppConfig;
 
 declare_object_cache_plugin!("moka", MokaCacheWrapper);
 
@@ -18,9 +19,12 @@ impl Default for MokaCacheWrapper {
 
 impl MokaCacheWrapper {
     pub fn new() -> Self {
+        let config = AppConfig::get();
         let inner = Cache::builder()
-            .max_capacity(10_000)
-            .time_to_live(std::time::Duration::from_secs(900))
+            .max_capacity(config.cache.memory.max_capacity)
+            .time_to_live(std::time::Duration::from_secs(
+                (config.jwt.access_token_expiry * 60) as u64,
+            ))
             .build();
         Self { inner }
     }

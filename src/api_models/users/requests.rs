@@ -26,6 +26,7 @@ pub struct CreateUserRequest {
 #[derive(Debug, Deserialize)]
 pub struct UpdateUserRequest {
     pub email: Option<String>,
+    pub password: Option<String>,
     pub role: Option<UserRole>,
     pub status: Option<UserStatus>,
     pub profile: Option<UserProfile>,

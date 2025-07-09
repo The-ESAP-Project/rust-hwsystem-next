@@ -6,7 +6,7 @@ use crate::api_models::{ApiResponse, ErrorCode};
 pub async fn get_user(
     service: &UserService,
     user_id: i64,
-    request: Option<&HttpRequest>,
+    request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 

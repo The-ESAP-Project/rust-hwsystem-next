@@ -146,8 +146,15 @@ impl User {
     }
 
     // 生成刷新令牌
-    pub async fn generate_refresh_token(&self) -> String {
-        match crate::utils::jwt::JwtUtils::generate_refresh_token(self.id, &self.role.to_string()) {
+    pub async fn generate_refresh_token(
+        &self,
+        refresh_token_expiry: Option<chrono::TimeDelta>,
+    ) -> String {
+        match crate::utils::jwt::JwtUtils::generate_refresh_token(
+            self.id,
+            &self.role.to_string(),
+            refresh_token_expiry,
+        ) {
             Ok(token) => token,
             Err(e) => {
                 tracing::error!("JWT refresh token 生成失败: {}", e);
@@ -161,8 +168,15 @@ impl User {
     }
 
     // 生成 token 对（access + refresh）
-    pub async fn generate_token_pair(&self) -> Result<crate::utils::jwt::TokenPair, String> {
-        crate::utils::jwt::JwtUtils::generate_token_pair(self.id, &self.role.to_string())
-            .map_err(|e| format!("生成 token 对失败: {e}"))
+    pub async fn generate_token_pair(
+        &self,
+        refresh_token_expiry: Option<chrono::TimeDelta>,
+    ) -> Result<crate::utils::jwt::TokenPair, String> {
+        crate::utils::jwt::JwtUtils::generate_token_pair(
+            self.id,
+            &self.role.to_string(),
+            refresh_token_expiry,
+        )
+        .map_err(|e| format!("生成 token 对失败: {e}"))
     }
 }

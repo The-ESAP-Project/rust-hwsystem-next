@@ -9,7 +9,7 @@ use crate::api_models::{
 pub async fn list_users(
     service: &UserService,
     query: UserQueryParams,
-    request: Option<&HttpRequest>,
+    request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 

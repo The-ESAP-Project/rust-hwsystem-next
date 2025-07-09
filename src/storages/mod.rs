@@ -10,7 +10,7 @@ use crate::api_models::users::{
     responses::UserListResponse,
 };
 use crate::errors::{HWSystemError, Result};
-use crate::system::config::AppConfig;
+use crate::system::app_config::AppConfig;
 
 pub mod backends;
 pub mod register;

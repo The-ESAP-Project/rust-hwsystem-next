@@ -19,16 +19,15 @@ impl UserService {
         Self { storage: None }
     }
 
-    pub(crate) fn get_storage(&self, request: Option<&HttpRequest>) -> Arc<dyn Storage> {
+    pub(crate) fn get_storage(&self, request: &HttpRequest) -> Arc<dyn Storage> {
         if let Some(storage) = &self.storage {
             storage.clone()
-        } else if let Some(req) = request {
-            req.app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
+        } else {
+            request
+                .app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
                 .expect("Storage not found in app data")
                 .get_ref()
                 .clone()
-        } else {
-            panic!("No storage available")
         }
     }
 
@@ -36,7 +35,7 @@ impl UserService {
     pub async fn list_users(
         &self,
         query: UserQueryParams,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         list::list_users(self, query, request).await
     }
@@ -45,17 +44,13 @@ impl UserService {
     pub async fn create_user(
         &self,
         user_data: CreateUserRequest,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         create::create_user(self, user_data, request).await
     }
 
     // 根据ID获取用户
-    pub async fn get_user(
-        &self,
-        user_id: i64,
-        request: Option<&HttpRequest>,
-    ) -> ActixResult<HttpResponse> {
+    pub async fn get_user(&self, user_id: i64, request: &HttpRequest) -> ActixResult<HttpResponse> {
         get::get_user(self, user_id, request).await
     }
 
@@ -64,7 +59,7 @@ impl UserService {
         &self,
         user_id: i64,
         update_data: UpdateUserRequest,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         update::update_user(self, user_id, update_data, request).await
     }
@@ -73,7 +68,7 @@ impl UserService {
     pub async fn delete_user(
         &self,
         user_id: i64,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         delete::delete_user(self, user_id, request).await
     }

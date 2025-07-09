@@ -4,7 +4,7 @@ use tracing::{debug, error, warn};
 
 use crate::cache::{CacheResult, ObjectCache};
 use crate::declare_object_cache_plugin;
-use crate::system::config::AppConfig;
+use crate::system::app_config::AppConfig;
 
 declare_object_cache_plugin!("redis", RedisObjectCache);
 

@@ -48,3 +48,5 @@ dashmap = "6.1.0"
 moka = { version = "0.12.10", features = ["future"] }
 actix-service = "2.0.3"
 config = "0.15.12"
+regex = "1.11.1"
+futures = "0.3.31"

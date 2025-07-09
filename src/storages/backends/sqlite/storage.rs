@@ -12,7 +12,7 @@ use crate::api_models::{
 };
 use crate::errors::{HWSystemError, Result};
 use crate::storages::Storage;
-use crate::system::config::AppConfig;
+use crate::system::app_config::AppConfig;
 use async_trait::async_trait;
 
 // 注册 SQLite 存储插件
@@ -289,7 +289,7 @@ impl Storage for SqliteStorage {
 
         // 查询数据
         let data_sql = format!(
-            "SELECT id, username, email, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+            "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
              FROM users{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
         );
 
@@ -350,6 +350,11 @@ impl Storage for SqliteStorage {
             params.push(email.clone());
         }
 
+        if let Some(password) = &update.password {
+            updates.push("password_hash = ?");
+            params.push(password.clone());
+        }
+
         if let Some(role) = &update.role {
             updates.push("role = ?");
             params.push(role.to_string());
@@ -376,8 +381,10 @@ impl Storage for SqliteStorage {
             return self.get_user_by_id(id).await;
         }
 
-        updates.push("updated_at = ?");
-        params.push(now.to_rfc3339());
+        // TODO: 保存应该为 Int 而不是 RFC3389
+        let update_at_query = format!("uptate_at = {}", now.timestamp());
+
+        updates.push(&update_at_query);
 
         let sql = format!("UPDATE users SET {} WHERE id = ?", updates.join(", "));
         params.push(id.to_string());

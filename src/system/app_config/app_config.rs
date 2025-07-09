@@ -54,6 +54,7 @@ pub struct JwtConfig {
     pub secret: String,
     pub access_token_expiry: i64,
     pub refresh_token_expiry: i64,
+    pub refresh_token_remember_me_expiry: i64,
 }
 
 /// 数据库配置

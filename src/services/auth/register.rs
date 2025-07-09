@@ -9,7 +9,7 @@ use super::AuthService;
 pub async fn handle_register(
     service: &AuthService,
     mut create_request: CreateUserRequest,
-    request: Option<&HttpRequest>,
+    request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 

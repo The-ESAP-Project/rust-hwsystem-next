@@ -1,5 +1,4 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
 
 use crate::api_models::{
     ApiResponse, ErrorCode,
@@ -7,16 +6,18 @@ use crate::api_models::{
 };
 use crate::cache::traits::TypedObjectCache;
 use crate::utils::jwt;
+use crate::utils::password::verify_password;
 
 use super::AuthService;
 
 pub async fn handle_login(
     service: &AuthService,
     login_request: LoginRequest,
-    request: Option<&HttpRequest>,
+    request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
     let cache = service.get_cache(request);
+    let config = service.get_config();
 
     // 1. 根据用户名或邮箱获取用户信息
     match storage
@@ -30,14 +31,19 @@ pub async fn handle_login(
                 let _ = storage.update_last_login(user.id).await;
 
                 // 4. 生成令牌对
-                match user.generate_token_pair().await {
+                match user
+                    .generate_token_pair(login_request.remember_me.then(|| {
+                        chrono::Duration::days(config.jwt.refresh_token_remember_me_expiry)
+                    }))
+                    .await
+                {
                     Ok(token_pair) => {
                         // 生成 Access Token 和 Refresh Token 成功
                         tracing::info!("用户 {} 登录成功", user.username);
 
                         let response = LoginResponse {
                             access_token: token_pair.access_token,
-                            expires_in: 900, // 设置过期时间为15分钟
+                            expires_in: config.jwt.access_token_expiry * 60, // 转换为秒
                             user,
                             created_at: chrono::Utc::now(),
                         };
@@ -47,7 +53,7 @@ pub async fn handle_login(
                             .insert(
                                 response.access_token.clone(),
                                 response.user.clone(),
-                                900, // 设置缓存过期时间为15分钟
+                                (config.jwt.access_token_expiry * 60) as u32,
                             )
                             .await;
 
@@ -86,15 +92,5 @@ pub async fn handle_login(
                 format!("登录失败: {e}"),
             )),
         ),
-    }
-}
-
-// 验证密码
-fn verify_password(password: &str, hash: &str) -> bool {
-    match PasswordHash::new(hash) {
-        Ok(parsed_hash) => Argon2::default()
-            .verify_password(password.as_bytes(), &parsed_hash)
-            .is_ok(),
-        Err(_) => false,
     }
 }

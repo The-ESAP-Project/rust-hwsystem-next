@@ -43,7 +43,10 @@ use futures_util::future::{LocalBoxFuture, Ready, ready};
 use std::rc::Rc;
 use tracing::info;
 
-use crate::api_models::ErrorCode;
+use crate::{
+    api_models::{ErrorCode, users::entities},
+    middlewares::RequireJWT,
+};
 
 #[derive(Clone)]
 pub struct RequireRole {
@@ -137,18 +140,22 @@ where
 
         Box::pin(async move {
             // 从请求扩展中获取用户Claims
-            let user_claims = req.extensions().get::<crate::utils::jwt::Claims>().cloned();
+            let user_claims = req.extensions().get::<entities::User>().cloned();
 
             match user_claims {
                 Some(claims) => {
-                    let user_sub = claims.sub.clone();
-                    let user_role = &claims.role;
+                    let user_sub = claims.id;
+                    let user_role = RequireJWT::extract_user_role(req.request());
                     let has_permission = if require_all {
                         // 需要所有角色（通常用于单一角色验证）
-                        required_roles.iter().all(|role| user_role == role)
+                        required_roles
+                            .iter()
+                            .all(|role| user_role.as_deref() == Some(role.as_str()))
                     } else {
                         // 需要任一角色
-                        required_roles.iter().any(|role| user_role == role)
+                        required_roles
+                            .iter()
+                            .any(|role| user_role.as_deref() == Some(role.as_str()))
                     };
 
                     if has_permission {
@@ -156,15 +163,12 @@ where
                         Ok(res)
                     } else {
                         info!(
-                            "Access denied for user {} (role: {}). Required roles: {:?}",
+                            "Access denied for user {} (role: {:?}). Required roles: {:?}",
                             user_sub, user_role, required_roles
                         );
                         Ok(req.into_response(
-                            create_error_response(
-                                StatusCode::FORBIDDEN,
-                                &format!("Access denied. Required role(s): {required_roles:?}"),
-                            )
-                            .map_into_right_body(),
+                            create_error_response(StatusCode::FORBIDDEN, "Access denied.")
+                                .map_into_right_body(),
                         ))
                     }
                 }

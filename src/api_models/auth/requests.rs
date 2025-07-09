@@ -7,4 +7,7 @@ pub struct LoginRequest {
     pub username: String,
     /// 密码
     pub password: String,
+    /// 是否记住我
+    #[serde(default)]
+    pub remember_me: bool,
 }

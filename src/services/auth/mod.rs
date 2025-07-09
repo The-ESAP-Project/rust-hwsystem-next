@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use crate::cache::ObjectCache;
 use crate::storages::Storage;
+use crate::system::app_config::AppConfig;
 
 pub struct AuthService {
     storage: Option<Arc<dyn Storage>>,
@@ -21,37 +22,39 @@ impl AuthService {
         }
     }
 
-    pub(crate) fn get_storage(&self, request: Option<&HttpRequest>) -> Arc<dyn Storage> {
+    pub(crate) fn get_storage(&self, request: &HttpRequest) -> Arc<dyn Storage> {
         if let Some(storage) = &self.storage {
             storage.clone()
-        } else if let Some(req) = request {
-            req.app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
+        } else {
+            request
+                .app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
                 .expect("Storage not found in app data")
                 .get_ref()
                 .clone()
-        } else {
-            panic!("No storage available")
         }
     }
 
-    pub(crate) fn get_cache(&self, request: Option<&HttpRequest>) -> Arc<dyn ObjectCache> {
+    pub(crate) fn get_cache(&self, request: &HttpRequest) -> Arc<dyn ObjectCache> {
         if let Some(cache) = &self.cache {
             cache.clone()
-        } else if let Some(req) = request {
-            req.app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
+        } else {
+            request
+                .app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
                 .expect("Cache not found in app data")
                 .get_ref()
                 .clone()
-        } else {
-            panic!("No cache available")
         }
+    }
+
+    pub(crate) fn get_config(&self) -> &AppConfig {
+        AppConfig::get()
     }
 
     // 登录验证
     pub async fn login(
         &self,
         login_request: crate::api_models::auth::LoginRequest,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         login::handle_login(self, login_request, request).await
     }
@@ -60,23 +63,23 @@ impl AuthService {
     pub async fn register(
         &self,
         create_request: crate::api_models::users::requests::CreateUserRequest,
-        request: Option<&HttpRequest>,
+        request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         register::handle_register(self, create_request, request).await
     }
 
     // 刷新令牌
-    pub async fn refresh_token(&self, request: HttpRequest) -> ActixResult<HttpResponse> {
+    pub async fn refresh_token(&self, request: &HttpRequest) -> ActixResult<HttpResponse> {
         token::handle_refresh_token(self, request).await
     }
 
     // 验证令牌
-    pub async fn verify_token(&self, request: HttpRequest) -> ActixResult<HttpResponse> {
+    pub async fn verify_token(&self, request: &HttpRequest) -> ActixResult<HttpResponse> {
         token::handle_verify_token(self, request).await
     }
 
     // 获取用户信息
-    pub async fn get_user(&self, request: HttpRequest) -> ActixResult<HttpResponse> {
+    pub async fn get_user(&self, request: &HttpRequest) -> ActixResult<HttpResponse> {
         // 这里可以实现获取用户信息的逻辑
         // 例如从数据库或缓存中获取用户信息
         token::handle_get_user(self, request).await

@@ -16,7 +16,7 @@ mod system;
 mod utils;
 
 use crate::models::AppStartTime;
-use crate::system::{config::AppConfig, lifetime};
+use crate::system::{app_config::AppConfig, lifetime};
 use crate::utils::{json_error_handler, query_error_handler};
 
 #[actix_web::main]
