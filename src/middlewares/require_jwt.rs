@@ -63,7 +63,7 @@
  */
 
 use crate::api_models::{ErrorCode, users::entities};
-use crate::cache::{CacheResult, ObjectCache};
+use crate::storages::Storage;
 use actix_service::{Service, Transform};
 use actix_web::{
     Error, HttpMessage, HttpResponse,
@@ -110,20 +110,38 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
         .and_then(|s| s.strip_prefix(BEARER_PREFIX))
         .ok_or_else(|| "Missing or invalid Authorization header".to_string())?;
 
-    let cache = req
-        .app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
-        .expect("Cache not found in app data")
+    crate::utils::jwt::JwtUtils::verify_access_token(token).map_err(|err| {
+        info!("JWT token validation failed: {}", err);
+        "Invalid JWT token".to_string()
+    })?;
+
+    let storage = req
+        .app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
+        .expect("Storage not found in app data")
         .get_ref()
         .clone();
 
-    let result = cache.get_raw(token).await;
-    match result {
-        CacheResult::Found(json) => match serde_json::from_str::<entities::User>(&json) {
-            Ok(user) => Ok(user),
-            Err(_) => Err("Invalid JWT claims format".to_string()),
-        },
-        _ => Err("JWT token not found or expired".to_string()),
+    let claims = crate::utils::jwt::JwtUtils::decode_token(token).map_err(|err| {
+        info!("Failed to decode JWT token: {}", err);
+        "Invalid JWT token format".to_string()
+    })?;
+
+    let user_id = claims
+        .sub
+        .parse::<i64>()
+        .map_err(|_| "Invalid user ID in JWT".to_string())?;
+
+    let user = storage
+        .get_user_by_id(user_id)
+        .await
+        .map_err(|_| "Failed to retrieve user from storage".to_string())?
+        .ok_or_else(|| "User not found".to_string())?;
+
+    if user.status != entities::UserStatus::Active {
+        return Err("User is not active".to_string());
     }
+
+    Ok(user)
 }
 
 impl<S, B> Transform<S, ServiceRequest> for RequireJWT
@@ -204,18 +222,6 @@ where
 
 // 辅助函数：从请求中提取用户信息
 impl RequireJWT {
-    /// 从请求扩展中获取用户的 Access Token
-    /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn extract_access_token(req: &actix_web::HttpRequest) -> Option<String> {
-        req.headers()
-            .get(AUTHORIZATION_HEADER)
-            .and_then(|header| header.to_str().ok())
-            .and_then(|auth| {
-                auth.strip_prefix(BEARER_PREFIX)
-                    .map(|token| token.to_string())
-            })
-    }
-
     /// 从请求扩展中提取用户Claims信息
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn extract_user_claims(req: &actix_web::HttpRequest) -> Option<entities::User> {

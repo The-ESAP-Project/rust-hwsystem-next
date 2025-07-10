@@ -4,7 +4,6 @@ use crate::api_models::{
     ApiResponse, ErrorCode,
     auth::{LoginRequest, LoginResponse},
 };
-use crate::cache::traits::TypedObjectCache;
 use crate::utils::jwt;
 use crate::utils::password::verify_password;
 
@@ -16,7 +15,6 @@ pub async fn handle_login(
     request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
-    let cache = service.get_cache(request);
     let config = service.get_config();
 
     // 1. 根据用户名或邮箱获取用户信息
@@ -47,15 +45,6 @@ pub async fn handle_login(
                             user,
                             created_at: chrono::Utc::now(),
                         };
-
-                        // 5. 缓存 AccessToken (15分钟)
-                        cache
-                            .insert(
-                                response.access_token.clone(),
-                                response.user.clone(),
-                                (config.jwt.access_token_expiry * 60) as u32,
-                            )
-                            .await;
 
                         // 6. 创建 refresh token cookie
                         let refresh_cookie =

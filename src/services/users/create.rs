@@ -11,6 +11,14 @@ pub async fn create_user(
     mut user_data: CreateUserRequest,
     request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
+    // 用户名长度校验：5 <= x <= 16
+    if user_data.username.len() < 5 || user_data.username.len() > 16 {
+        return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
+            ErrorCode::BadRequest,
+            "Username length must be between 5 and 16 characters",
+        )));
+    }
+
     // 用户名校验：只允许英文、-、_
     let username_re = Regex::new(r"^[A-Za-z0-9_-]+$").unwrap();
     if !username_re.is_match(&user_data.username) {

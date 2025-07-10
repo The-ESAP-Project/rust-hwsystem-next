@@ -132,6 +132,14 @@ impl JwtUtils {
         Self::verify_token_type(token, "refresh")
     }
 
+    pub fn decode_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+        let secret = Self::get_secret();
+        let decoding_key = DecodingKey::from_secret(secret.as_ref());
+        let validation = Validation::default();
+
+        decode::<Claims>(token, &decoding_key, &validation).map(|token_data| token_data.claims)
+    }
+
     // 使用 Refresh Token 生成新的 Access Token
     pub fn refresh_access_token(
         refresh_token: &str,
