@@ -14,10 +14,10 @@ impl FromRequest for SafeI64 {
             Err(_) => {
                 let resp = crate::api_models::common::response::ApiResponse::<()>::error_empty(
                     crate::api_models::ErrorCode::BadRequest,
-                    "User ID format error, please provide a valid numeric ID.",
+                    "ID format error, please provide a valid numeric ID.",
                 );
                 ready(Err(actix_web::error::InternalError::from_response(
-                    "Invalid User ID",
+                    "Invalid ID",
                     HttpResponse::BadRequest().json(resp),
                 )
                 .into()))
