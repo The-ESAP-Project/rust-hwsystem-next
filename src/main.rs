@@ -93,7 +93,8 @@ async fn main() -> std::io::Result<()> {
                 config.server.limits.max_payload_size,
             )) // 设置最大请求体大小
             .configure(routes::configure_auth_routes) // 配置认证相关路由
-            .configure(routes::configure_user_routes)
+            .configure(routes::configure_user_routes) // 配置用户相关路由
+            .configure(routes::configure_file_routes) // 配置文件相关路由
     })
     .keep_alive(std::time::Duration::from_secs(
         config.server.timeouts.keep_alive,
