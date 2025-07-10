@@ -4,10 +4,13 @@ mod macros;
 use std::sync::Arc;
 use tracing::error;
 
-use crate::api_models::users::{
-    entities::User,
-    requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
-    responses::UserListResponse,
+use crate::api_models::{
+    files::entities::File,
+    users::{
+        entities::User,
+        requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
+        responses::UserListResponse,
+    },
 };
 use crate::errors::{HWSystemError, Result};
 use crate::system::app_config::AppConfig;
@@ -28,6 +31,17 @@ pub trait Storage: Send + Sync {
     async fn update_user(&self, id: i64, update: UpdateUserRequest) -> Result<Option<User>>;
     async fn delete_user(&self, id: i64) -> Result<bool>;
     async fn update_last_login(&self, id: i64) -> Result<bool>;
+
+    // 文件管理方法
+    async fn upload_file(
+        &self,
+        unique_name: &str,
+        file_name: &str,
+        file_size: &i64,
+        file_type: &str,
+        user_id: i64,
+    ) -> Result<File>;
+    async fn get_file_by_id(&self, file_id: i64) -> Result<Option<File>>;
 }
 
 pub struct StorageFactory;

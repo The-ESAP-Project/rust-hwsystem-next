@@ -146,6 +146,17 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     updated_at INTEGER NOT NULL
                 );
 
+                CREATE TABLE files (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    unique_name TEXT NOT NULL UNIQUE,
+                    file_name TEXT NOT NULL,
+                    file_size INTEGER NOT NULL,
+                    file_type TEXT NOT NULL,
+                    uploaded_at INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                );
+
                 -- 插入初始管理员用户 (用户名: admin, 密码: admin123)
                 INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at)
                 VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', '000001', 'Admin', NULL, NULL, 1704067200, 1704067200);

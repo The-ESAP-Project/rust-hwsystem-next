@@ -1,3 +1,4 @@
+pub mod file;
 pub mod storage_impl;
 pub mod user;
 
