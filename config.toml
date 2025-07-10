@@ -79,3 +79,8 @@ allowed_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 allowed_headers = ["*"]
 # 预检请求缓存时间 (秒)
 max_age = 3600
+
+[upload]
+dir = "uploads"
+max_size = 10485760 # 10MB
+allowed_types = ["image/png", "image/jpeg", "application/pdf"]

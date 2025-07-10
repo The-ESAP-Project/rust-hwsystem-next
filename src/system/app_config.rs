@@ -13,6 +13,7 @@ pub struct AppConfig {
     pub database: DatabaseConfig,
     pub cache: CacheConfig,
     pub cors: CorsConfig,
+    pub upload: UploadConfig,
 }
 
 /// 应用设置
@@ -98,6 +99,13 @@ pub struct CorsConfig {
     pub allowed_methods: Vec<String>,
     pub allowed_headers: Vec<String>,
     pub max_age: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UploadConfig {
+    pub dir: String,                // 上传目录
+    pub max_size: usize,            // 单文件最大字节数
+    pub allowed_types: Vec<String>, // 允许的MIME类型或扩展名
 }
 
 impl AppConfig {

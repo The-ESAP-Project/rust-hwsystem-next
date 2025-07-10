@@ -1,5 +1,5 @@
-// 登录请求模型
-pub mod requests;
+// 文件实体模型
+pub mod entities;
 
-// 登录响应模型
+// 文件响应模型
 pub mod responses;

@@ -1,11 +1,14 @@
 use super::SqliteStorage;
-use crate::api_models::users::{
-    entities::User,
-    requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
-    responses::UserListResponse,
+use crate::api_models::{
+    files::entities::File,
+    users::{
+        entities::User,
+        requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
+        responses::UserListResponse,
+    },
 };
 
-use super::user;
+use super::{file, user};
 use crate::errors::Result;
 use crate::storages::Storage;
 use async_trait::async_trait;
@@ -47,5 +50,23 @@ impl Storage for SqliteStorage {
 
     async fn delete_user(&self, id: i64) -> Result<bool> {
         user::delete_user(self, id).await
+    }
+
+    /// 文件模块
+    async fn upload_file(
+        &self,
+        unique_name: &str,
+        file_name: &str,
+        file_size: &i64,
+        file_type: &str,
+        user_id: i64,
+    ) -> Result<File> {
+        // 文件上传逻辑
+        file::upload_file(self, unique_name, file_name, file_size, file_type, user_id).await
+    }
+
+    async fn get_file_by_id(&self, file_id: i64) -> Result<Option<File>> {
+        // 获取文件逻辑
+        file::get_file_by_id(self, file_id).await
     }
 }

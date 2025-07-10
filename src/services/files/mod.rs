@@ -1,6 +1,7 @@
 pub mod download;
 pub mod upload;
 
+use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
@@ -28,8 +29,12 @@ impl FileService {
     }
 
     // Handle file upload
-    pub async fn handle_upload(&self, request: &HttpRequest) -> ActixResult<HttpResponse> {
-        upload::handle_upload(self, request).await
+    pub async fn handle_upload(
+        &self,
+        request: &HttpRequest,
+        payload: Multipart,
+    ) -> ActixResult<HttpResponse> {
+        upload::handle_upload(self, request, payload).await
     }
 
     // Handle file download

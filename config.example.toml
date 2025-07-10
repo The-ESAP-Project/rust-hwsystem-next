@@ -85,6 +85,15 @@ allowed_headers = ["*"]
 # 预检请求缓存时间 (秒)
 max_age = 3600
 
+[upload]
+# 文件上传配置
+# 上传目录 (相对于项目根目录)
+dir = "uploads"
+# 单文件最大字节数
+max_size = 10485760 # 10MB
+# 允许的 MIME 类型或扩展名
+allowed_types = ["image/png", "image/jpeg", "application/pdf"]
+
 # 环境变量覆盖说明:
 # 任何配置项都可以通过环境变量覆盖，格式为 HWSYSTEM_{SECTION}_{KEY}
 # 例如：
