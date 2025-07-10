@@ -48,25 +48,9 @@ pub async fn handle_refresh_token(
 
 pub async fn handle_verify_token(
     _service: &AuthService,
-    request: &HttpRequest,
+    _request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
-    // 从 Authorization header 中提取 token
-    match RequireJWT::extract_access_token(request) {
-        Some(token) => {
-            if jwt::JwtUtils::verify_token(&token).is_ok() {
-                Ok(HttpResponse::Ok().json(ApiResponse::success_empty("Token is valid")))
-            } else {
-                Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-                    crate::api_models::ErrorCode::Unauthorized,
-                    "令牌无效",
-                )))
-            }
-        }
-        None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-            crate::api_models::ErrorCode::Unauthorized,
-            "未提供令牌",
-        ))),
-    }
+    Ok(HttpResponse::Ok().json(ApiResponse::success_empty("Token is valid")))
 }
 
 pub async fn handle_get_user(
@@ -76,8 +60,7 @@ pub async fn handle_get_user(
     // 从 Authorization header 中提取 token
     match RequireJWT::extract_user_id(request) {
         Some(user_id) => {
-            // 这里可以实现获取用户信息的逻辑
-            // 例如从数据库或缓存中获取用户信息
+            // 从数据库中获取用户信息
             let storage = service.get_storage(request);
             match storage.get_user_by_id(user_id).await {
                 Ok(Some(user)) => {

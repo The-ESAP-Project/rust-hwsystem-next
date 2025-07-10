@@ -204,18 +204,6 @@ where
 
 // 辅助函数：从请求中提取用户信息
 impl RequireJWT {
-    /// 从请求扩展中获取用户的 Access Token
-    /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn extract_access_token(req: &actix_web::HttpRequest) -> Option<String> {
-        req.headers()
-            .get(AUTHORIZATION_HEADER)
-            .and_then(|header| header.to_str().ok())
-            .and_then(|auth| {
-                auth.strip_prefix(BEARER_PREFIX)
-                    .map(|token| token.to_string())
-            })
-    }
-
     /// 从请求扩展中提取用户Claims信息
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
     pub fn extract_user_claims(req: &actix_web::HttpRequest) -> Option<entities::User> {
