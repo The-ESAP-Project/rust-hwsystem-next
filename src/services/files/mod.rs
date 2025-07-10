@@ -41,7 +41,7 @@ impl FileService {
     pub async fn handle_download(
         &self,
         request: &HttpRequest,
-        file_id: String,
+        file_id: i64,
     ) -> ActixResult<HttpResponse> {
         download::handle_download(self, request, file_id).await
     }
