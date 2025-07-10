@@ -326,7 +326,7 @@ impl Storage for SqliteStorage {
         let now = chrono::Utc::now();
 
         let result = sqlx::query("UPDATE users SET last_login = ? WHERE id = ?")
-            .bind(now.to_rfc3339())
+            .bind(now.timestamp())
             .bind(id)
             .execute(&self.pool)
             .await
@@ -381,8 +381,7 @@ impl Storage for SqliteStorage {
             return self.get_user_by_id(id).await;
         }
 
-        // TODO: 保存应该为 Int 而不是 RFC3389
-        let update_at_query = format!("uptate_at = {}", now.timestamp());
+        let update_at_query = format!("updated_at = {}", now.timestamp());
 
         updates.push(&update_at_query);
 
