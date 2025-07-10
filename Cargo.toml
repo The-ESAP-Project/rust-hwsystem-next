@@ -1,7 +1,8 @@
 [package]
 name = "rust-hwsystem-next"
 version = "0.0.1"
-description = "A next-generation hardware system for Rust"
+description = "A next-generation homework system based on Rust and Actix-web."
+license = "MIT"
 authors = ["AptS-1547 <apts-1547@esaps.net>"]
 edition = "2024"
 
