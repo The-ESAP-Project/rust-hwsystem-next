@@ -38,6 +38,8 @@ secret = "your_super_secret_jwt_key_here"
 access_token_expiry = 15
 # Refresh Token 有效期 (天)
 refresh_token_expiry = 7
+# Refresh Token 记住我选项有效期 (天)
+refresh_token_remember_me_expiry = 30
 
 [database]
 # 数据库后端: sqlite, postgres, mysql

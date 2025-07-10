@@ -1,4 +1,3 @@
-
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::FileService;
@@ -10,7 +9,5 @@ pub async fn handle_upload(
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 
-    Ok(HttpResponse::Ok().json(ApiResponse::success_empty(
-        "File uploaded successfully",
-    )))
+    Ok(HttpResponse::Ok().json(ApiResponse::success_empty("File uploaded successfully")))
 }

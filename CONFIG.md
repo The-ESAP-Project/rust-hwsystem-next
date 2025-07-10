@@ -67,6 +67,7 @@ export JWT_SECRET=your_secret_key
 - `jwt.secret`: JWT 密钥
 - `jwt.access_token_expiry`: Access Token 过期时间(分钟)
 - `jwt.refresh_token_expiry`: Refresh Token 过期时间(天)
+- `jwt.refresh_token_remember_me_expiry`: Refresh Token 记住我选项有效期(天)
 
 ### 数据库设置
 - `database.backend`: 数据库类型 (sqlite/postgres/mysql)
