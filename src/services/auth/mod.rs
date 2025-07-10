@@ -5,21 +5,16 @@ pub mod token;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::cache::ObjectCache;
 use crate::storages::Storage;
 use crate::system::app_config::AppConfig;
 
 pub struct AuthService {
     storage: Option<Arc<dyn Storage>>,
-    cache: Option<Arc<dyn ObjectCache>>,
 }
 
 impl AuthService {
     pub fn new_lazy() -> Self {
-        Self {
-            storage: None,
-            cache: None,
-        }
+        Self { storage: None }
     }
 
     pub(crate) fn get_storage(&self, request: &HttpRequest) -> Arc<dyn Storage> {
@@ -29,18 +24,6 @@ impl AuthService {
             request
                 .app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
                 .expect("Storage not found in app data")
-                .get_ref()
-                .clone()
-        }
-    }
-
-    pub(crate) fn get_cache(&self, request: &HttpRequest) -> Arc<dyn ObjectCache> {
-        if let Some(cache) = &self.cache {
-            cache.clone()
-        } else {
-            request
-                .app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
-                .expect("Cache not found in app data")
                 .get_ref()
                 .clone()
         }
