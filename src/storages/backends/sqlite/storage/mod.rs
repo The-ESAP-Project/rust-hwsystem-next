@@ -1,6 +1,7 @@
 pub mod file;
 pub mod storage_impl;
 pub mod user;
+pub mod homeworks;
 
 use super::migrations::SqliteMigrationManager;
 use crate::errors::{HWSystemError, Result};
