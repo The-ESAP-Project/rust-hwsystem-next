@@ -150,6 +150,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     teacher_id INTEGER NOT NULL,
                     class_name TEXT NOT NULL UNIQUE,
                     description TEXT,
+                    invite_code TEXT NOT NULL UNIQUE,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,
                     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE SET NULL
@@ -205,12 +206,19 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
                 VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', NULL, NULL, 1704067200, 1704067200);
 
-                -- 创建索引
+                -- 用户表索引
                 CREATE INDEX idx_users_username ON users(username);
                 CREATE INDEX idx_users_email ON users(email);
                 CREATE INDEX idx_users_role ON users(role);
                 CREATE INDEX idx_users_status ON users(status);
                 CREATE INDEX idx_users_last_login ON users(last_login);
+
+                -- 班级表索引
+                CREATE INDEX idx_classes_class_name ON classes(class_name);
+                CREATE INDEX idx_classes_teacher_id ON classes(teacher_id);
+                CREATE INDEX idx_classes_invite_code ON classes(invite_code);
+
+                -- 班级学生关联表索引
             ".to_string(),
         },
     ]

@@ -1,8 +1,12 @@
 use super::SqliteStorage;
 use crate::models::{
+    classes::{
+        entities::Class,
+        requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
+        responses::ClassListResponse,
+    },
     files::entities::File,
-    homeworks::requests::HomeworkListQuery,
-    homeworks::responses::HomeworkListResponse,
+    homeworks::{requests::HomeworkListQuery, responses::HomeworkListResponse},
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
@@ -10,7 +14,7 @@ use crate::models::{
     },
 };
 
-use super::{file, homeworks, user};
+use super::{classes, file, homeworks, user};
 use crate::errors::Result;
 use crate::storages::Storage;
 use async_trait::async_trait;
@@ -60,6 +64,34 @@ impl Storage for SqliteStorage {
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse> {
         homeworks::list_homeworks_with_pagination(self, query).await
+    }
+
+    /// 班级模块
+    async fn create_class(&self, class: CreateClassRequest) -> Result<Class> {
+        classes::create_class(self, class).await
+    }
+
+    async fn get_class_by_id(&self, class_id: i64) -> Result<Option<Class>> {
+        classes::get_class_by_id(self, class_id).await
+    }
+
+    async fn list_classes_with_pagination(
+        &self,
+        query: ClassListQuery,
+    ) -> Result<ClassListResponse> {
+        classes::list_classes_with_pagination(self, query).await
+    }
+
+    async fn update_class(
+        &self,
+        class_id: i64,
+        update: UpdateClassRequest,
+    ) -> Result<Option<Class>> {
+        classes::update_class(self, class_id, update).await
+    }
+
+    async fn delete_class(&self, class_id: i64) -> Result<bool> {
+        classes::delete_class(self, class_id).await
     }
 
     /// 文件模块

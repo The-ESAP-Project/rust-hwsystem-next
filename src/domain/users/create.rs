@@ -1,31 +1,26 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
-use regex::Regex;
 use tracing::error;
 
 use super::UserService;
 use crate::models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
 use crate::utils::password::hash_password;
+use crate::utils::validate::{validate_email, validate_username};
 
 pub async fn create_user(
     service: &UserService,
     mut user_data: CreateUserRequest,
     request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
-    // 用户名长度校验：5 <= x <= 16
-    if user_data.username.len() < 5 || user_data.username.len() > 16 {
-        return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-            ErrorCode::UserNameInvalid,
-            "Username length must be between 5 and 16 characters",
-        )));
+    // 验证用户名
+    if let Err(msg) = validate_username(&user_data.username) {
+        return Ok(HttpResponse::BadRequest()
+            .json(ApiResponse::error_empty(ErrorCode::UserNameInvalid, msg)));
     }
 
-    // 用户名校验：只允许英文、-、_
-    let username_re = Regex::new(r"^[A-Za-z0-9_-]+$").unwrap();
-    if !username_re.is_match(&user_data.username) {
-        return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-            ErrorCode::UserNameInvalid,
-            "Username must contain only letters, numbers, underscores or hyphens",
-        )));
+    // 验证邮箱
+    if let Err(msg) = validate_email(&user_data.email) {
+        return Ok(HttpResponse::BadRequest()
+            .json(ApiResponse::error_empty(ErrorCode::UserEmailInvalid, msg)));
     }
 
     user_data.password = match hash_password(&user_data.password) {
@@ -54,7 +49,7 @@ pub async fn create_user(
                     "Username or email already exists",
                 )))
             } else {
-                Ok(HttpResponse::BadRequest()
+                Ok(HttpResponse::InternalServerError()
                     .json(ApiResponse::error_empty(ErrorCode::UserCreationFailed, msg)))
             }
         }
