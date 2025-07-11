@@ -9,6 +9,11 @@ pub mod users;
 
 // 文件模块
 pub mod files;
+
+// 班级模块
+pub mod classes;
+
+// 作业模块
 pub mod homeworks;
 
 // 重新导出通用类型

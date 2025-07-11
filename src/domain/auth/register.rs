@@ -3,10 +3,9 @@ use argon2::Argon2;
 use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 
 use crate::models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
+use crate::utils::validate::{validate_email, validate_username};
 
 use super::AuthService;
-
-// TODO：验证用户名和邮箱格式
 
 pub async fn handle_register(
     service: &AuthService,
@@ -25,7 +24,19 @@ pub async fn handle_register(
         return Ok(response);
     }
 
-    // 3. 哈希密码
+    // 验证用户名合法性
+    if let Err(msg) = validate_username(&create_request.username) {
+        return Ok(HttpResponse::BadRequest()
+            .json(ApiResponse::error_empty(ErrorCode::UserNameInvalid, msg)));
+    }
+
+    // 验证邮箱
+    if let Err(msg) = validate_email(&create_request.email) {
+        return Ok(HttpResponse::BadRequest()
+            .json(ApiResponse::error_empty(ErrorCode::UserEmailInvalid, msg)));
+    }
+
+    // 3. 哈希密码合法性
     match hash_password(&create_request.password) {
         Ok(password_hash) => {
             // 将明文密码替换为哈希后的密码

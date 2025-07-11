@@ -6,6 +6,7 @@ pub mod system;
 pub mod users;
 
 pub use auth::AuthService;
+pub use classes::ClassService;
 pub use files::FileService;
 pub use homeworks::HomeworkService;
 pub use system::SystemService;

@@ -1,4 +1,6 @@
-use actix_web::HttpRequest;
+pub mod get;
+
+use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
 use crate::storages::Storage;
@@ -27,5 +29,9 @@ impl ClassService {
 
     pub(crate) fn get_config(&self) -> &AppConfig {
         AppConfig::get()
+    }
+
+    pub async fn get_class(&self, req: &HttpRequest, class_id: i64) -> ActixResult<HttpResponse> {
+        get::get_class(self, req, class_id).await
     }
 }

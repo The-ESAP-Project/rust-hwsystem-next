@@ -2,6 +2,7 @@ pub mod extractor;
 pub mod jwt;
 pub mod parameter_error_handler;
 pub mod password;
+pub mod validate;
 
 pub use extractor::SafeI64;
 pub use parameter_error_handler::json_error_handler;
