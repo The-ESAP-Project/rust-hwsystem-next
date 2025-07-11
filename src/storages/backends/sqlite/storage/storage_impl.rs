@@ -1,6 +1,8 @@
 use super::SqliteStorage;
 use crate::api_models::{
     files::entities::File,
+    homeworks::requests::HomeworkListQuery,
+    homeworks::responses::HomeworkListResponse,
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
@@ -8,7 +10,7 @@ use crate::api_models::{
     },
 };
 
-use super::{file, user};
+use super::{file, homeworks, user};
 use crate::errors::Result;
 use crate::storages::Storage;
 use async_trait::async_trait;
@@ -50,6 +52,14 @@ impl Storage for SqliteStorage {
 
     async fn delete_user(&self, id: i64) -> Result<bool> {
         user::delete_user(self, id).await
+    }
+
+    /// 作业模块
+    async fn list_homeworks_with_pagination(
+        &self,
+        query: HomeworkListQuery,
+    ) -> Result<HomeworkListResponse> {
+        homeworks::list_homeworks_with_pagination(self, query).await
     }
 
     /// 文件模块

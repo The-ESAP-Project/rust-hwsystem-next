@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug rust-hwsystem-next",
+      "program": "${workspaceFolder}/target/debug/${input:executableName}",
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "preLaunchTask": "cargo build"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "executableName",
+      "type": "pickString",
+      "description": "请选择要调试的可执行文件",
+      "options": [
+        "rust-hwsystem-next"
+      ]
+    }
+  ]
+}

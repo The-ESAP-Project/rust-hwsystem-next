@@ -6,12 +6,15 @@ use tracing::error;
 
 use crate::api_models::{
     files::entities::File,
+    homeworks::requests::HomeworkListQuery,
+    homeworks::responses::HomeworkListResponse,
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
         responses::UserListResponse,
     },
 };
+
 use crate::errors::{HWSystemError, Result};
 use crate::system::app_config::AppConfig;
 
@@ -42,6 +45,12 @@ pub trait Storage: Send + Sync {
         user_id: i64,
     ) -> Result<File>;
     async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>>;
+
+    // 作业管理方法（新增）
+    async fn list_homeworks_with_pagination(
+        &self,
+        query: HomeworkListQuery,
+    ) -> Result<HomeworkListResponse>;
 }
 
 pub struct StorageFactory;

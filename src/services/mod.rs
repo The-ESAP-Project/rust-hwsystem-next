@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod files;
+pub mod homeworks;
 pub mod system;
 pub mod users;
 
