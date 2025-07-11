@@ -62,7 +62,7 @@
  * 确保在环境变量中设置了 `JWT_SECRET`，JWT服务将使用此密钥来验证令牌。
  */
 
-use crate::api_models::{ErrorCode, users::entities};
+use crate::models::{ErrorCode, users::entities};
 use crate::storages::Storage;
 use actix_service::{Service, Transform};
 use actix_web::{

@@ -1,8 +1,8 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, middleware, web};
 use once_cell::sync::Lazy;
 
+use crate::domain::SystemService;
 use crate::middlewares;
-use crate::services::SystemService;
 
 // 懒加载的全局 SystemService 实例
 static SYSTEM_SERVICE: Lazy<SystemService> = Lazy::new(SystemService::new_lazy);

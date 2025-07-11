@@ -1,8 +1,8 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, middleware, web};
 use once_cell::sync::Lazy;
 
+use crate::domain::FileService;
 use crate::middlewares;
-use crate::services::FileService;
 
 // 懒加载的全局 FileService 实例
 static FILE_SERVICE: Lazy<FileService> = Lazy::new(FileService::new_lazy);

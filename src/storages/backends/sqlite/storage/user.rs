@@ -1,10 +1,10 @@
 use sqlx::Row;
 
 use super::SqliteStorage;
-use crate::api_models::{
+use crate::models::{
     PaginationInfo,
     users::{
-        entities::{User, UserProfile, UserRole, UserStatus},
+        entities::{User, UserStatus},
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
         responses::UserListResponse,
     },
@@ -15,83 +15,71 @@ use crate::errors::{HWSystemError, Result};
 pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Result<User> {
     let now = chrono::Utc::now();
 
-    let result = sqlx::query(
+    let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+            RETURNING id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at",
     )
     .bind(&user.username)
     .bind(&user.email)
     .bind(&user.password) // 密码哈希应该在 Service 层完成
     .bind(user.role.to_string())
     .bind(UserStatus::Active.to_string())
-    .bind(user.profile.as_ref().map(|p| &p.name))
+    .bind(user.profile.as_ref().map(|p| &p.profile_name))
     .bind(user.profile.as_ref().and_then(|p| p.avatar_url.as_deref()))
     .bind(now.timestamp()) // 使用时间戳
     .bind(now.timestamp()) // 使用时间戳
     .fetch_one(&storage.pool)
     .await
-    .map_err(|e| HWSystemError::database_operation(format!("创建用户失败: {e}")))?;
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to create user: {e}")))?;
 
-    let id: i64 = result.get("id");
-
-    Ok(User {
-        id,
-        username: user.username,
-        email: user.email,
-        password_hash: user.password, // 密码哈希在 Service 层处理
-        role: user.role,
-        status: UserStatus::Active,
-        profile: user.profile,
-        last_login: None,
-        created_at: now,
-        updated_at: now,
-    })
+    Ok(result)
 }
 
 pub async fn get_user_by_id(storage: &SqliteStorage, id: i64) -> Result<Option<User>> {
-    let result = sqlx::query(
+    let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE id = ?",
     )
     .bind(id)
     .fetch_optional(&storage.pool)
     .await
-    .map_err(|e| HWSystemError::database_operation(format!("查询用户失败: {e}")))?;
+    .map_err(|e| HWSystemError::database_operation(format!("Search user by ID failed: {e}")))?;
 
     match result {
-        Some(row) => Ok(Some(user_from_row(&row)?)),
+        Some(row) => Ok(Some(row)),
         None => Ok(None),
     }
 }
 
 pub async fn get_user_by_username(storage: &SqliteStorage, username: &str) -> Result<Option<User>> {
-    let result = sqlx::query(
+    let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE username = ?",
     )
     .bind(username)
     .fetch_optional(&storage.pool)
     .await
-    .map_err(|e| HWSystemError::database_operation(format!("根据用户名查询用户失败: {e}")))?;
+    .map_err(|e| HWSystemError::database_operation(format!("Search user by username failed: {e}")))?;
 
     match result {
-        Some(row) => Ok(Some(user_from_row(&row)?)),
+        Some(row) => Ok(Some(row)),
         None => Ok(None),
     }
 }
 
 pub async fn get_user_by_email(storage: &SqliteStorage, email: &str) -> Result<Option<User>> {
-    let result = sqlx::query(
+    let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE email = ?",
     )
     .bind(email)
     .fetch_optional(&storage.pool)
     .await
-    .map_err(|e| HWSystemError::database_operation(format!("根据邮箱查询用户失败: {e}")))?;
+    .map_err(|e| HWSystemError::database_operation(format!("Search user by email failed: {e}")))?;
 
     match result {
-        Some(row) => Ok(Some(user_from_row(&row)?)),
+        Some(row) => Ok(Some(row)),
         None => Ok(None),
     }
 }
@@ -100,7 +88,7 @@ pub async fn get_user_by_username_or_email(
     storage: &SqliteStorage,
     identifier: &str,
 ) -> Result<Option<User>> {
-    let result = sqlx::query(
+    let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE username = ? OR email = ?",
     )
@@ -111,7 +99,7 @@ pub async fn get_user_by_username_or_email(
     .map_err(|e| HWSystemError::database_operation(format!("根据用户名或邮箱查询用户失败: {e}")))?;
 
     match result {
-        Some(row) => Ok(Some(user_from_row(&row)?)),
+        Some(row) => Ok(Some(row)),
         None => Ok(None),
     }
 }
@@ -176,7 +164,7 @@ pub async fn list_users_with_pagination(
             FROM users{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
 
-    let mut data_query = sqlx::query(&data_sql);
+    let mut data_query = sqlx::query_as::<sqlx::Sqlite, User>(&data_sql);
     for param in &params {
         data_query = data_query.bind(param);
     }
@@ -189,7 +177,7 @@ pub async fn list_users_with_pagination(
 
     let mut users = Vec::new();
     for row in rows {
-        users.push(user_from_row(&row)?);
+        users.push(row);
     }
 
     let pages = (total + size - 1) / size; // 向上取整
@@ -213,7 +201,9 @@ pub async fn update_last_login(storage: &SqliteStorage, id: i64) -> Result<bool>
         .bind(id)
         .execute(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("更新最后登录时间失败: {e}")))?;
+        .map_err(|e| {
+            HWSystemError::database_operation(format!("Failed to update last login time: {e}"))
+        })?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -255,7 +245,7 @@ pub async fn update_user(
     if let Some(profile) = &update.profile {
         updates.push("profile_name = ?");
         updates.push("avatar_url = ?");
-        params.push(profile.name.clone());
+        params.push(profile.profile_name.clone());
         params.push(profile.avatar_url.clone().unwrap_or_default());
     }
 
@@ -279,7 +269,7 @@ pub async fn update_user(
     query_builder
         .execute(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("更新用户失败: {e}")))?;
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to update user: {e}")))?;
 
     get_user_by_id(storage, id).await
 }
@@ -289,73 +279,7 @@ pub async fn delete_user(storage: &SqliteStorage, id: i64) -> Result<bool> {
         .bind(id)
         .execute(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("删除用户失败: {e}")))?;
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to delete user: {e}")))?;
 
     Ok(result.rows_affected() > 0)
-}
-
-fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<User> {
-    let id: i64 = row.get("id");
-    let username: String = row.get("username");
-    let password_hash: String = row.get("password_hash");
-    let role_str: String = row.get("role");
-    let email: String = row.get("email");
-    let status_str: String = row.get("status");
-    let created_at_ts: i64 = row.get("created_at");
-    let updated_at_ts: i64 = row.get("updated_at");
-
-    // 获取可选字段
-    let profile_name: Option<String> = row.try_get("profile_name").ok();
-    let avatar_url: Option<String> = row.try_get("avatar_url").ok();
-    let last_login_ts: Option<i64> = row.try_get("last_login").ok();
-
-    let role = role_str
-        .parse::<UserRole>()
-        .map_err(|e| HWSystemError::validation(format!("角色解析失败: {e}")))?;
-    let status = status_str
-        .parse::<UserStatus>()
-        .map_err(|e| HWSystemError::validation(format!("状态解析失败: {e}")))?;
-
-    // 从时间戳转换为DateTime
-    let created_at = chrono::DateTime::from_timestamp(created_at_ts, 0)
-        .ok_or_else(|| HWSystemError::date_parse("无效的创建时间时间戳".to_string()))?;
-
-    let updated_at = chrono::DateTime::from_timestamp(updated_at_ts, 0)
-        .ok_or_else(|| HWSystemError::date_parse("无效的更新时间时间戳".to_string()))?;
-
-    let last_login = if let Some(last_login_ts) = last_login_ts {
-        Some(
-            chrono::DateTime::from_timestamp(last_login_ts, 0)
-                .ok_or_else(|| HWSystemError::date_parse("无效的最后登录时间时间戳".to_string()))?,
-        )
-    } else {
-        None
-    };
-
-    // TODO: Profile class 需要从新表中查询得到
-
-    let class: Option<String> = Some("Default Class".to_string()); // 默认值或从其他地方获取
-
-    let profile = if profile_name.is_some() || class.is_some() || avatar_url.is_some() {
-        Some(UserProfile {
-            name: profile_name.unwrap_or_default(),
-            class,
-            avatar_url,
-        })
-    } else {
-        None
-    };
-
-    Ok(User {
-        id,
-        username,
-        email,
-        password_hash,
-        role,
-        status,
-        profile,
-        last_login,
-        created_at,
-        updated_at,
-    })
 }

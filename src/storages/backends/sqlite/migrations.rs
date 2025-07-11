@@ -144,29 +144,11 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     updated_at INTEGER NOT NULL
                 );
 
-                -- 创建作业表
-                CREATE TABLE homeworks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL,
-                    description TEXT,
-                    content TEXT,
-                    deadline INTEGER,
-                    max_score INTEGER NOT NULL DEFAULT 100,
-                    allow_late_submission INTEGER NOT NULL DEFAULT 0,
-                    attachments TEXT, -- JSON 格式存储附件列表
-                    submission_count INTEGER NOT NULL DEFAULT 0,
-                    status TEXT NOT NULL, -- draft/published/closed
-                    created_by INTEGER NOT NULL,
-                    created_at INTEGER NOT NULL,
-                    updated_at INTEGER NOT NULL,
-                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-                );
-
                 -- 创建班级表
                 CREATE TABLE classes (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     teacher_id INTEGER NOT NULL,
-                    name TEXT NOT NULL UNIQUE,
+                    class_name TEXT NOT NULL UNIQUE,
                     description TEXT,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,

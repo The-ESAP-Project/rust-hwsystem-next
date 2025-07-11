@@ -44,8 +44,8 @@ use std::rc::Rc;
 use tracing::info;
 
 use crate::{
-    api_models::{ErrorCode, users::entities},
     middlewares::RequireJWT,
+    models::{ErrorCode, users::entities},
 };
 
 #[derive(Clone)]
