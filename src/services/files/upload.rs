@@ -10,6 +10,7 @@ use uuid::Uuid;
 use super::FileService;
 use crate::api_models::ErrorCode;
 use crate::api_models::{ApiResponse, files::responses::FileUploadResponse};
+use crate::errors::HWSystemError;
 use crate::middlewares::RequireJWT;
 use crate::system::app_config::AppConfig;
 
@@ -26,15 +27,20 @@ pub async fn handle_upload(
 
     // 确保上传目录存在
     if !Path::new(upload_dir).exists() {
-        fs::create_dir_all(upload_dir).map_err(actix_web::error::ErrorInternalServerError)?;
+        fs::create_dir_all(upload_dir).map_err(|e| {
+            tracing::error!("{}", HWSystemError::file_operation(format!("{e}")));
+            actix_web::error::ErrorInternalServerError(HWSystemError::file_operation(
+                "file create error",
+            ))
+        })?;
     }
 
     // 文件相关信息
     let mut unique_name = String::new();
     let mut original_filename = String::new();
     let mut file_size: i64 = 0;
+    let mut file_uploaded = false;
     let mut file_type = String::new();
-    let mut file_uploaded = false; // 新增变量
 
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_disposition = field.content_disposition();
@@ -52,12 +58,12 @@ pub async fn handle_upload(
             }
             file_uploaded = true;
             // 获取文件类型
-            let content_type = field
+            file_type = field
                 .content_type()
                 .map(|ct| ct.to_string())
                 .unwrap_or_default();
             // 校验类型
-            if !allowed_types.iter().any(|t| content_type.contains(t)) {
+            if !allowed_types.iter().any(|t| file_type.contains(t)) {
                 return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
                     ErrorCode::FileTypeNotAllowed,
                     "File type not allowed",
@@ -72,7 +78,13 @@ pub async fn handle_upload(
 
             unique_name = format!("{}{}", chrono::Utc::now().timestamp(), Uuid::new_v4());
             let file_path = format!("{upload_dir}/{unique_name}.bin");
-            let mut f = File::create(&file_path)?;
+            let mut f = File::create(&file_path).map_err(|e| {
+                tracing::error!("{}", HWSystemError::file_operation(format!("{e}")));
+                actix_web::error::ErrorInternalServerError(HWSystemError::file_operation(
+                    "file create error",
+                ))
+            })?;
+
             let mut total_size: usize = 0;
             while let Some(chunk) = field.next().await {
                 let data = chunk?;
@@ -88,7 +100,6 @@ pub async fn handle_upload(
                 f.write_all(&data)?;
             }
             file_size = total_size as i64;
-            file_type = content_type;
         }
     }
 

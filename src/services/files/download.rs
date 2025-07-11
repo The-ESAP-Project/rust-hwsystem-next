@@ -5,6 +5,7 @@ use std::path::Path;
 
 use super::FileService;
 use crate::api_models::{ApiResponse, ErrorCode};
+use crate::errors::HWSystemError;
 use crate::system::app_config::AppConfig;
 
 pub async fn handle_download(
@@ -43,7 +44,8 @@ pub async fn handle_download(
 
     let mut file = match File::open(&file_path) {
         Ok(f) => f,
-        Err(_) => {
+        Err(e) => {
+            tracing::error!("{:?}", HWSystemError::file_operation(format!("{e:?}")));
             return Ok(
                 HttpResponse::InternalServerError().json(ApiResponse::error_empty(
                     ErrorCode::InternalServerError,
@@ -55,6 +57,7 @@ pub async fn handle_download(
 
     let mut buf = Vec::new();
     if file.read_to_end(&mut buf).is_err() {
+        tracing::error!("{:?}", HWSystemError::file_operation("File read failed"));
         return Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
                 ErrorCode::InternalServerError,

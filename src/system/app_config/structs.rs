@@ -48,6 +48,7 @@ pub struct LimitConfig {
 /// JWT 配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JwtConfig {
+    #[serde(skip_serializing, default)] // 不序列化到JSON响应中
     pub secret: String,
     pub access_token_expiry: i64,
     pub refresh_token_expiry: i64,
