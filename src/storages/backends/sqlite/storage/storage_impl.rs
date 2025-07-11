@@ -1,16 +1,16 @@
 use super::SqliteStorage;
 use crate::api_models::{
     files::entities::File,
+    homeworks::requests::HomeworkListQuery,
+    homeworks::responses::HomeworkListResponse,
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
         responses::UserListResponse,
     },
-    homeworks::requests::HomeworkListQuery,
-    homeworks::responses::HomeworkListResponse,
 };
 
-use super::{file, user, homeworks};
+use super::{file, homeworks, user};
 use crate::errors::Result;
 use crate::storages::Storage;
 use async_trait::async_trait;

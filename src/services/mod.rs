@@ -1,8 +1,8 @@
 pub mod auth;
 pub mod files;
+pub mod homeworks;
 pub mod system;
 pub mod users;
-pub mod homeworks;
 
 pub use auth::AuthService;
 pub use files::FileService;

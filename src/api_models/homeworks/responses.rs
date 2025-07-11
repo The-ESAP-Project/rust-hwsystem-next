@@ -1,6 +1,6 @@
+use crate::api_models::common::pagination::PaginationInfo;
 use serde::Serialize;
 use serde_json::Value;
-use crate::api_models::common::pagination::PaginationInfo;
 
 #[derive(Debug, Serialize)]
 pub struct HomeworkResponse {

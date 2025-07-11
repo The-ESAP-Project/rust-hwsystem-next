@@ -1,15 +1,13 @@
-use sqlx::Row;
 use super::SqliteStorage;
-use crate::api_models::homeworks::{
-    entities::Homework,
-    responses::HomeworkResponse,
-    responses::HomeworkListResponse,
-    requests::HomeworkListQuery,
-};
 use crate::api_models::common::pagination::PaginationInfo;
+use crate::api_models::homeworks::{
+    entities::Homework, requests::HomeworkListQuery, responses::HomeworkListResponse,
+    responses::HomeworkResponse,
+};
 use crate::errors::{HWSystemError, Result};
 use chrono::{TimeZone, Utc};
 use serde_json::json;
+use sqlx::Row;
 
 pub async fn list_homeworks_with_pagination(
     storage: &SqliteStorage,
@@ -28,7 +26,7 @@ pub async fn list_homeworks_with_pagination(
     }
     if let Some(search) = &query.search {
         conditions.push("(title LIKE ? OR description LIKE ?)");
-        let pattern = format!("%{}%", search);
+        let pattern = format!("%{search}%");
         params.push(pattern.clone());
         params.push(pattern);
     }
@@ -50,7 +48,7 @@ pub async fn list_homeworks_with_pagination(
     };
 
     // 查询总数
-    let count_sql = format!("SELECT COUNT(*) as total FROM homeworks{}", where_clause);
+    let count_sql = format!("SELECT COUNT(*) as total FROM homeworks{where_clause}");
     let mut count_query = sqlx::query(&count_sql);
     for param in &params {
         count_query = count_query.bind(param);
@@ -63,8 +61,7 @@ pub async fn list_homeworks_with_pagination(
 
     // 查询数据
     let data_sql = format!(
-        "SELECT * FROM homeworks{} ORDER BY {} {} LIMIT ? OFFSET ?",
-        where_clause, order_by, order
+        "SELECT * FROM homeworks{where_clause} ORDER BY {order_by} {order} LIMIT ? OFFSET ?"
     );
     let mut data_query = sqlx::query_as::<_, Homework>(&data_sql);
     for param in &params {
@@ -99,12 +96,14 @@ fn homework_to_response(hw: &Homework) -> HomeworkResponse {
         title: hw.title.clone(),
         description: hw.description.clone(),
         content: hw.content.clone(),
-        deadline: hw.deadline
+        deadline: hw
+            .deadline
             .map(|ts| Utc.timestamp_opt(ts, 0).unwrap().to_rfc3339())
             .unwrap_or_default(),
         max_score: hw.max_score,
         allow_late_submission: hw.allow_late_submission != 0,
-        attachments: hw.attachments
+        attachments: hw
+            .attachments
             .as_ref()
             .and_then(|s| serde_json::from_str::<Vec<Option<String>>>(s).ok())
             .unwrap_or_default(),

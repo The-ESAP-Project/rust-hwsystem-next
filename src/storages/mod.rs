@@ -6,13 +6,13 @@ use tracing::error;
 
 use crate::api_models::{
     files::entities::File,
+    homeworks::requests::HomeworkListQuery,
+    homeworks::responses::HomeworkListResponse,
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
         responses::UserListResponse,
     },
-    homeworks::requests::HomeworkListQuery,
-    homeworks::responses::HomeworkListResponse,
 };
 
 use crate::errors::{HWSystemError, Result};

@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::api_models::common::pagination::PaginationQuery;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct HomeworkListQuery {
