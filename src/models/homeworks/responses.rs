@@ -1,4 +1,4 @@
-use crate::api_models::common::pagination::PaginationInfo;
+use crate::models::common::pagination::PaginationInfo;
 use serde::Serialize;
 use serde_json::Value;
 

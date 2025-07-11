@@ -12,8 +12,8 @@ impl FromRequest for SafeI64 {
         match id_str.parse::<i64>() {
             Ok(id) => ready(Ok(SafeI64(id))),
             Err(_) => {
-                let resp = crate::api_models::common::response::ApiResponse::<()>::error_empty(
-                    crate::api_models::ErrorCode::BadRequest,
+                let resp = crate::models::common::response::ApiResponse::<()>::error_empty(
+                    crate::models::ErrorCode::BadRequest,
                     "ID format error, please provide a valid numeric ID.",
                 );
                 ready(Err(actix_web::error::InternalError::from_response(

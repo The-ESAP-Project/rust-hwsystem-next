@@ -8,10 +8,10 @@ use std::{fs::File, path::Path};
 use uuid::Uuid;
 
 use super::FileService;
-use crate::api_models::ErrorCode;
-use crate::api_models::{ApiResponse, files::responses::FileUploadResponse};
 use crate::errors::HWSystemError;
 use crate::middlewares::RequireJWT;
+use crate::models::ErrorCode;
+use crate::models::{ApiResponse, files::responses::FileUploadResponse};
 use crate::system::app_config::AppConfig;
 
 pub async fn handle_upload(
@@ -135,7 +135,7 @@ pub async fn handle_upload(
         Err(e) => {
             return Ok(
                 HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                    ErrorCode::InternalServerError,
+                    ErrorCode::FileUploadFailed,
                     format!("Failed to upload file: {e}"),
                 )),
             );

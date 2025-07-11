@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::SystemService;
-use crate::api_models::ApiResponse;
+use crate::models::ApiResponse;
 
 pub async fn get_settings(
     service: &SystemService,

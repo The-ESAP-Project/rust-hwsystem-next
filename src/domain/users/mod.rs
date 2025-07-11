@@ -7,7 +7,7 @@ pub mod update;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::api_models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
+use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
 use crate::storages::Storage;
 
 pub struct UserService {

@@ -1,5 +1,5 @@
 use super::entities::{UserProfile, UserRole, UserStatus};
-use crate::api_models::common::PaginationQuery;
+use crate::models::common::PaginationQuery;
 use serde::Deserialize;
 
 // 用户查询参数（来自HTTP请求）

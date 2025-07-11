@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use sqlx::{Decode, Sqlite, Type, sqlite::SqliteValueRef};
+use std::str::FromStr;
 
 // 用户角色
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -53,6 +55,19 @@ impl std::str::FromStr for UserRole {
     }
 }
 
+impl Type<Sqlite> for UserRole {
+    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
+        <String as Type<Sqlite>>::type_info()
+    }
+}
+
+impl<'r> Decode<'r, Sqlite> for UserRole {
+    fn decode(value: SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s: String = <String as Decode<Sqlite>>::decode(value)?;
+        UserRole::from_str(&s).map_err(|e| format!("UserRole decode error: {e}").into())
+    }
+}
+
 // 用户状态
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -102,16 +117,28 @@ impl std::str::FromStr for UserStatus {
     }
 }
 
+impl Type<Sqlite> for UserStatus {
+    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
+        <String as Type<Sqlite>>::type_info()
+    }
+}
+
+impl<'r> Decode<'r, Sqlite> for UserStatus {
+    fn decode(value: SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s: String = <String as Decode<Sqlite>>::decode(value)?;
+        UserStatus::from_str(&s).map_err(|e| format!("UserStatus decode error: {e}").into())
+    }
+}
+
 // 用户资料
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserProfile {
-    pub name: String,
-    pub class: Option<String>,
+    pub profile_name: String,
     pub avatar_url: Option<String>,
 }
 
 // 用户实体
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: i64,
     pub username: String,
@@ -120,7 +147,8 @@ pub struct User {
     pub password_hash: String,
     pub role: UserRole,
     pub status: UserStatus,
-    pub profile: Option<UserProfile>,
+    #[sqlx(flatten)]
+    pub profile: UserProfile,
     pub last_login: Option<chrono::DateTime<chrono::Utc>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,

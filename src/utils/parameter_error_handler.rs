@@ -56,8 +56,8 @@ fn format_query_error(err: &QueryPayloadError) -> String {
 
 // 创建统一的错误响应
 fn create_error_response(error_msg: String) -> actix_web::Error {
-    use crate::api_models::ErrorCode;
-    use crate::api_models::common::response::ApiResponse;
+    use crate::models::ErrorCode;
+    use crate::models::common::response::ApiResponse;
 
     let response = ApiResponse::<()>::error_empty(ErrorCode::BadRequest, &error_msg);
     let json_response = HttpResponse::BadRequest().json(response);

@@ -1,4 +1,4 @@
-use crate::api_models::users::entities::User;
+use crate::models::users::entities::User;
 use serde::Serialize;
 
 // 用户响应模型

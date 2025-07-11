@@ -3,7 +3,7 @@ pub mod list;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::api_models::homeworks::requests::HomeworkListQuery;
+use crate::models::homeworks::requests::HomeworkListQuery;
 use crate::storages::Storage;
 use crate::system::app_config::AppConfig;
 

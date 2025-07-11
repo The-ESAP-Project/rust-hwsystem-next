@@ -1,9 +1,9 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult, web};
 use once_cell::sync::Lazy;
 
-use crate::api_models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
 use crate::domain::UserService;
 use crate::middlewares;
+use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
 use crate::utils::SafeI64;
 
 // 懒加载的全局 UserService 实例

@@ -1,4 +1,4 @@
-use crate::api_models::common::pagination::PaginationQuery;
+use crate::models::common::pagination::PaginationQuery;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

@@ -2,9 +2,11 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use argon2::Argon2;
 use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 
-use crate::api_models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
+use crate::models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
 
 use super::AuthService;
+
+// TODO：验证用户名和邮箱格式
 
 pub async fn handle_register(
     service: &AuthService,
@@ -36,7 +38,7 @@ pub async fn handle_register(
                 }
                 Err(e) => Ok(
                     HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                        ErrorCode::InternalServerError,
+                        ErrorCode::RegisterFailed,
                         format!("注册失败: {e}"),
                     )),
                 ),
@@ -44,7 +46,7 @@ pub async fn handle_register(
         }
         Err(e) => Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
+                ErrorCode::RegisterFailed,
                 format!("密码哈希失败: {e}"),
             )),
         ),
@@ -57,14 +59,14 @@ async fn check_username_exists(
 ) -> Result<(), HttpResponse> {
     match storage.get_user_by_username(username).await {
         Ok(Some(_)) => Err(HttpResponse::Conflict().json(ApiResponse::error_empty(
-            ErrorCode::Conflict,
-            "用户名已存在",
+            ErrorCode::UserNameAlreadyExists,
+            "Username already exists",
         ))),
         Ok(None) => Ok(()),
         Err(e) => Err(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
-                format!("注册失败: {e}"),
+                ErrorCode::RegisterFailed,
+                format!("Register failed: {e}"),
             )),
         ),
     }
@@ -75,13 +77,15 @@ async fn check_email_exists(
     email: &str,
 ) -> Result<(), HttpResponse> {
     match storage.get_user_by_email(email).await {
-        Ok(Some(_)) => Err(HttpResponse::Conflict()
-            .json(ApiResponse::error_empty(ErrorCode::Conflict, "邮箱已存在"))),
+        Ok(Some(_)) => Err(HttpResponse::Conflict().json(ApiResponse::error_empty(
+            ErrorCode::UserEmailAlreadyExists,
+            "Email already exists",
+        ))),
         Ok(None) => Ok(()),
         Err(e) => Err(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
-                format!("注册失败: {e}"),
+                ErrorCode::RegisterFailed,
+                format!("Register failed: {e}"),
             )),
         ),
     }

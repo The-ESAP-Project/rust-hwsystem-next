@@ -1,7 +1,10 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::UserService;
-use crate::api_models::{ApiResponse, ErrorCode};
+use crate::{
+    middlewares::RequireJWT,
+    models::{ApiResponse, ErrorCode},
+};
 
 pub async fn delete_user(
     service: &UserService,
@@ -10,14 +13,28 @@ pub async fn delete_user(
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 
+    if let Some(current_user_id) = RequireJWT::extract_user_id(request) {
+        if user_id == current_user_id {
+            // 禁止删除当前用户
+            return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
+                ErrorCode::CanNotDeleteCurrentUser,
+                "Cannot delete current user",
+            )));
+        }
+    }
+
     match storage.delete_user(user_id).await {
-        Ok(true) => Ok(HttpResponse::Ok().json(ApiResponse::success_empty("用户删除成功"))),
-        Ok(false) => Ok(HttpResponse::NotFound()
-            .json(ApiResponse::error_empty(ErrorCode::NotFound, "用户不存在"))),
+        Ok(true) => {
+            Ok(HttpResponse::Ok().json(ApiResponse::success_empty("User deleted successfully")))
+        }
+        Ok(false) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
+            ErrorCode::UserNotFound,
+            "User not found",
+        ))),
         Err(e) => Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
-                format!("用户删除失败: {e}"),
+                ErrorCode::UserDeleteFailed,
+                format!("User deletion failed: {e}"),
             )),
         ),
     }

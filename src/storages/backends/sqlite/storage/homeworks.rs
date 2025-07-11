@@ -1,10 +1,10 @@
 use super::SqliteStorage;
-use crate::api_models::common::pagination::PaginationInfo;
-use crate::api_models::homeworks::{
+use crate::errors::{HWSystemError, Result};
+use crate::models::common::pagination::PaginationInfo;
+use crate::models::homeworks::{
     entities::Homework, requests::HomeworkListQuery, responses::HomeworkListResponse,
     responses::HomeworkResponse,
 };
-use crate::errors::{HWSystemError, Result};
 use chrono::{TimeZone, Utc};
 use serde_json::json;
 use sqlx::Row;

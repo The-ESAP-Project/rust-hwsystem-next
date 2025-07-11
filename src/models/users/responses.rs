@@ -1,5 +1,5 @@
 use super::entities::{User, UserProfile, UserRole, UserStatus};
-use crate::api_models::common::PaginationInfo;
+use crate::models::common::PaginationInfo;
 use serde::Serialize;
 
 // 用户响应模型
@@ -10,7 +10,7 @@ pub struct UserResponse {
     pub email: String,
     pub role: UserRole,
     pub status: UserStatus,
-    pub profile: Option<UserProfile>,
+    pub profile: UserProfile,
     pub last_login: Option<chrono::DateTime<chrono::Utc>>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,

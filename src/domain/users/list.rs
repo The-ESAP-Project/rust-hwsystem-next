@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::UserService;
-use crate::api_models::{
+use crate::models::{
     ApiResponse, ErrorCode,
     users::requests::{UserListQuery, UserQueryParams},
 };
@@ -22,13 +22,14 @@ pub async fn list_users(
     };
 
     match storage.list_users_with_pagination(list_query).await {
-        Ok(response) => {
-            Ok(HttpResponse::Ok().json(ApiResponse::success(response, "获取用户列表成功")))
-        }
+        Ok(response) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+            response,
+            "User list retrieved successfully",
+        ))),
         Err(e) => Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
                 ErrorCode::InternalServerError,
-                format!("获取用户列表失败: {e}"),
+                format!("Failed to retrieve user list: {e}"),
             )),
         ),
     }

@@ -36,7 +36,7 @@ impl AuthService {
     // 登录验证
     pub async fn login(
         &self,
-        login_request: crate::api_models::auth::LoginRequest,
+        login_request: crate::models::auth::LoginRequest,
         request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         login::handle_login(self, login_request, request).await
@@ -45,7 +45,7 @@ impl AuthService {
     // 用户注册
     pub async fn register(
         &self,
-        create_request: crate::api_models::users::requests::CreateUserRequest,
+        create_request: crate::models::users::requests::CreateUserRequest,
         request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         register::handle_register(self, create_request, request).await

@@ -4,7 +4,7 @@ mod macros;
 use std::sync::Arc;
 use tracing::error;
 
-use crate::api_models::{
+use crate::models::{
     files::entities::File,
     homeworks::requests::HomeworkListQuery,
     homeworks::responses::HomeworkListResponse,

@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
-use crate::api_models::ApiResponse;
 use crate::middlewares::require_jwt::RequireJWT;
+use crate::models::{ApiResponse, ErrorCode};
 use crate::utils::jwt;
 
 use super::AuthService;
@@ -22,26 +22,29 @@ pub async fn handle_refresh_token(
                         "expires_in": config.jwt.access_token_expiry * 60, // 转换为秒
                         "token_type": "Bearer"
                     });
-                    Ok(HttpResponse::Ok().json(ApiResponse::success(response, "令牌刷新成功")))
+                    Ok(HttpResponse::Ok().json(ApiResponse::success(
+                        response,
+                        "Token refreshed successfully",
+                    )))
                 }
                 Err(e) => {
-                    tracing::error!("刷新令牌失败: {}", e);
+                    tracing::error!("Refresh token failed: {}", e);
 
                     // 清除无效的 refresh token cookie
                     let empty_cookie = jwt::JwtUtils::create_empty_refresh_token_cookie();
 
                     Ok(HttpResponse::Unauthorized().cookie(empty_cookie).json(
                         ApiResponse::error_empty(
-                            crate::api_models::ErrorCode::Unauthorized,
-                            "令牌已过期，请重新登录",
+                            ErrorCode::Unauthorized,
+                            "Login expired or invalid, please login again",
                         ),
                     ))
                 }
             }
         }
         None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-            crate::api_models::ErrorCode::Unauthorized,
-            "未找到刷新令牌",
+            ErrorCode::Unauthorized,
+            "Unauthorized access, please login",
         ))),
     }
 }
@@ -63,27 +66,28 @@ pub async fn handle_get_user(
             // 从数据库中获取用户信息
             let storage = service.get_storage(request);
             match storage.get_user_by_id(user_id).await {
-                Ok(Some(user)) => {
-                    Ok(HttpResponse::Ok().json(ApiResponse::success(user, "用户信息获取成功")))
-                }
+                Ok(Some(user)) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+                    user,
+                    "User info retrieved successfully",
+                ))),
                 Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
-                    crate::api_models::ErrorCode::NotFound,
-                    "用户不存在",
+                    ErrorCode::UserNotFound,
+                    "User not found",
                 ))),
                 Err(e) => {
-                    tracing::error!("获取用户信息失败: {}", e);
+                    tracing::error!("Get user info failed: {}", e);
                     Ok(
                         HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                            crate::api_models::ErrorCode::InternalServerError,
-                            "获取用户信息失败",
+                            ErrorCode::InternalServerError,
+                            "Get user info failed",
                         )),
                     )
                 }
             }
         }
         None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-            crate::api_models::ErrorCode::Unauthorized,
-            "未提供令牌",
+            ErrorCode::Unauthorized,
+            "Unauthorized access, please login",
         ))),
     }
 }

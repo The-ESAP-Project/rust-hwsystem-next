@@ -4,8 +4,8 @@ use std::io::Read;
 use std::path::Path;
 
 use super::FileService;
-use crate::api_models::{ApiResponse, ErrorCode};
 use crate::errors::HWSystemError;
+use crate::models::{ApiResponse, ErrorCode};
 use crate::system::app_config::AppConfig;
 
 pub async fn handle_download(

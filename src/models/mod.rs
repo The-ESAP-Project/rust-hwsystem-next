@@ -13,3 +13,9 @@ pub mod homeworks;
 
 // 重新导出通用类型
 pub use common::{ApiResponse, ErrorCode, PaginationInfo};
+
+// 系统模块
+#[derive(Clone, Debug)]
+pub struct AppStartTime {
+    pub start_datetime: chrono::DateTime<chrono::Utc>,
+}

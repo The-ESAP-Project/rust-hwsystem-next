@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::api_models::ErrorCode;
+use crate::models::ErrorCode;
 
 // 统一的API响应结构
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
-use crate::api_models::{
+use crate::models::{
     ApiResponse, ErrorCode,
     auth::{LoginRequest, LoginResponse},
 };
@@ -37,7 +37,7 @@ pub async fn handle_login(
                 {
                     Ok(token_pair) => {
                         // 生成 Access Token 和 Refresh Token 成功
-                        tracing::info!("用户 {} 登录成功", user.username);
+                        tracing::info!("User {} logged in successfully", user.username);
 
                         let response = LoginResponse {
                             access_token: token_pair.access_token,
@@ -52,14 +52,14 @@ pub async fn handle_login(
 
                         Ok(HttpResponse::Ok()
                             .cookie(refresh_cookie)
-                            .json(ApiResponse::success(response, "登录成功")))
+                            .json(ApiResponse::success(response, "Login successful")))
                     }
                     Err(e) => {
-                        tracing::error!("生成 JWT 令牌失败: {}", e);
+                        tracing::error!("Failed to generate JWT token: {}", e);
                         Ok(
                             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
                                 ErrorCode::InternalServerError,
-                                "登录失败，无法生成令牌",
+                                "Login failed, unable to generate token",
                             )),
                         )
                     }
@@ -67,18 +67,18 @@ pub async fn handle_login(
             } else {
                 Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
                     ErrorCode::AuthFailed,
-                    "用户名或密码错误",
+                    "Username or password is incorrect",
                 )))
             }
         }
         Ok(None) => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
             ErrorCode::AuthFailed,
-            "用户名或密码错误",
+            "Username or password is incorrect",
         ))),
         Err(e) => Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(
                 ErrorCode::InternalServerError,
-                format!("登录失败: {e}"),
+                format!("Login failed: {e}"),
             )),
         ),
     }

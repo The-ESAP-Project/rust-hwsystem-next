@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::UserService;
-use crate::api_models::{ApiResponse, ErrorCode, users::requests::UpdateUserRequest};
+use crate::models::{ApiResponse, ErrorCode, users::requests::UpdateUserRequest};
 
 pub async fn update_user(
     service: &UserService,
@@ -15,23 +15,28 @@ pub async fn update_user(
         match crate::utils::password::hash_password(&password) {
             Ok(hash) => update_data.password = Some(hash),
             Err(e) => {
-                return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-                    ErrorCode::BadRequest,
-                    format!("Password hashing failed: {e}"),
-                )));
+                return Ok(
+                    HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+                        ErrorCode::InternalServerError,
+                        format!("Password hashing failed: {e}"),
+                    )),
+                );
             }
         }
     }
 
     match storage.update_user(user_id, update_data).await {
-        Ok(Some(user)) => {
-            Ok(HttpResponse::Ok().json(ApiResponse::success(user, "用户信息更新成功")))
-        }
-        Ok(None) => Ok(HttpResponse::NotFound()
-            .json(ApiResponse::error_empty(ErrorCode::NotFound, "用户不存在"))),
+        Ok(Some(user)) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+            user,
+            "User information updated successfully",
+        ))),
+        Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
+            ErrorCode::UserNotFound,
+            "User not found",
+        ))),
         Err(e) => Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-            ErrorCode::BadRequest,
-            format!("用户信息更新失败: {e}"),
+            ErrorCode::UserUpdateFailed,
+            format!("Failed to update user information: {e}"),
         ))),
     }
 }

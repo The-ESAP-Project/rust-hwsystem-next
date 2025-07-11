@@ -3,7 +3,7 @@ use regex::Regex;
 use tracing::error;
 
 use super::UserService;
-use crate::api_models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
+use crate::models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
 use crate::utils::password::hash_password;
 
 pub async fn create_user(
@@ -14,7 +14,7 @@ pub async fn create_user(
     // 用户名长度校验：5 <= x <= 16
     if user_data.username.len() < 5 || user_data.username.len() > 16 {
         return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-            ErrorCode::BadRequest,
+            ErrorCode::UserNameInvalid,
             "Username length must be between 5 and 16 characters",
         )));
     }
@@ -23,7 +23,7 @@ pub async fn create_user(
     let username_re = Regex::new(r"^[A-Za-z0-9_-]+$").unwrap();
     if !username_re.is_match(&user_data.username) {
         return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-            ErrorCode::BadRequest,
+            ErrorCode::UserNameInvalid,
             "Username must contain only letters, numbers, underscores or hyphens",
         )));
     }
@@ -31,10 +31,12 @@ pub async fn create_user(
     user_data.password = match hash_password(&user_data.password) {
         Ok(hash) => hash,
         Err(e) => {
-            return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
-                ErrorCode::BadRequest,
-                format!("Password hashing failed: {e}"),
-            )));
+            return Ok(
+                HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+                    ErrorCode::InternalServerError,
+                    format!("Password hashing failed: {e}"),
+                )),
+            );
         }
     };
 
@@ -48,12 +50,12 @@ pub async fn create_user(
             // 判断是否唯一约束冲突
             if msg.contains("UNIQUE constraint failed") {
                 Ok(HttpResponse::Conflict().json(ApiResponse::error_empty(
-                    ErrorCode::Conflict,
+                    ErrorCode::UserAlreadyExists,
                     "Username or email already exists",
                 )))
             } else {
                 Ok(HttpResponse::BadRequest()
-                    .json(ApiResponse::error_empty(ErrorCode::BadRequest, msg)))
+                    .json(ApiResponse::error_empty(ErrorCode::UserCreationFailed, msg)))
             }
         }
     }

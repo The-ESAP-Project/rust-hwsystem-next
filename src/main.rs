@@ -4,7 +4,6 @@ use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use tracing::{debug, warn};
 
-mod api_models;
 mod cache;
 mod domain;
 mod errors;
