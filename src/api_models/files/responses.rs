@@ -3,12 +3,10 @@ use serde::Serialize;
 /// FileAttachment
 #[derive(Serialize)]
 pub struct FileUploadResponse {
-    /// 文件 ID
-    pub id: i64,
     /// 文件名
-    pub filename: String,
+    pub submission_token: String,
     /// 原始文件名
-    pub original_name: String,
+    pub file_name: String,
     /// 文件大小(字节)
     pub size: i64,
     /// 文件类型

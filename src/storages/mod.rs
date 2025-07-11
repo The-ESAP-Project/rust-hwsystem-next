@@ -35,13 +35,13 @@ pub trait Storage: Send + Sync {
     // 文件管理方法
     async fn upload_file(
         &self,
-        unique_name: &str,
+        submission_token: &str,
         file_name: &str,
         file_size: &i64,
         file_type: &str,
         user_id: i64,
     ) -> Result<File>;
-    async fn get_file_by_id(&self, file_id: i64) -> Result<Option<File>>;
+    async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>>;
 }
 
 pub struct StorageFactory;

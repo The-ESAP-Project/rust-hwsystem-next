@@ -36,8 +36,8 @@ pub async fn handle_upload(
     }
 
     // 文件相关信息
-    let mut unique_name = String::new();
-    let mut original_filename = String::new();
+    let mut submission_token = String::new();
+    let mut file_name = String::new();
     let mut file_size: i64 = 0;
     let mut file_uploaded = false;
     let mut file_type = String::new();
@@ -71,13 +71,13 @@ pub async fn handle_upload(
             }
 
             // 获取原始文件名
-            original_filename = content_disposition
+            file_name = content_disposition
                 .and_then(|cd| cd.get_filename())
                 .map(|s| s.to_string())
                 .unwrap_or_default();
 
-            unique_name = format!("{}{}", chrono::Utc::now().timestamp(), Uuid::new_v4());
-            let file_path = format!("{upload_dir}/{unique_name}.bin");
+            submission_token = format!("{}-{}", chrono::Utc::now().timestamp(), Uuid::new_v4());
+            let file_path = format!("{upload_dir}/{submission_token}.bin");
             let mut f = File::create(&file_path).map_err(|e| {
                 tracing::error!("{}", HWSystemError::file_operation(format!("{e}")));
                 actix_web::error::ErrorInternalServerError(HWSystemError::file_operation(
@@ -103,6 +103,13 @@ pub async fn handle_upload(
         }
     }
 
+    if !file_uploaded {
+        return Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
+            ErrorCode::FileNotFound,
+            "No file found in upload payload",
+        )));
+    }
+
     let storage = service.get_storage(req);
 
     let user_id = RequireJWT::extract_user_id(req)
@@ -110,8 +117,8 @@ pub async fn handle_upload(
 
     let db_file = match storage
         .upload_file(
-            &unique_name,
-            &original_filename,
+            &submission_token,
+            &file_name,
             &file_size,
             &file_type,
             user_id,
@@ -119,9 +126,8 @@ pub async fn handle_upload(
         .await
     {
         Ok(file) => FileUploadResponse {
-            id: file.id,
-            filename: file.unique_name,
-            original_name: file.file_name,
+            submission_token: file.submission_token,
+            file_name: file.file_name,
             size: file.file_size,
             content_type: file.file_type,
             uploaded_at: file.uploaded_at,
