@@ -16,7 +16,7 @@ pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Re
     let now = chrono::Utc::now();
 
     let result = sqlx::query(
-        "INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, created_at, updated_at) 
+        "INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, created_at, updated_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
     )
     .bind(&user.username)
@@ -25,8 +25,6 @@ pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Re
     .bind(user.role.to_string())
     .bind(UserStatus::Active.to_string())
     .bind(user.profile.as_ref().map(|p| &p.name))
-    .bind(user.profile.as_ref().and_then(|p| p.student_id.as_deref()))
-    .bind(user.profile.as_ref().and_then(|p| p.class.as_deref()))
     .bind(user.profile.as_ref().and_then(|p| p.avatar_url.as_deref()))
     .bind(now.timestamp()) // 使用时间戳
     .bind(now.timestamp()) // 使用时间戳
@@ -52,7 +50,7 @@ pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Re
 
 pub async fn get_user_by_id(storage: &SqliteStorage, id: i64) -> Result<Option<User>> {
     let result = sqlx::query(
-        "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE id = ?",
     )
     .bind(id)
@@ -68,7 +66,7 @@ pub async fn get_user_by_id(storage: &SqliteStorage, id: i64) -> Result<Option<U
 
 pub async fn get_user_by_username(storage: &SqliteStorage, username: &str) -> Result<Option<User>> {
     let result = sqlx::query(
-        "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE username = ?",
     )
     .bind(username)
@@ -84,7 +82,7 @@ pub async fn get_user_by_username(storage: &SqliteStorage, username: &str) -> Re
 
 pub async fn get_user_by_email(storage: &SqliteStorage, email: &str) -> Result<Option<User>> {
     let result = sqlx::query(
-        "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE email = ?",
     )
     .bind(email)
@@ -103,7 +101,7 @@ pub async fn get_user_by_username_or_email(
     identifier: &str,
 ) -> Result<Option<User>> {
     let result = sqlx::query(
-        "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users WHERE username = ? OR email = ?",
     )
     .bind(identifier)
@@ -174,7 +172,7 @@ pub async fn list_users_with_pagination(
 
     // 查询数据
     let data_sql = format!(
-        "SELECT id, username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at 
+        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
             FROM users{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
 
@@ -256,12 +254,8 @@ pub async fn update_user(
 
     if let Some(profile) = &update.profile {
         updates.push("profile_name = ?");
-        updates.push("student_id = ?");
-        updates.push("class = ?");
         updates.push("avatar_url = ?");
         params.push(profile.name.clone());
-        params.push(profile.student_id.clone().unwrap_or_default());
-        params.push(profile.class.clone().unwrap_or_default());
         params.push(profile.avatar_url.clone().unwrap_or_default());
     }
 
@@ -312,8 +306,6 @@ fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<User> {
 
     // 获取可选字段
     let profile_name: Option<String> = row.try_get("profile_name").ok();
-    let student_id: Option<String> = row.try_get("student_id").ok();
-    let class: Option<String> = row.try_get("class").ok();
     let avatar_url: Option<String> = row.try_get("avatar_url").ok();
     let last_login_ts: Option<i64> = row.try_get("last_login").ok();
 
@@ -340,14 +332,13 @@ fn user_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<User> {
         None
     };
 
-    let profile = if profile_name.is_some()
-        || student_id.is_some()
-        || class.is_some()
-        || avatar_url.is_some()
-    {
+    // TODO: Profile class 需要从新表中查询得到
+
+    let class: Option<String> = Some("Default Class".to_string()); // 默认值或从其他地方获取
+
+    let profile = if profile_name.is_some() || class.is_some() || avatar_url.is_some() {
         Some(UserProfile {
             name: profile_name.unwrap_or_default(),
-            student_id,
             class,
             avatar_url,
         })

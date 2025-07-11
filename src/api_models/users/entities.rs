@@ -106,7 +106,6 @@ impl std::str::FromStr for UserStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserProfile {
     pub name: String,
-    pub student_id: Option<String>,
     pub class: Option<String>,
     pub avatar_url: Option<String>,
 }

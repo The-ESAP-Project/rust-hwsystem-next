@@ -55,18 +55,26 @@ impl Storage for SqliteStorage {
     /// 文件模块
     async fn upload_file(
         &self,
-        unique_name: &str,
+        submission_token: &str,
         file_name: &str,
         file_size: &i64,
         file_type: &str,
         user_id: i64,
     ) -> Result<File> {
         // 文件上传逻辑
-        file::upload_file(self, unique_name, file_name, file_size, file_type, user_id).await
+        file::upload_file(
+            self,
+            submission_token,
+            file_name,
+            file_size,
+            file_type,
+            user_id,
+        )
+        .await
     }
 
-    async fn get_file_by_id(&self, file_id: i64) -> Result<Option<File>> {
+    async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>> {
         // 获取文件逻辑
-        file::get_file_by_id(self, file_id).await
+        file::get_file_by_token(self, file_id).await
     }
 }

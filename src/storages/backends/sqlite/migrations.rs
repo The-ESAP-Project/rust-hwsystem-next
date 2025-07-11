@@ -127,7 +127,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
     vec![
         Migration {
             version: 1,
-            name: "create_users_table_with_indexes".to_string(),
+            name: "create_table_with_indexes".to_string(),
             up_sql: "
                 -- 创建用户表
                 CREATE TABLE users (
@@ -138,35 +138,78 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     role TEXT NOT NULL,
                     status TEXT NOT NULL,
                     profile_name TEXT,
-                    student_id TEXT,
-                    class TEXT,
                     avatar_url TEXT,
                     last_login INTEGER,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL
                 );
 
-                CREATE TABLE files (
+                -- 创建班级表
+                CREATE TABLE classes (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    unique_name TEXT NOT NULL UNIQUE,
+                    teacher_id INTEGER NOT NULL,
+                    name TEXT NOT NULL UNIQUE,
+                    description TEXT,
+                    created_at INTEGER NOT NULL,
+                    updated_at INTEGER NOT NULL,
+                    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE SET NULL
+                );
+
+                -- 创建班级学生关联表
+                CREATE TABLE class_students (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    class_id INTEGER NOT NULL,
+                    student_id INTEGER NOT NULL,
+                    joined_at INTEGER NOT NULL,
+                    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                -- 创建作业表
+                CREATE TABLE assignments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    class_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    due_date INTEGER,
+                    created_at INTEGER NOT NULL,
+                    updated_at INTEGER NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE 
+                );
+
+                -- 创建提交表
+                CREATE TABLE submissions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    assignment_id INTEGER NOT NULL,
+                    creator_id INTEGER NOT NULL,
+                    content TEXT NOT NULL,
+                    submitted_at INTEGER NOT NULL,
+                    FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
+                    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                -- 创建文件表
+                CREATE TABLE files (
+                    submission_token TEXT PRIMARY KEY,
                     file_name TEXT NOT NULL,
                     file_size INTEGER NOT NULL,
                     file_type TEXT NOT NULL,
                     uploaded_at INTEGER NOT NULL,
                     user_id INTEGER NOT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
                 );
 
                 -- 插入初始管理员用户 (用户名: admin, 密码: admin123)
-                INSERT INTO users (username, email, password_hash, role, status, profile_name, student_id, class, avatar_url, last_login, created_at, updated_at)
-                VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', '000001', 'Admin', NULL, NULL, 1704067200, 1704067200);
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
+                VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', NULL, NULL, 1704067200, 1704067200);
 
                 -- 创建索引
                 CREATE INDEX idx_users_username ON users(username);
                 CREATE INDEX idx_users_email ON users(email);
                 CREATE INDEX idx_users_role ON users(role);
                 CREATE INDEX idx_users_status ON users(status);
-                CREATE INDEX idx_users_student_id ON users(student_id);
                 CREATE INDEX idx_users_last_login ON users(last_login);
             ".to_string(),
         },

@@ -11,11 +11,11 @@ use crate::system::app_config::AppConfig;
 pub async fn handle_download(
     service: &FileService,
     request: &HttpRequest,
-    file_id: i64,
+    file_token: String,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);
 
-    let db_file = match storage.get_file_by_id(file_id).await {
+    let db_file = match storage.get_file_by_token(file_token).await {
         Ok(Some(f)) => f,
         Ok(None) => {
             return Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
@@ -35,7 +35,7 @@ pub async fn handle_download(
 
     let config = AppConfig::get();
     let upload_dir = &config.upload.dir;
-    let file_path = format!("{}/{}.bin", upload_dir, db_file.unique_name);
+    let file_path = format!("{}/{}.bin", upload_dir, db_file.submission_token);
 
     if !Path::new(&file_path).exists() {
         return Ok(HttpResponse::NotFound()

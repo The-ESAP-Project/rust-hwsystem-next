@@ -7,7 +7,7 @@ use crate::errors::{HWSystemError, Result};
 
 pub async fn upload_file(
     storage: &SqliteStorage,
-    unique_name: &str,
+    submission_token: &str,
     file_name: &str,
     file_size: &i64,
     file_type: &str,
@@ -15,25 +15,22 @@ pub async fn upload_file(
 ) -> Result<File> {
     let now = chrono::Utc::now();
 
-    let result = sqlx::query(
-        "INSERT INTO files (unique_name, file_name, file_size, file_type, uploaded_at, user_id)
-            VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
+    let _ = sqlx::query(
+    "INSERT INTO files (submission_token, file_name, file_size, file_type, uploaded_at, user_id)
+        VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .bind(unique_name)
+    .bind(submission_token)
     .bind(file_name)
     .bind(file_size)
     .bind(file_type)
-    .bind(now.timestamp()) // 使用时间戳
+    .bind(now.timestamp())
     .bind(user_id)
-    .fetch_one(&storage.pool)
+    .execute(&storage.pool)
     .await
     .map_err(|e| HWSystemError::database_operation(format!("上传文件失败: {e}")))?;
 
-    let id: i64 = result.get("id");
-
     Ok(File {
-        id,
-        unique_name: unique_name.to_string(),
+        submission_token: submission_token.to_string(),
         file_name: file_name.to_string(),
         file_size: *file_size,
         file_type: file_type.to_string(),
@@ -42,8 +39,8 @@ pub async fn upload_file(
     })
 }
 
-pub async fn get_file_by_id(storage: &SqliteStorage, file_id: i64) -> Result<Option<File>> {
-    let result = sqlx::query("SELECT * FROM files WHERE id = ?")
+pub async fn get_file_by_token(storage: &SqliteStorage, file_id: String) -> Result<Option<File>> {
+    let result = sqlx::query("SELECT * FROM files WHERE submission_token = ?")
         .bind(file_id)
         .fetch_optional(&storage.pool)
         .await
@@ -51,8 +48,7 @@ pub async fn get_file_by_id(storage: &SqliteStorage, file_id: i64) -> Result<Opt
 
     match result {
         Some(row) => {
-            let id: i64 = row.get("id");
-            let unique_name: String = row.get("unique_name");
+            let submission_token: String = row.get("submission_token");
             let file_name: String = row.get("file_name");
             let file_size: i64 = row.get("file_size");
             let file_type: String = row.get("file_type");
@@ -64,8 +60,7 @@ pub async fn get_file_by_id(storage: &SqliteStorage, file_id: i64) -> Result<Opt
             let user_id: i64 = row.get("user_id");
 
             Ok(Some(File {
-                id,
-                unique_name,
+                submission_token,
                 file_name,
                 file_size,
                 file_type,
