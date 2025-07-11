@@ -46,7 +46,7 @@ pub trait Storage: Send + Sync {
     ) -> Result<File>;
     async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>>;
 
-    // 作业管理方法（新增）
+    // 作业管理方法
     async fn list_homeworks_with_pagination(
         &self,
         query: HomeworkListQuery,

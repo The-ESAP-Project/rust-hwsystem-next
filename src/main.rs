@@ -6,11 +6,11 @@ use tracing::{debug, warn};
 
 mod api_models;
 mod cache;
+mod domain;
 mod errors;
 mod middlewares;
 mod models;
 mod routes;
-mod services;
 mod storages;
 mod system;
 mod utils;

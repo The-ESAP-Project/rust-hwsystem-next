@@ -1,6 +1,6 @@
-use sqlx::FromRow;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Homework {
     pub id: i64,
     pub title: String,

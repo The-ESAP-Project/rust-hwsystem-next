@@ -1,16 +1,16 @@
 use crate::api_models::{ApiResponse, ErrorCode, homeworks::requests::HomeworkListQuery};
-use crate::storages::Storage;
-use actix_web::{HttpResponse, Result as ActixResult, web};
-use std::sync::Arc;
+use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
+
+use super::HomeworkService;
 
 pub async fn list_homeworks(
-    storage: web::Data<Arc<dyn Storage>>,
-    query: web::Query<HomeworkListQuery>,
+    service: &HomeworkService,
+    request: &HttpRequest,
+    query: HomeworkListQuery,
 ) -> ActixResult<HttpResponse> {
-    match storage
-        .list_homeworks_with_pagination(query.into_inner())
-        .await
-    {
+    let storage = service.get_storage(request);
+
+    match storage.list_homeworks_with_pagination(query).await {
         Ok(resp) => Ok(HttpResponse::Ok().json(ApiResponse::success(resp, "获取作业列表成功"))),
         Err(e) => Ok(
             HttpResponse::InternalServerError().json(ApiResponse::error_empty(

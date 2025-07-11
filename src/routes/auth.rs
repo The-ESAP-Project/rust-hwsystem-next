@@ -3,8 +3,8 @@ use once_cell::sync::Lazy;
 
 use crate::api_models::auth::requests::LoginRequest;
 use crate::api_models::users::requests::CreateUserRequest;
+use crate::domain::AuthService;
 use crate::middlewares;
-use crate::services::AuthService;
 
 // 懒加载的全局 AuthService 实例
 static AUTH_SERVICE: Lazy<AuthService> = Lazy::new(AuthService::new_lazy);
