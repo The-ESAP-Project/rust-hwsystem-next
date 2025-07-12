@@ -2,6 +2,7 @@ use actix_cors::Cors;
 use actix_web::middleware::{Compress, DefaultHeaders};
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
+use human_panic::setup_panic;
 use tracing::{debug, warn};
 
 mod cache;
@@ -32,6 +33,7 @@ async fn main() -> std::io::Result<()> {
     debug!("Starting pre-startup processing...");
 
     // 初始化配置
+    setup_panic!();
     AppConfig::init().expect("Failed to initialize configuration");
     let config = AppConfig::get();
 

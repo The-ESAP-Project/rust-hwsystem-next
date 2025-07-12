@@ -13,12 +13,12 @@ pub struct MokaCacheWrapper {
 
 impl Default for MokaCacheWrapper {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("MokaCacheWrapper 初始化失败，请检查配置")
     }
 }
 
 impl MokaCacheWrapper {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, String> {
         let config = AppConfig::get();
         let inner = Cache::builder()
             .max_capacity(config.cache.memory.max_capacity)
@@ -26,7 +26,7 @@ impl MokaCacheWrapper {
                 (config.jwt.access_token_expiry * 60) as u64,
             ))
             .build();
-        Self { inner }
+        Ok(Self { inner })
     }
 }
 

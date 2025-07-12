@@ -15,7 +15,7 @@ pub struct RedisObjectCache {
 }
 
 impl RedisObjectCache {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, String> {
         let config = AppConfig::get();
         let redis_config = &config.cache.redis;
 
@@ -34,25 +34,27 @@ impl RedisObjectCache {
                     debug!("Redis connection test successful: {}", response);
                 }
                 Err(e) => {
-                    panic!(
-                        "Redis PING command failed: {e}. Check Redis server status and URL: {}",
-                        redis_config.url
+                    error!(
+                        "Failed to ping Redis server: {}. Check Redis server status and URL: {}",
+                        e, redis_config.url
                     );
+                    return Err(format!("Redis ping failed: {e}"));
                 }
             },
             Err(e) => {
-                panic!(
-                    "Failed to connect to Redis: {e}. Check Redis server status and URL: {}",
-                    redis_config.url
+                error!(
+                    "Failed to ping Redis server: {}. Check Redis server status and URL: {}",
+                    e, redis_config.url
                 );
+                return Err(format!("Redis ping failed: {e}"));
             }
         }
 
-        Self {
+        Ok(Self {
             client,
             key_prefix: redis_config.key_prefix.clone(),
             ttl: redis_config.default_ttl,
-        }
+        })
     }
 
     async fn get_connection(&self) -> Result<MultiplexedConnection, redis::RedisError> {
