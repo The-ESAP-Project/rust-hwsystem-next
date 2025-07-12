@@ -1,10 +1,14 @@
+pub mod create;
+pub mod delete;
 pub mod get;
+pub mod list;
+pub mod update;
 
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
+use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
 use crate::storages::Storage;
-use crate::system::app_config::AppConfig;
 
 pub struct ClassService {
     storage: Option<Arc<dyn Storage>>,
@@ -27,11 +31,44 @@ impl ClassService {
         }
     }
 
-    pub(crate) fn get_config(&self) -> &AppConfig {
-        AppConfig::get()
+    // 获取班级列表
+    pub async fn list_classes(
+        &self,
+        request: &HttpRequest,
+        query: ClassQueryParams,
+    ) -> ActixResult<HttpResponse> {
+        list::list_classes(self, request, query).await
     }
 
+    pub async fn create_class(
+        &self,
+        req: &HttpRequest,
+        class_data: CreateClassRequest,
+    ) -> ActixResult<HttpResponse> {
+        create::create_class(self, req, class_data).await
+    }
+
+    // 根据班级 ID 获取班级信息
     pub async fn get_class(&self, req: &HttpRequest, class_id: i64) -> ActixResult<HttpResponse> {
         get::get_class(self, req, class_id).await
+    }
+
+    // 更新班级信息
+    pub async fn update_class(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+        update_data: UpdateClassRequest,
+    ) -> ActixResult<HttpResponse> {
+        update::update_class(self, req, class_id, update_data).await
+    }
+
+    // 根据班级 ID 删除班级
+    pub async fn delete_class(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        delete::delete_class(self, req, class_id).await
     }
 }

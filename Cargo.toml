@@ -3,7 +3,7 @@ name = "rust-hwsystem-next"
 version = "0.0.1"
 description = "A next-generation homework system based on Rust and Actix-web."
 license = "MIT"
-authors = ["AptS-1547 <apts-1547@esaps.net>"]
+authors = ["AptS-1547 <apts-1547@esaps.net>", "Cg8-5712 <cg8.5712@gmail.com"]
 edition = "2024"
 
 # 优化配置
@@ -53,3 +53,4 @@ regex = "1.11.1"
 futures = "0.3.31"
 actix-multipart = "0.7.2"
 uuid = "1.17.0"
+rand = "0.9.1"

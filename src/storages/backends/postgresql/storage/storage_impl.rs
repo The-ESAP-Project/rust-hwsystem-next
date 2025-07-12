@@ -1,4 +1,4 @@
-use super::SqliteStorage;
+use super::PostgresqlStorage;
 use crate::models::{
     classes::{
         entities::Class,
@@ -14,13 +14,13 @@ use crate::models::{
     },
 };
 
-use super::{classes, file, homeworks, user};
+use super::{file, homeworks, user};
 use crate::errors::Result;
 use crate::storages::Storage;
 use async_trait::async_trait;
 
 #[async_trait]
-impl Storage for SqliteStorage {
+impl Storage for PostgresqlStorage {
     /// 用户模块
     async fn create_user(&self, user: CreateUserRequest) -> Result<User> {
         user::create_user(self, user).await
@@ -68,18 +68,21 @@ impl Storage for SqliteStorage {
 
     /// 班级模块
     async fn create_class(&self, class: CreateClassRequest) -> Result<Class> {
-        classes::create_class(self, class).await
+        // classes::create_class(self, class).await
+        unimplemented!("create_class not implemented for PostgresqlStorage")
     }
 
     async fn get_class_by_id(&self, class_id: i64) -> Result<Option<Class>> {
-        classes::get_class_by_id(self, class_id).await
+        // classes::get_class_by_id(self, class_id).await
+        unimplemented!("get_class_by_id not implemented for PostgresqlStorage")
     }
 
     async fn list_classes_with_pagination(
         &self,
         query: ClassListQuery,
     ) -> Result<ClassListResponse> {
-        classes::list_classes_with_pagination(self, query).await
+        // classes::list_classes_with_pagination(self, query).await
+        unimplemented!("list_classes_with_pagination not implemented for PostgresqlStorage")
     }
 
     async fn update_class(
@@ -87,11 +90,13 @@ impl Storage for SqliteStorage {
         class_id: i64,
         update: UpdateClassRequest,
     ) -> Result<Option<Class>> {
-        classes::update_class(self, class_id, update).await
+        // classes::update_class(self, class_id, update).await
+        unimplemented!("update_class not implemented for PostgresqlStorage")
     }
 
     async fn delete_class(&self, class_id: i64) -> Result<bool> {
-        classes::delete_class(self, class_id).await
+        // classes::delete_class(self, class_id).await
+        unimplemented!("delete_class not implemented for PostgresqlStorage")
     }
 
     /// 文件模块

@@ -17,8 +17,7 @@ pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Re
 
     let result = sqlx::query_as::<sqlx::Sqlite, User>(
         "INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
-            RETURNING id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *",
     )
     .bind(&user.username)
     .bind(&user.email)
@@ -37,14 +36,11 @@ pub async fn create_user(storage: &SqliteStorage, user: CreateUserRequest) -> Re
 }
 
 pub async fn get_user_by_id(storage: &SqliteStorage, id: i64) -> Result<Option<User>> {
-    let result = sqlx::query_as::<sqlx::Sqlite, User>(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
-            FROM users WHERE id = ?",
-    )
-    .bind(id)
-    .fetch_optional(&storage.pool)
-    .await
-    .map_err(|e| HWSystemError::database_operation(format!("Search user by ID failed: {e}")))?;
+    let result = sqlx::query_as::<sqlx::Sqlite, User>("SELECT * FROM users WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&storage.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("Search user by ID failed: {e}")))?;
 
     match result {
         Some(row) => Ok(Some(row)),
@@ -53,14 +49,13 @@ pub async fn get_user_by_id(storage: &SqliteStorage, id: i64) -> Result<Option<U
 }
 
 pub async fn get_user_by_username(storage: &SqliteStorage, username: &str) -> Result<Option<User>> {
-    let result = sqlx::query_as::<sqlx::Sqlite, User>(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
-            FROM users WHERE username = ?",
-    )
-    .bind(username)
-    .fetch_optional(&storage.pool)
-    .await
-    .map_err(|e| HWSystemError::database_operation(format!("Search user by username failed: {e}")))?;
+    let result = sqlx::query_as::<sqlx::Sqlite, User>("SELECT * FROM users WHERE username = ?")
+        .bind(username)
+        .fetch_optional(&storage.pool)
+        .await
+        .map_err(|e| {
+            HWSystemError::database_operation(format!("Search user by username failed: {e}"))
+        })?;
 
     match result {
         Some(row) => Ok(Some(row)),
@@ -69,14 +64,13 @@ pub async fn get_user_by_username(storage: &SqliteStorage, username: &str) -> Re
 }
 
 pub async fn get_user_by_email(storage: &SqliteStorage, email: &str) -> Result<Option<User>> {
-    let result = sqlx::query_as::<sqlx::Sqlite, User>(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
-            FROM users WHERE email = ?",
-    )
-    .bind(email)
-    .fetch_optional(&storage.pool)
-    .await
-    .map_err(|e| HWSystemError::database_operation(format!("Search user by email failed: {e}")))?;
+    let result = sqlx::query_as::<sqlx::Sqlite, User>("SELECT * FROM users WHERE email = ?")
+        .bind(email)
+        .fetch_optional(&storage.pool)
+        .await
+        .map_err(|e| {
+            HWSystemError::database_operation(format!("Search user by email failed: {e}"))
+        })?;
 
     match result {
         Some(row) => Ok(Some(row)),
@@ -88,15 +82,15 @@ pub async fn get_user_by_username_or_email(
     storage: &SqliteStorage,
     identifier: &str,
 ) -> Result<Option<User>> {
-    let result = sqlx::query_as::<sqlx::Sqlite, User>(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
-            FROM users WHERE username = ? OR email = ?",
-    )
-    .bind(identifier)
-    .bind(identifier)
-    .fetch_optional(&storage.pool)
-    .await
-    .map_err(|e| HWSystemError::database_operation(format!("根据用户名或邮箱查询用户失败: {e}")))?;
+    let result =
+        sqlx::query_as::<sqlx::Sqlite, User>("SELECT * FROM users WHERE username = ? OR email = ?")
+            .bind(identifier)
+            .bind(identifier)
+            .fetch_optional(&storage.pool)
+            .await
+            .map_err(|e| {
+                HWSystemError::database_operation(format!("根据用户名或邮箱查询用户失败: {e}"))
+            })?;
 
     match result {
         Some(row) => Ok(Some(row)),
@@ -160,7 +154,7 @@ pub async fn list_users_with_pagination(
 
     // 查询数据
     let data_sql = format!(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at 
+        "SELECT * 
             FROM users{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
 
@@ -170,15 +164,10 @@ pub async fn list_users_with_pagination(
     }
     data_query = data_query.bind(size).bind(offset);
 
-    let rows = data_query
+    let users = data_query
         .fetch_all(&storage.pool)
         .await
         .map_err(|e| HWSystemError::database_operation(format!("查询用户列表失败: {e}")))?;
-
-    let mut users = Vec::new();
-    for row in rows {
-        users.push(row);
-    }
 
     let pages = (total + size - 1) / size; // 向上取整
 

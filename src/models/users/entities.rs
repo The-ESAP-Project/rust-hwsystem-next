@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{Decode, Sqlite, Type, sqlite::SqliteValueRef};
+use sqlx::{Decode, Postgres, Type, postgres::PgValueRef};
 use std::str::FromStr;
 
 // 用户角色
@@ -55,15 +55,15 @@ impl std::str::FromStr for UserRole {
     }
 }
 
-impl Type<Sqlite> for UserRole {
-    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
-        <String as Type<Sqlite>>::type_info()
+impl Type<Postgres> for UserRole {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        <String as Type<Postgres>>::type_info()
     }
 }
 
-impl<'r> Decode<'r, Sqlite> for UserRole {
-    fn decode(value: SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s: String = <String as Decode<Sqlite>>::decode(value)?;
+impl<'r> Decode<'r, Postgres> for UserRole {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s: String = <String as Decode<Postgres>>::decode(value)?;
         UserRole::from_str(&s).map_err(|e| format!("UserRole decode error: {e}").into())
     }
 }
@@ -117,15 +117,15 @@ impl std::str::FromStr for UserStatus {
     }
 }
 
-impl Type<Sqlite> for UserStatus {
-    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
-        <String as Type<Sqlite>>::type_info()
+impl Type<Postgres> for UserStatus {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        <String as Type<Postgres>>::type_info()
     }
 }
 
-impl<'r> Decode<'r, Sqlite> for UserStatus {
-    fn decode(value: SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s: String = <String as Decode<Sqlite>>::decode(value)?;
+impl<'r> Decode<'r, Postgres> for UserStatus {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let s: String = <String as Decode<Postgres>>::decode(value)?;
         UserStatus::from_str(&s).map_err(|e| format!("UserStatus decode error: {e}").into())
     }
 }

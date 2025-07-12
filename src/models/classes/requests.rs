@@ -12,6 +12,7 @@ pub struct ClassQueryParams {
 // 创建班级请求
 #[derive(Debug, Deserialize)]
 pub struct CreateClassRequest {
+    pub teacher_id: i64,
     pub class_name: String,
     pub description: Option<String>,
 }
@@ -23,7 +24,7 @@ pub struct UpdateClassRequest {
     pub description: Option<String>,
 }
 
-// 班级列表查询参数（用于存储层）
+// 用户列表查询参数（用于存储层）
 #[derive(Debug, Clone, Deserialize)]
 pub struct ClassListQuery {
     pub page: Option<i64>,
