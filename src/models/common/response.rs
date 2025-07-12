@@ -21,6 +21,15 @@ impl<T> ApiResponse<T> {
             timestamp: chrono::Utc::now(),
         }
     }
+
+    pub fn error(code: ErrorCode, data: T, message: impl Into<String>) -> Self {
+        Self {
+            code: code as i32,
+            message: message.into(),
+            data: Some(data),
+            timestamp: chrono::Utc::now(),
+        }
+    }
 }
 
 impl ApiResponse<()> {

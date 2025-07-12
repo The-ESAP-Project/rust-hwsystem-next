@@ -161,6 +161,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     class_id INTEGER NOT NULL,
                     student_id INTEGER NOT NULL,
+                    role TEXT NOT NULL,
                     joined_at INTEGER NOT NULL,
                     FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
                     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE

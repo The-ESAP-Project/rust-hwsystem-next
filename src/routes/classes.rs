@@ -4,6 +4,7 @@ use once_cell::sync::Lazy;
 use crate::domain::ClassService;
 use crate::middlewares;
 use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
+use crate::models::users::entities::UserRole;
 use crate::utils::SafeI64;
 
 // 懒加载的全局 CLASS_SERVICE 实例
@@ -30,6 +31,15 @@ pub async fn get_class(req: HttpRequest, id: SafeI64) -> ActixResult<HttpRespons
     CLASS_SERVICE.get_class(&req, id.0).await
 }
 
+pub async fn get_class_by_code(
+    req: HttpRequest,
+    code: web::Path<String>,
+) -> ActixResult<HttpResponse> {
+    CLASS_SERVICE
+        .get_class_by_code(&req, code.into_inner())
+        .await
+}
+
 pub async fn update_class(
     req: HttpRequest,
     id: SafeI64,
@@ -51,13 +61,26 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/api/v1/classes")
             .wrap(middlewares::RequireJWT)
             .service(
-                web::scope("")
-                    .wrap(middlewares::RequireRole::new("admin"))
-                    .route("", web::get().to(list_classes))
-                    .route("", web::post().to(create_class))
-                    .route("/{id}", web::get().to(get_class))
-                    .route("/{id}", web::put().to(update_class))
-                    .route("/{id}", web::delete().to(delete_class)),
+                web::resource("").route(web::get().to(list_classes)).route(
+                    web::post()
+                        .to(create_class)
+                        .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
+                ),
+            )
+            .service(web::resource("/code/{code}").route(web::get().to(get_class_by_code)))
+            .service(
+                web::resource("/{id}")
+                    .route(web::get().to(get_class))
+                    .route(
+                        web::put()
+                            .to(update_class)
+                            .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
+                    )
+                    .route(
+                        web::delete()
+                            .to(delete_class)
+                            .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
+                    ),
             ),
     );
 }

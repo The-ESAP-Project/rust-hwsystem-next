@@ -1,3 +1,4 @@
+pub mod class_students;
 pub mod classes;
 pub mod file;
 pub mod homeworks;

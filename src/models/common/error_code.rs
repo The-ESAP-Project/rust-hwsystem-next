@@ -34,9 +34,13 @@ pub enum ErrorCode {
     UserEmailAlreadyExists = 4013, // 用户邮箱已存在、
 
     // 班级相关错误
-    ClassNotFound = 5000,       // 班级未找到
-    ClassAlreadyExists = 5001,  // 班级已存在
-    ClassCreationFailed = 5002, // 班级创建失败
-    ClassUpdateFailed = 5003,   // 班级更新失败
-    ClassDeleteFailed = 5004,   // 班级删除失败
+    ClassNotFound = 5000,          // 班级未找到
+    ClassAlreadyExists = 5001,     // 班级已存在
+    ClassCreationFailed = 5002,    // 班级创建失败
+    ClassUpdateFailed = 5003,      // 班级更新失败
+    ClassDeleteFailed = 5004,      // 班级删除失败
+    ClassJoinFailed = 5010,        // 加入班级失败
+    ClassInviteCodeInvalid = 5011, // 班级邀请码无效
+    ClassAlreadyJoined = 5012,     // 已经加入该班级
+    ClassJoinForbidden = 5013,     // 加入班级被禁止
 }

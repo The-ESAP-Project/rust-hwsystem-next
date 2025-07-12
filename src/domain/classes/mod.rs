@@ -53,6 +53,15 @@ impl ClassService {
         get::get_class(self, req, class_id).await
     }
 
+    // 根据班级邀请码获取班级信息
+    pub async fn get_class_by_code(
+        &self,
+        req: &HttpRequest,
+        code: String,
+    ) -> ActixResult<HttpResponse> {
+        get::get_class_by_code(self, req, code).await
+    }
+
     // 更新班级信息
     pub async fn update_class(
         &self,

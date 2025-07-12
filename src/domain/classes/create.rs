@@ -23,6 +23,11 @@ pub async fn create_class(
                     ErrorCode::ClassAlreadyExists,
                     "Classname already exists",
                 )))
+            } else if msg.contains("FOREIGN KEY constraint failed") {
+                Ok(HttpResponse::BadRequest().json(ApiResponse::error_empty(
+                    ErrorCode::ClassCreationFailed,
+                    "Teacher does not exist",
+                )))
             } else {
                 Ok(
                     HttpResponse::InternalServerError().json(ApiResponse::error_empty(

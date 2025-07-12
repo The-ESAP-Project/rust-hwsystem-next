@@ -1,5 +1,6 @@
 use super::PostgresqlStorage;
 use crate::models::{
+    class_student::entities::ClassStudent,
     classes::{
         entities::Class,
         requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
@@ -77,6 +78,11 @@ impl Storage for PostgresqlStorage {
         unimplemented!("get_class_by_id not implemented for PostgresqlStorage")
     }
 
+    async fn get_class_by_code(&self, invite_code: &str) -> Result<Option<Class>> {
+        // classes::get_class_by_code(self, invite_code).await
+        unimplemented!("get_class_by_code not implemented for PostgresqlStorage")
+    }
+
     async fn list_classes_with_pagination(
         &self,
         query: ClassListQuery,
@@ -97,6 +103,33 @@ impl Storage for PostgresqlStorage {
     async fn delete_class(&self, class_id: i64) -> Result<bool> {
         // classes::delete_class(self, class_id).await
         unimplemented!("delete_class not implemented for PostgresqlStorage")
+    }
+
+    /// 班级学生管理方法
+    async fn join_class(&self, user_id: i64, class_id: i64) -> Result<ClassStudent> {
+        // class_students::join_class(self, user_id, join_request).await
+        unimplemented!("join_class not implemented for PostgresqlStorage")
+    }
+
+    async fn get_user_class_role(
+        &self,
+        user_id: i64,
+        class_id: i64,
+    ) -> Result<Option<ClassStudent>> {
+        // class_students::get_user_class_role(self, user_id, invite_code).await
+        unimplemented!("get_user_class_role not implemented for PostgresqlStorage")
+    }
+
+    async fn get_class_and_user_student_by_id_and_code(
+        &self,
+        class_id: i64,
+        invite_code: &str,
+        user_id: i64,
+    ) -> Result<(Option<Class>, Option<ClassStudent>)> {
+        // class_students::get_class_and_user_role_by_id_and_code(self, class_id, invite_code, user_id).await
+        unimplemented!(
+            "get_class_and_user_role_by_id_and_code not implemented for PostgresqlStorage"
+        )
     }
 
     /// 文件模块
@@ -120,7 +153,7 @@ impl Storage for PostgresqlStorage {
         .await
     }
 
-    async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>> {
+    async fn get_file_by_token(&self, file_id: &str) -> Result<Option<File>> {
         // 获取文件逻辑
         file::get_file_by_token(self, file_id).await
     }
