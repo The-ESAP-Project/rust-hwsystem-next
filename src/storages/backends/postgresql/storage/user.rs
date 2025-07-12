@@ -49,7 +49,10 @@ pub async fn get_user_by_id(storage: &PostgresqlStorage, id: i64) -> Result<Opti
     Ok(result)
 }
 
-pub async fn get_user_by_username(storage: &PostgresqlStorage, username: &str) -> Result<Option<User>> {
+pub async fn get_user_by_username(
+    storage: &PostgresqlStorage,
+    username: &str,
+) -> Result<Option<User>> {
     let result = sqlx::query_as::<sqlx::Postgres, User>(
         "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at
             FROM users WHERE username = $1",
@@ -270,7 +273,11 @@ pub async fn update_user(
     updates.push(format!("updated_at = ${}", params.len() + 1));
     params.push(now.timestamp().to_string());
 
-    let sql = format!("UPDATE users SET {} WHERE id = ${}", updates.join(", "), params.len() + 1);
+    let sql = format!(
+        "UPDATE users SET {} WHERE id = ${}",
+        updates.join(", "),
+        params.len() + 1
+    );
     params.push(id.to_string());
 
     let mut query_builder = sqlx::query(&sql);

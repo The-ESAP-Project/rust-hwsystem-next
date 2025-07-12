@@ -30,9 +30,9 @@ impl PostgresqlMigrationManager {
                 checksum TEXT
             )",
         )
-            .execute(&self.pool)
-            .await
-            .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
 
         Ok(())
     }
@@ -67,15 +67,12 @@ impl PostgresqlMigrationManager {
         for stmt in migration.up_sql.split(';') {
             let trimmed = stmt.trim();
             if !trimmed.is_empty() {
-                sqlx::query(trimmed)
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(|e| {
-                        HWSystemError::database_operation(format!(
-                            "执行迁移v{}失败: {}",
-                            migration.version, e
-                        ))
-                    })?;
+                sqlx::query(trimmed).execute(&mut *tx).await.map_err(|e| {
+                    HWSystemError::database_operation(format!(
+                        "执行迁移v{}失败: {}",
+                        migration.version, e
+                    ))
+                })?;
             }
         }
 

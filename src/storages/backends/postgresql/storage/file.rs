@@ -1,6 +1,6 @@
 use super::PostgresqlStorage;
-use crate::models::files::entities::File;
 use crate::errors::{HWSystemError, Result};
+use crate::models::files::entities::File;
 
 pub async fn upload_file(
     storage: &PostgresqlStorage,
@@ -30,7 +30,10 @@ pub async fn upload_file(
     Ok(result)
 }
 
-pub async fn get_file_by_token(storage: &PostgresqlStorage, file_id: String) -> Result<Option<File>> {
+pub async fn get_file_by_token(
+    storage: &PostgresqlStorage,
+    file_id: String,
+) -> Result<Option<File>> {
     let result = sqlx::query_as::<_, File>("SELECT * FROM files WHERE submission_token = $1")
         .bind(file_id)
         .fetch_optional(&storage.pool)

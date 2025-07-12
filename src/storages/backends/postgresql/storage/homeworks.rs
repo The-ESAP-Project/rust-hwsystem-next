@@ -27,7 +27,11 @@ pub async fn list_homeworks_with_pagination(
         param_index += 1;
     }
     if let Some(search) = &query.search {
-        conditions.push(format!("(title ILIKE ${} OR description ILIKE ${})", param_index, param_index + 1));
+        conditions.push(format!(
+            "(title ILIKE ${} OR description ILIKE ${})",
+            param_index,
+            param_index + 1
+        ));
         let pattern = format!("%{}%", search);
         params.push(pattern.clone());
         params.push(pattern);
@@ -65,7 +69,8 @@ pub async fn list_homeworks_with_pagination(
     // 查询数据
     let data_sql = format!(
         "SELECT * FROM homeworks{where_clause} ORDER BY {order_by} {order} LIMIT ${} OFFSET ${}",
-        param_index, param_index + 1
+        param_index,
+        param_index + 1
     );
     let mut data_query = sqlx::query_as::<_, Homework>(&data_sql);
     for param in &params {
@@ -102,7 +107,12 @@ fn homework_to_response(hw: &Homework) -> HomeworkResponse {
         content: hw.content.clone(),
         deadline: hw
             .deadline
-            .map(|dt| Utc.timestamp_opt(dt, 0).single().map(|d| d.to_rfc3339()).unwrap_or_default())
+            .map(|dt| {
+                Utc.timestamp_opt(dt, 0)
+                    .single()
+                    .map(|d| d.to_rfc3339())
+                    .unwrap_or_default()
+            })
             .unwrap_or_default(),
         max_score: hw.max_score,
         allow_late_submission: hw.allow_late_submission != 0,
@@ -114,7 +124,15 @@ fn homework_to_response(hw: &Homework) -> HomeworkResponse {
         submission_count: hw.submission_count,
         status: hw.status.clone(),
         created_by: json!({ "id": hw.created_by }), // 可根据需要补充更多用户信息
-        created_at: Utc.timestamp_opt(hw.created_at, 0).single().map(|d| d.to_rfc3339()).unwrap_or_default(),
-        updated_at: Utc.timestamp_opt(hw.updated_at, 0).single().map(|d| d.to_rfc3339()).unwrap_or_default(),
+        created_at: Utc
+            .timestamp_opt(hw.created_at, 0)
+            .single()
+            .map(|d| d.to_rfc3339())
+            .unwrap_or_default(),
+        updated_at: Utc
+            .timestamp_opt(hw.updated_at, 0)
+            .single()
+            .map(|d| d.to_rfc3339())
+            .unwrap_or_default(),
     }
 }

@@ -8,7 +8,7 @@ use super::migrations::PostgresqlMigrationManager;
 use crate::errors::{HWSystemError, Result};
 use crate::system::app_config::AppConfig;
 use sqlx::postgres::{PgPool, PgPoolOptions};
-use tracing::{info, error, warn};
+use tracing::{error, info, warn};
 
 #[derive(Clone)]
 pub struct PostgresqlStorage {
@@ -20,10 +20,9 @@ impl PostgresqlStorage {
         let config = AppConfig::get();
 
         info!("初始化 PostgreSQL 数据库连接...");
-        info!("数据库信息: {}:{}/{}",
-            config.database.host,
-            config.database.port,
-            config.database.name
+        info!(
+            "数据库信息: {}:{}/{}",
+            config.database.host, config.database.port, config.database.name
         );
         info!("连接池配置: {} 连接", config.database.pool_size);
 
@@ -58,10 +57,9 @@ impl PostgresqlStorage {
         migration_manager.migrate_up().await?;
 
         info!("PostgreSQL 数据库连接成功");
-        warn!("PostgresqlStorage initialized, database: {}:{}/{}",
-            config.database.host,
-            config.database.port,
-            config.database.name
+        warn!(
+            "PostgresqlStorage initialized, database: {}:{}/{}",
+            config.database.host, config.database.port, config.database.name
         );
 
         Ok(storage)
