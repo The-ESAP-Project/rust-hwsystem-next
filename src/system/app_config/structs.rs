@@ -58,10 +58,11 @@ pub struct JwtConfig {
 /// 数据库配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
+    #[serde(rename = "type")]
     pub backend: String,
-    pub url: String,
-    pub pool_size: u32,
-    pub timeout: u64,
+    pub url: String,    // 数据库连接 URL
+    pub pool_size: u32, // 连接池大小
+    pub timeout: u64,   // 连接超时 (秒)
 }
 
 /// 缓存配置
