@@ -3,6 +3,7 @@ pub mod jwt;
 pub mod parameter_error_handler;
 pub mod password;
 pub mod random_code;
+pub mod sqlx_macros;
 pub mod validate;
 
 pub use extractor::SafeI64;

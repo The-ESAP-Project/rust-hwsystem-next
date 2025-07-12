@@ -10,8 +10,10 @@ macro_rules! declare_object_cache_plugin {
                 $name,
                 Arc::new(|| {
                     Box::pin(async {
-                        let cache = <$ty>::new();
-                        Ok(Box::new(cache) as Box<dyn $crate::cache::ObjectCache>)
+                        match <$ty>::new() {
+                            Ok(cache) => Ok(Box::new(cache) as Box<dyn $crate::cache::ObjectCache>),
+                            Err(e) => Err($crate::errors::HWSystemError::cache_connection(e)),
+                        }
                     })
                 }),
             );

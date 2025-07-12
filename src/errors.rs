@@ -1,7 +1,8 @@
-use std::fmt;
+use std::fmt::{self};
 
 #[derive(Debug, Clone)]
 pub enum HWSystemError {
+    CacheConnection(String),
     DatabaseConfig(String),
     DatabaseConnection(String),
     DatabaseOperation(String),
@@ -15,6 +16,7 @@ pub enum HWSystemError {
 impl fmt::Display for HWSystemError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            HWSystemError::CacheConnection(msg) => write!(f, "缓存连接错误: {msg}"),
             HWSystemError::DatabaseConfig(msg) => write!(f, "数据库配置错误: {msg}"),
             HWSystemError::DatabaseConnection(msg) => write!(f, "数据库连接错误: {msg}"),
             HWSystemError::DatabaseOperation(msg) => write!(f, "数据库操作错误: {msg}"),
@@ -31,6 +33,10 @@ impl std::error::Error for HWSystemError {}
 
 // 便捷的构造函数
 impl HWSystemError {
+    pub fn cache_connection<T: Into<String>>(msg: T) -> Self {
+        HWSystemError::CacheConnection(msg.into())
+    }
+
     pub fn database_config<T: Into<String>>(msg: T) -> Self {
         HWSystemError::DatabaseConfig(msg.into())
     }
