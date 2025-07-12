@@ -15,8 +15,14 @@ refresh_token_expiry = 1
 refresh_token_remember_me_expiry = 3
 
 [database]
-# 开发环境使用独立的数据库文件
-url = "hwsystem_dev.db"
+type = "postgresql"
+host = "192.168.1.9"
+port = 54321
+name = "hwsystem_dev"
+user = "hwsystem"
+password = "Aa123456"
+pool_size = 5
+timeout = 30
 
 [cache]
 type = "moka"

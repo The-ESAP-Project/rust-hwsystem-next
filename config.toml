@@ -41,7 +41,7 @@ refresh_token_expiry = 7
 refresh_token_remember_me_expiry = 30
 
 [database]
-# 数据库后端: sqlite, postgres, mysql
+# 数据库后端: postgresql, postgres, mysql
 backend = "sqlite"
 # 数据库连接 URL
 url = "hwsystem.db"

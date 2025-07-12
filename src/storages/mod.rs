@@ -53,6 +53,13 @@ pub trait Storage: Send + Sync {
     ) -> Result<HomeworkListResponse>;
 }
 
+// 切换数据库后端
+#[cfg(feature = "postgresql")]
+pub use backends::postgresql::*;
+
+#[cfg(not(feature = "postgresql"))]
+pub use backends::postgresql::*;
+
 pub struct StorageFactory;
 
 impl StorageFactory {
@@ -73,3 +80,5 @@ impl StorageFactory {
         }
     }
 }
+
+// use sqlx::PgPool; // 如果有连接池相关导入
