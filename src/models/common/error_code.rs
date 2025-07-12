@@ -31,5 +31,12 @@ pub enum ErrorCode {
     UserNameInvalid = 4010,        // 用户名无效
     UserNameAlreadyExists = 4011,  // 用户名已存在
     UserEmailInvalid = 4012,       // 用户邮箱无效
-    UserEmailAlreadyExists = 4013, // 用户邮箱已存在
+    UserEmailAlreadyExists = 4013, // 用户邮箱已存在、
+
+    // 班级相关错误
+    ClassNotFound = 5000,       // 班级未找到
+    ClassAlreadyExists = 5001,  // 班级已存在
+    ClassCreationFailed = 5002, // 班级创建失败
+    ClassUpdateFailed = 5003,   // 班级更新失败
+    ClassDeleteFailed = 5004,   // 班级删除失败
 }
