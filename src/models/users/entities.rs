@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{Decode, Postgres, Type, postgres::PgValueRef};
+use sqlx::{Decode, Type};
 use std::str::FromStr;
+
+use crate::sqlx_enum_type;
 
 // 用户角色
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -55,18 +57,9 @@ impl std::str::FromStr for UserRole {
     }
 }
 
-impl Type<Postgres> for UserRole {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        <String as Type<Postgres>>::type_info()
-    }
-}
-
-impl<'r> Decode<'r, Postgres> for UserRole {
-    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s: String = <String as Decode<Postgres>>::decode(value)?;
-        UserRole::from_str(&s).map_err(|e| format!("UserRole decode error: {e}").into())
-    }
-}
+// 分别为 PostgreSQL 和 SQLite 实现
+sqlx_enum_type!(sqlx::Postgres, sqlx::postgres::PgValueRef<'r>, UserRole);
+sqlx_enum_type!(sqlx::Sqlite, sqlx::sqlite::SqliteValueRef<'r>, UserRole);
 
 // 用户状态
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -117,18 +110,9 @@ impl std::str::FromStr for UserStatus {
     }
 }
 
-impl Type<Postgres> for UserStatus {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        <String as Type<Postgres>>::type_info()
-    }
-}
-
-impl<'r> Decode<'r, Postgres> for UserStatus {
-    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let s: String = <String as Decode<Postgres>>::decode(value)?;
-        UserStatus::from_str(&s).map_err(|e| format!("UserStatus decode error: {e}").into())
-    }
-}
+// 分别为 PostgreSQL 和 SQLite 实现
+sqlx_enum_type!(sqlx::Postgres, sqlx::postgres::PgValueRef<'r>, UserStatus);
+sqlx_enum_type!(sqlx::Sqlite, sqlx::sqlite::SqliteValueRef<'r>, UserStatus);
 
 // 用户资料
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]

@@ -16,7 +16,7 @@ refresh_token_remember_me_expiry = 3
 
 [database]
 type = "sqlite"
-url = "hwsystem.db"
+url = "hwsystem_dev.db"
 pool_size = 10
 timeout = 30
 
