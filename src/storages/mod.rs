@@ -5,9 +5,13 @@ use std::sync::Arc;
 use tracing::error;
 
 use crate::models::{
+    classes::{
+        entities::Class,
+        requests::{ClassListQuery, UpdateClassRequest},
+        responses::ClassListResponse,
+    },
     files::entities::File,
-    homeworks::requests::HomeworkListQuery,
-    homeworks::responses::HomeworkListResponse,
+    homeworks::{requests::HomeworkListQuery, responses::HomeworkListResponse},
     users::{
         entities::User,
         requests::{CreateUserRequest, UpdateUserRequest, UserListQuery},
@@ -45,6 +49,19 @@ pub trait Storage: Send + Sync {
         user_id: i64,
     ) -> Result<File>;
     async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>>;
+
+    // 班级管理方法
+    async fn get_class_by_id(&self, class_id: i64) -> Result<Option<Class>>;
+    async fn list_classes_with_pagination(
+        &self,
+        query: ClassListQuery,
+    ) -> Result<ClassListResponse>;
+    async fn update_class(
+        &self,
+        class_id: i64,
+        update: UpdateClassRequest,
+    ) -> Result<Option<Class>>;
+    async fn delete_class(&self, class_id: i64) -> Result<bool>;
 
     // 作业管理方法
     async fn list_homeworks_with_pagination(

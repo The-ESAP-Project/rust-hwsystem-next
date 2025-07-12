@@ -23,7 +23,7 @@ pub struct UpdateClassRequest {
     pub description: Option<String>,
 }
 
-// 班级列表查询参数（用于存储层）
+// 用户列表查询参数（用于存储层）
 #[derive(Debug, Clone, Deserialize)]
 pub struct ClassListQuery {
     pub page: Option<i64>,
