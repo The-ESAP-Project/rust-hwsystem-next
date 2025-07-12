@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{Decode, Type};
 use std::str::FromStr;
 
 use crate::sqlx_enum_type;
@@ -8,10 +7,25 @@ use crate::sqlx_enum_type;
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum UserRole {
-    Teacher,             // 教师
-    Student,             // 学生
-    Admin,               // 管理员
-    ClassRepresentative, // 课代表
+    User,    // 普通用户
+    Teacher, // 教师
+    Admin,   // 管理员
+}
+
+impl UserRole {
+    pub const USER: &'static str = "user";
+    pub const TEACHER: &'static str = "teacher";
+    pub const ADMIN: &'static str = "admin";
+
+    pub fn admin_roles() -> &'static [&'static str] {
+        &[Self::ADMIN]
+    }
+    pub fn teacher_roles() -> &'static [&'static str] {
+        &[Self::TEACHER, Self::ADMIN]
+    }
+    pub fn all_roles() -> &'static [&'static str] {
+        &[Self::USER, Self::TEACHER, Self::ADMIN]
+    }
 }
 
 impl<'de> Deserialize<'de> for UserRole {
@@ -21,12 +35,11 @@ impl<'de> Deserialize<'de> for UserRole {
     {
         let s = String::deserialize(deserializer)?;
         match s.as_str() {
+            "user" => Ok(UserRole::User),
             "teacher" => Ok(UserRole::Teacher),
-            "student" => Ok(UserRole::Student),
             "admin" => Ok(UserRole::Admin),
-            "class_representative" => Ok(UserRole::ClassRepresentative),
             _ => Err(serde::de::Error::custom(format!(
-                "无效的用户角色: '{s}'. 支持的角色: teacher, student, admin, class_representative"
+                "无效的用户角色: '{s}'. 支持的角色: user, teacher, admin"
             ))),
         }
     }
@@ -35,10 +48,9 @@ impl<'de> Deserialize<'de> for UserRole {
 impl std::fmt::Display for UserRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            UserRole::User => write!(f, "user"),
             UserRole::Teacher => write!(f, "teacher"),
-            UserRole::Student => write!(f, "student"),
             UserRole::Admin => write!(f, "admin"),
-            UserRole::ClassRepresentative => write!(f, "class_representative"),
         }
     }
 }
@@ -48,10 +60,9 @@ impl std::str::FromStr for UserRole {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
+            "user" => Ok(UserRole::User),
             "teacher" => Ok(UserRole::Teacher),
-            "student" => Ok(UserRole::Student),
             "admin" => Ok(UserRole::Admin),
-            "class_representative" => Ok(UserRole::ClassRepresentative),
             _ => Err(format!("Invalid user role: {s}")),
         }
     }

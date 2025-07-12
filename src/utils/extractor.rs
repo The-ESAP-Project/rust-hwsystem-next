@@ -1,6 +1,8 @@
 use actix_web::{Error as ActixError, FromRequest, HttpRequest, HttpResponse, dev::Payload};
 use futures::future::{Ready, ready};
+use serde::Deserialize;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 pub struct SafeI64(pub i64);
 
 impl FromRequest for SafeI64 {

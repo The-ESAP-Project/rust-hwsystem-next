@@ -31,7 +31,7 @@ pub async fn upload_file(
     Ok(result)
 }
 
-pub async fn get_file_by_token(storage: &SqliteStorage, file_id: String) -> Result<Option<File>> {
+pub async fn get_file_by_token(storage: &SqliteStorage, file_id: &str) -> Result<Option<File>> {
     let result =
         sqlx::query_as::<sqlx::Sqlite, File>("SELECT * FROM files WHERE submission_token = ?")
             .bind(file_id)

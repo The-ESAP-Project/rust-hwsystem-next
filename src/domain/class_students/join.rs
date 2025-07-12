@@ -1,0 +1,68 @@
+use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
+use tracing::error;
+
+use super::ClassStudentService;
+use crate::{
+    middlewares::RequireJWT,
+    models::{ApiResponse, ErrorCode, class_student::requests::JoinClassRequest},
+};
+
+pub async fn join_class(
+    service: &ClassStudentService,
+    request: &HttpRequest,
+    class_id: i64,
+    join_data: JoinClassRequest,
+) -> ActixResult<HttpResponse> {
+    let user_id = RequireJWT::extract_user_id(request)
+        .ok_or_else(|| actix_web::error::ErrorUnauthorized("User not authenticated"))?;
+
+    let storage = service.get_storage(request);
+    let invite_code = &join_data.invite_code;
+
+    // 新方法：根据 class_id 和 invite_code 校验班级和用户角色
+    let (class, user_student) = match storage
+        .get_class_and_user_student_by_id_and_code(class_id, invite_code, user_id)
+        .await
+    {
+        Ok(res) => res,
+        Err(e) => {
+            error!("Error getting class and user role by id and code: {}", e);
+            return Ok(
+                HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+                    ErrorCode::ClassJoinFailed,
+                    "Failed to get class and user role",
+                )),
+            );
+        }
+    };
+
+    if class.is_none() {
+        return Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
+            ErrorCode::ClassInviteCodeInvalid,
+            "Class not found or invite code is invalid",
+        )));
+    }
+    if user_student.is_some() {
+        return Ok(HttpResponse::Ok().json(ApiResponse::error(
+            ErrorCode::ClassAlreadyJoined,
+            class.unwrap(),
+            "User has already joined the class",
+        )));
+    }
+
+    match storage.join_class(user_id, class_id).await {
+        Ok(class_student) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+            class_student,
+            "Class joined successfully",
+        ))),
+        Err(e) => {
+            error!("Error joining class: {}", e);
+            Ok(
+                HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+                    ErrorCode::ClassJoinFailed,
+                    "Failed to join class",
+                )),
+            )
+        }
+    }
+}
