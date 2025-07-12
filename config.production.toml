@@ -15,10 +15,10 @@ access_token_expiry = 15
 refresh_token_expiry = 7
 
 [database]
-# 生产环境配置
+type = "sqlite"
 url = "hwsystem.db"
-pool_size = 20
-timeout = 10
+pool_size = 10
+timeout = 30
 
 [cache]
 type = "redis"

@@ -43,16 +43,33 @@ refresh_token_remember_me_expiry = 30
 
 [database]
 # 数据库后端: sqlite, postgres, mysql
-backend = "sqlite"
+type = "sqlite"
 # 数据库连接 URL
-# SQLite: "hwsystem.db" 或 "/path/to/database.db"
-# PostgreSQL: "postgresql://user:password@localhost/database"
-# MySQL: "mysql://user:password@localhost/database"
 url = "hwsystem.db"
 # 连接池大小
 pool_size = 10
 # 连接超时 (秒)
 timeout = 30
+
+# PostgreSQL 配置示例
+# [database]
+# backend = "postgresql"
+# # 数据库连接 URL
+# url = "postgresql://user:password@localhost/hwsystem"
+# # 连接池大小
+# pool_size = 5
+# # 连接超时 (秒)
+# timeout = 30
+
+# MySQL 配置示例
+# [database]
+# backend = "mysql"
+# # 数据库连接 URL
+# url = "mysql://user:password@localhost/hwsystem"
+# # 连接池大小
+# pool_size = 5
+# # 连接超时 (秒)
+# timeout = 30
 
 [cache]
 # 缓存类型: moka, redis

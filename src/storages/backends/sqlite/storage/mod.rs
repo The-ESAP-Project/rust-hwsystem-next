@@ -18,12 +18,11 @@ pub struct SqliteStorage {
 impl SqliteStorage {
     pub async fn new_async() -> Result<Self> {
         let config = AppConfig::get();
-        let db_path = &config.database.url;
 
         // 创建连接池
         let pool = SqlitePool::connect_with(
             SqliteConnectOptions::new()
-                .filename(db_path)
+                .filename(&config.database.url)
                 .create_if_missing(true)
                 .journal_mode(sqlite::SqliteJournalMode::Wal)
                 .synchronous(sqlite::SqliteSynchronous::Normal)
@@ -43,7 +42,10 @@ impl SqliteStorage {
         migration_manager.init().await?;
         migration_manager.migrate_up().await?;
 
-        warn!("SqliteStorage initialized, database path: {}", db_path);
+        warn!(
+            "SqliteStorage initialized, database path: {}",
+            &config.database.url
+        );
 
         Ok(storage)
     }
