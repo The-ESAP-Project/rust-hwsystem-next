@@ -7,7 +7,7 @@ use tracing::error;
 use crate::models::{
     classes::{
         entities::Class,
-        requests::{ClassListQuery, UpdateClassRequest},
+        requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
         responses::ClassListResponse,
     },
     files::entities::File,
@@ -51,6 +51,7 @@ pub trait Storage: Send + Sync {
     async fn get_file_by_token(&self, file_id: String) -> Result<Option<File>>;
 
     // 班级管理方法
+    async fn create_class(&self, class: CreateClassRequest) -> Result<Class>;
     async fn get_class_by_id(&self, class_id: i64) -> Result<Option<Class>>;
     async fn list_classes_with_pagination(
         &self,

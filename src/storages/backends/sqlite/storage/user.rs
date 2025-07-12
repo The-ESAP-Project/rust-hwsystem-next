@@ -164,15 +164,10 @@ pub async fn list_users_with_pagination(
     }
     data_query = data_query.bind(size).bind(offset);
 
-    let rows = data_query
+    let users = data_query
         .fetch_all(&storage.pool)
         .await
         .map_err(|e| HWSystemError::database_operation(format!("查询用户列表失败: {e}")))?;
-
-    let mut users = Vec::new();
-    for row in rows {
-        users.push(row);
-    }
 
     let pages = (total + size - 1) / size; // 向上取整
 

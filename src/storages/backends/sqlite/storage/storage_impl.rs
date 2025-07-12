@@ -2,7 +2,7 @@ use super::SqliteStorage;
 use crate::models::{
     classes::{
         entities::Class,
-        requests::{ClassListQuery, UpdateClassRequest},
+        requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
         responses::ClassListResponse,
     },
     files::entities::File,
@@ -67,6 +67,10 @@ impl Storage for SqliteStorage {
     }
 
     /// 班级模块
+    async fn create_class(&self, class: CreateClassRequest) -> Result<Class> {
+        classes::create_class(self, class).await
+    }
+
     async fn get_class_by_id(&self, class_id: i64) -> Result<Option<Class>> {
         classes::get_class_by_id(self, class_id).await
     }

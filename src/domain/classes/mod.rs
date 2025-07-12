@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
 use crate::storages::Storage;
-use crate::system::app_config::AppConfig;
 
 pub struct ClassService {
     storage: Option<Arc<dyn Storage>>,
@@ -30,10 +29,6 @@ impl ClassService {
                 .get_ref()
                 .clone()
         }
-    }
-
-    pub(crate) fn get_config(&self) -> &AppConfig {
-        AppConfig::get()
     }
 
     // 获取班级列表

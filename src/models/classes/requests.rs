@@ -12,6 +12,7 @@ pub struct ClassQueryParams {
 // 创建班级请求
 #[derive(Debug, Deserialize)]
 pub struct CreateClassRequest {
+    pub teacher_id: i64,
     pub class_name: String,
     pub description: Option<String>,
 }

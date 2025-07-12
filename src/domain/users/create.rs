@@ -49,7 +49,7 @@ pub async fn create_user(
                     "Username or email already exists",
                 )))
             } else {
-                Ok(HttpResponse::BadRequest()
+                Ok(HttpResponse::InternalServerError()
                     .json(ApiResponse::error_empty(ErrorCode::UserCreationFailed, msg)))
             }
         }
