@@ -2,7 +2,7 @@ use crate::cache::{ObjectCache, register::get_object_cache_plugin};
 use crate::storages::{Storage, StorageFactory};
 use crate::system::app_config::AppConfig;
 use std::sync::Arc;
-use tracing::warn;
+use tracing::{debug, warn};
 
 pub struct StartupContext {
     pub storage: Arc<dyn Storage>,
@@ -78,7 +78,7 @@ pub async fn prepare_server_startup() -> StartupContext {
     if cfg!(debug_assertions) {
         crate::storages::register::debug_storage_registry();
         crate::cache::register::debug_object_cache_registry();
-        warn!("Debug mode: Storage and cache registries are enabled");
+        debug!("Debug mode: Storage and cache registries are enabled");
     }
 
     let storage = StorageFactory::create()

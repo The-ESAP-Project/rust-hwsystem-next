@@ -23,6 +23,9 @@ impl UserRole {
     pub fn teacher_roles() -> &'static [&'static str] {
         &[Self::TEACHER, Self::ADMIN]
     }
+    pub fn user_roles() -> &'static [&'static str] {
+        &[Self::USER, Self::TEACHER, Self::ADMIN]
+    }
     pub fn all_roles() -> &'static [&'static str] {
         &[Self::USER, Self::TEACHER, Self::ADMIN]
     }

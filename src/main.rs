@@ -30,8 +30,6 @@ async fn main() -> std::io::Result<()> {
 
     // 启动前预处理 //
 
-    debug!("Starting pre-startup processing...");
-
     // 初始化配置
     setup_panic!();
     AppConfig::init().expect("Failed to initialize configuration");
@@ -47,6 +45,17 @@ async fn main() -> std::io::Result<()> {
         .with_level(true)
         .with_ansi(true)
         .init();
+
+    // 打印信息
+    warn!(
+        "Starting pre-startup processing...
+        Project: {}
+        Version: {}
+        Authors: {}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_AUTHORS")
+    );
 
     let startup = lifetime::startup::prepare_server_startup().await;
 

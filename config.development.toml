@@ -7,6 +7,7 @@ log_level = "debug"
 [server]
 host = "127.0.0.1"
 port = 3000
+workers = 4
 
 [jwt]
 # 开发环境使用较长的过期时间以便于调试

@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use moka::future::Cache;
+use tracing::debug;
 
 use crate::cache::{CacheResult, ObjectCache};
 use crate::declare_object_cache_plugin;
@@ -23,9 +24,14 @@ impl MokaCacheWrapper {
         let inner = Cache::builder()
             .max_capacity(config.cache.memory.max_capacity)
             .time_to_live(std::time::Duration::from_secs(
-                (config.jwt.access_token_expiry * 60) as u64,
+                config.cache.memory.default_ttl,
             ))
             .build();
+
+        debug!(
+            "MokaCacheWrapper initialized with max capacity: {}",
+            config.cache.memory.max_capacity
+        );
         Ok(Self { inner })
     }
 }

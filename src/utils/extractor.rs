@@ -1,29 +1,36 @@
-use actix_web::{Error as ActixError, FromRequest, HttpRequest, HttpResponse, dev::Payload};
-use futures::future::{Ready, ready};
-use serde::Deserialize;
+#[macro_export]
+macro_rules! define_safe_i64_extractor {
+    ($name:ident, $key:literal) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+        pub struct $name(pub i64);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
-pub struct SafeI64(pub i64);
+        impl actix_web::FromRequest for $name {
+            type Error = actix_web::Error;
+            type Future = std::future::Ready<Result<Self, Self::Error>>;
 
-impl FromRequest for SafeI64 {
-    type Error = ActixError;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let id_str = req.match_info().get("id").unwrap_or("");
-        match id_str.parse::<i64>() {
-            Ok(id) => ready(Ok(SafeI64(id))),
-            Err(_) => {
-                let resp = crate::models::common::response::ApiResponse::<()>::error_empty(
-                    crate::models::ErrorCode::BadRequest,
-                    "ID format error, please provide a valid numeric ID.",
-                );
-                ready(Err(actix_web::error::InternalError::from_response(
-                    "Invalid ID",
-                    HttpResponse::BadRequest().json(resp),
-                )
-                .into()))
+            fn from_request(
+                req: &actix_web::HttpRequest,
+                _: &mut actix_web::dev::Payload,
+            ) -> Self::Future {
+                use actix_web::{HttpResponse, error};
+                let id_str = req.match_info().get($key).unwrap_or("");
+                match id_str.parse::<i64>() {
+                    Ok(id) => std::future::ready(Ok(Self(id))),
+                    Err(_) => {
+                        let resp = $crate::models::common::response::ApiResponse::<()>::error_empty(
+                            $crate::models::ErrorCode::BadRequest,
+                            concat!($key, " format error, please provide a valid numeric ID."),
+                        );
+                        std::future::ready(Err(error::InternalError::from_response(
+                            "Invalid ID",
+                            HttpResponse::BadRequest().json(resp),
+                        )
+                        .into()))
+                    }
+                }
             }
         }
-    }
+    };
 }
+
+define_safe_i64_extractor!(SafeIDI64, "id");

@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use crate::domain::UserService;
 use crate::middlewares;
 use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
-use crate::utils::SafeI64;
+use crate::utils::SafeIDI64;
 
 // 懒加载的全局 UserService 实例
 static USER_SERVICE: Lazy<UserService> = Lazy::new(UserService::new_lazy);
@@ -24,13 +24,13 @@ pub async fn create_user(
     USER_SERVICE.create_user(user_data.into_inner(), &req).await
 }
 
-pub async fn get_user(req: HttpRequest, user_id: SafeI64) -> ActixResult<HttpResponse> {
+pub async fn get_user(req: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
     USER_SERVICE.get_user(user_id.0, &req).await
 }
 
 pub async fn update_user(
     req: HttpRequest,
-    user_id: SafeI64,
+    user_id: SafeIDI64,
     update_data: web::Json<UpdateUserRequest>,
 ) -> ActixResult<HttpResponse> {
     USER_SERVICE
@@ -38,7 +38,7 @@ pub async fn update_user(
         .await
 }
 
-pub async fn delete_user(req: HttpRequest, user_id: SafeI64) -> ActixResult<HttpResponse> {
+pub async fn delete_user(req: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
     USER_SERVICE.delete_user(user_id.0, &req).await
 }
 

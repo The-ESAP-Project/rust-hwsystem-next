@@ -5,7 +5,7 @@ use crate::domain::ClassService;
 use crate::middlewares;
 use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
 use crate::models::users::entities::UserRole;
-use crate::utils::SafeI64;
+use crate::utils::SafeIDI64;
 
 // 懒加载的全局 CLASS_SERVICE 实例
 static CLASS_SERVICE: Lazy<ClassService> = Lazy::new(ClassService::new_lazy);
@@ -27,7 +27,7 @@ pub async fn create_class(
         .await
 }
 
-pub async fn get_class(req: HttpRequest, id: SafeI64) -> ActixResult<HttpResponse> {
+pub async fn get_class(req: HttpRequest, id: SafeIDI64) -> ActixResult<HttpResponse> {
     CLASS_SERVICE.get_class(&req, id.0).await
 }
 
@@ -42,7 +42,7 @@ pub async fn get_class_by_code(
 
 pub async fn update_class(
     req: HttpRequest,
-    id: SafeI64,
+    id: SafeIDI64,
     update_data: web::Json<UpdateClassRequest>,
 ) -> ActixResult<HttpResponse> {
     CLASS_SERVICE
@@ -50,24 +50,31 @@ pub async fn update_class(
         .await
 }
 
-pub async fn delete_class(req: HttpRequest, id: SafeI64) -> ActixResult<HttpResponse> {
+pub async fn delete_class(req: HttpRequest, id: SafeIDI64) -> ActixResult<HttpResponse> {
     CLASS_SERVICE.delete_class(&req, id.0).await
 }
 
 // 配置路由
-// TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
 pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api/v1/classes")
             .wrap(middlewares::RequireJWT)
             .service(
+                // TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
                 web::resource("").route(web::get().to(list_classes)).route(
                     web::post()
                         .to(create_class)
+                        // TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
                         .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
                 ),
             )
-            .service(web::resource("/code/{code}").route(web::get().to(get_class_by_code)))
+            .service(
+                web::resource("/code/{code}").route(
+                    web::get()
+                        .to(get_class_by_code)
+                        .wrap(middlewares::RequireRole::new(UserRole::USER)),
+                ),
+            )
             .service(
                 web::resource("/{id}")
                     .route(web::get().to(get_class))
