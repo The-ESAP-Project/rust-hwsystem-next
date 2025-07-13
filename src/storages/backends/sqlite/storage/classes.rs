@@ -131,10 +131,15 @@ pub async fn list_classes_with_pagination(
     let mut conditions = Vec::new();
     let mut params = Vec::new();
 
+    // 教师 ID 搜索
+    if let Some(teacher_id) = &query.teacher_id {
+        conditions.push(format!("teacher_id = {teacher_id}"));
+    }
+
     // 搜索条件
     if let Some(search) = &query.search {
         if !search.trim().is_empty() {
-            conditions.push("(class_name LIKE ? OR description LIKE ?)");
+            conditions.push("(class_name LIKE ? OR description LIKE ?)".to_owned());
             let search_pattern = format!("%{}%", search.trim());
             params.push(search_pattern.clone());
             params.push(search_pattern);

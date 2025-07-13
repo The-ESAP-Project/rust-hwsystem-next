@@ -22,6 +22,7 @@ pub struct CreateClassRequest {
 pub struct UpdateClassRequest {
     pub class_name: Option<String>,
     pub description: Option<String>,
+    pub _teacher_id: Option<i64>, // TODO: 未来计划实现班级转让
 }
 
 // 班级列表查询参数（用于存储层）
@@ -29,5 +30,6 @@ pub struct UpdateClassRequest {
 pub struct ClassListQuery {
     pub page: Option<i64>,
     pub size: Option<i64>,
+    pub teacher_id: Option<i64>,
     pub search: Option<String>,
 }

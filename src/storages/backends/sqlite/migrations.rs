@@ -212,6 +212,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     file_size INTEGER NOT NULL,
                     file_type TEXT NOT NULL,
                     uploaded_at INTEGER NOT NULL,
+                    citation_count INTEGER DEFAULT 0,
                     user_id INTEGER NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
                 );
@@ -239,8 +240,41 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 CREATE INDEX idx_class_students_role ON class_students(role);
 
                 -- 创建文件关联表索引
+                CREATE INDEX idx_files_citation_count ON files(citation_count);
                 CREATE INDEX idx_files_user_id ON files(user_id);
             ".to_string(),
+        },
+        Migration {
+            version: 2,
+            name: "add_test_data".to_string(),
+            up_sql: "
+                -- 插入测试数据
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
+                VALUES ('test_user_1', 'test@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'user', 'active', 'Test User', NULL, NULL, 1704067200, 1704067200);
+
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
+                VALUES ('test_user_2', 'test2@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'user', 'active', 'Test User 2', NULL, NULL, 1704067200, 1704067200);
+
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
+                VALUES ('test_user_3', 'test3@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'teacher', 'active', 'Test User 3', NULL, NULL, 1704067200, 1704067200);
+
+                INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
+                VALUES ('test_user_4', 'test4@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'teacher', 'active', 'Test User 4', NULL, NULL, 1704067200, 1704067200);
+
+                INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at)
+                VALUES (4, 'Test Class 1', 'This is a test class', 'TEST123', 1704067200, 1704067200);
+
+                INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at)
+                VALUES (5, 'Test Class 2', 'This is another test class', 'TEST456', 1704067200, 1704067200);
+
+                INSERT INTO class_students (class_id, student_id, role, joined_at)
+                VALUES (1, 2, 'student', 1704067200);
+
+                INSERT INTO class_students (class_id, student_id, role, joined_at)
+                VALUES (2, 3, 'student', 1704067200);
+
+                -- 正式环境需要删除这些测试数据
+                ".to_string(),
         },
     ]
 }

@@ -57,34 +57,15 @@ pub async fn handle_verify_token(
 }
 
 pub async fn handle_get_user(
-    service: &AuthService,
+    _service: &AuthService,
     request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     // 从 Authorization header 中提取 token
-    match RequireJWT::extract_user_id(request) {
-        Some(user_id) => {
-            // 从数据库中获取用户信息
-            let storage = service.get_storage(request);
-            match storage.get_user_by_id(user_id).await {
-                Ok(Some(user)) => Ok(HttpResponse::Ok().json(ApiResponse::success(
-                    user,
-                    "User info retrieved successfully",
-                ))),
-                Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
-                    ErrorCode::UserNotFound,
-                    "User not found",
-                ))),
-                Err(e) => {
-                    tracing::error!("Get user info failed: {}", e);
-                    Ok(
-                        HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                            ErrorCode::InternalServerError,
-                            "Get user info failed",
-                        )),
-                    )
-                }
-            }
-        }
+    match RequireJWT::extract_user_claims(request) {
+        Some(user) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+            user,
+            "User information retrieved successfully",
+        ))),
         None => Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
             ErrorCode::Unauthorized,
             "Unauthorized access, please login",

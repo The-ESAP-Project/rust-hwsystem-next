@@ -2,8 +2,11 @@ use sqlx::{FromRow, Row};
 
 use super::SqliteStorage;
 use crate::errors::{HWSystemError, Result};
+use crate::models::PaginationInfo;
 use crate::models::class_student::entities::{ClassStudent, ClassUserRole};
-use crate::models::classes::entities::Class;
+use crate::models::classes::{
+    entities::Class, requests::ClassListQuery, responses::ClassListResponse,
+};
 
 pub async fn join_class(
     storage: &SqliteStorage,
@@ -28,6 +31,47 @@ pub async fn join_class(
     Ok(class_student)
 }
 
+pub async fn list_user_classes_with_pagination(
+    storage: &SqliteStorage,
+    user_id: i64,
+    query: ClassListQuery,
+) -> Result<ClassListResponse> {
+    let page = query.page.unwrap_or(1).max(1);
+    let size = query.size.unwrap_or(10).clamp(1, 100);
+    let offset = (page - 1) * size;
+
+    let total = sqlx::query_scalar::<sqlx::Sqlite, i64>(
+        "SELECT COUNT(*) FROM class_students WHERE student_id = ?",
+    )
+    .bind(user_id)
+    .fetch_one(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to count user classes: {e}")))?;
+
+    let classes = sqlx::query_as::<sqlx::Sqlite, Class>(
+        "SELECT c.* FROM classes c
+        JOIN class_students cs ON cs.class_id = c.id
+        WHERE cs.student_id = ?
+        LIMIT ? OFFSET ?",
+    )
+    .bind(user_id)
+    .bind(size)
+    .bind(offset)
+    .fetch_all(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to list user classes: {e}")))?;
+
+    Ok(ClassListResponse {
+        items: classes,
+        pagination: PaginationInfo {
+            page,
+            size,
+            total,
+            pages: (total + size - 1) / size, // 向上取整
+        },
+    })
+}
+
 pub async fn get_user_class_role(
     storage: &SqliteStorage,
     user_id: i64,
@@ -45,7 +89,7 @@ pub async fn get_user_class_role(
     Ok(class_student)
 }
 
-pub async fn get_class_and_user_student_by_id_and_code(
+pub async fn get_class_and_class_student_by_id_and_code(
     storage: &SqliteStorage,
     class_id: i64,
     invite_code: &str,

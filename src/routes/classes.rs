@@ -60,11 +60,11 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/api/v1/classes")
             .wrap(middlewares::RequireJWT)
             .service(
-                // TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
+                // 用户查询自己的班级列表，管理员可以查询所有班级
                 web::resource("").route(web::get().to(list_classes)).route(
                     web::post()
                         .to(create_class)
-                        // TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
+                        // 教师创建自己的班级，管理员可以创建指定教师的班级
                         .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
                 ),
             )
@@ -72,20 +72,28 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
                 web::resource("/code/{code}").route(
                     web::get()
                         .to(get_class_by_code)
-                        .wrap(middlewares::RequireRole::new(UserRole::USER)),
+                        // 学生使用邀请码查询班级信息
+                        .wrap(middlewares::RequireRole::new(&UserRole::User)),
                 ),
             )
             .service(
                 web::resource("/{id}")
-                    .route(web::get().to(get_class))
+                    .route(
+                        web::get()
+                            .to(get_class)
+                            // 仅管理员可用
+                            .wrap(middlewares::RequireRole::new(&UserRole::Admin)),
+                    )
                     .route(
                         web::put()
                             .to(update_class)
+                            // 教师更新自己班级，管理员可以更新所有班级
                             .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
                     )
                     .route(
                         web::delete()
                             .to(delete_class)
+                            // 教师删除自己班级，管理员可以删除所有班级
                             .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
                     ),
             ),

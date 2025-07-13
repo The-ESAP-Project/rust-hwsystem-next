@@ -3,6 +3,7 @@ use once_cell::sync::Lazy;
 
 use crate::domain::UserService;
 use crate::middlewares;
+use crate::models::users::entities::UserRole;
 use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
 use crate::utils::SafeIDI64;
 
@@ -49,7 +50,7 @@ pub fn configure_user_routes(cfg: &mut web::ServiceConfig) {
             .wrap(middlewares::RequireJWT)
             .service(
                 web::scope("")
-                    .wrap(middlewares::RequireRole::new("admin"))
+                    .wrap(middlewares::RequireRole::new(&UserRole::Admin))
                     .route("", web::get().to(list_users))
                     .route("", web::post().to(create_user))
                     .route("/{id}", web::get().to(get_user))

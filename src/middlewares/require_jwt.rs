@@ -62,6 +62,7 @@
  * 确保在环境变量中设置了 `JWT_SECRET`，JWT服务将使用此密钥来验证令牌。
  */
 
+use crate::models::users::entities::UserRole;
 use crate::models::{ErrorCode, users::entities};
 use crate::storages::Storage;
 use actix_service::{Service, Transform};
@@ -236,10 +237,10 @@ impl RequireJWT {
 
     /// 从请求扩展中提取用户角色
     /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn extract_user_role(req: &actix_web::HttpRequest) -> Option<String> {
+    pub fn extract_user_role(req: &actix_web::HttpRequest) -> Option<UserRole> {
         req.extensions()
             .get::<entities::User>()
-            .map(|user| user.role.to_string())
+            .map(|user| user.role.clone())
     }
 
     /// 检查用户是否具有指定角色

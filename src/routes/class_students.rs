@@ -50,7 +50,7 @@ pub fn configure_class_students_routes(cfg: &mut web::ServiceConfig) {
             .service(
                 web::resource("")
                     .route(web::post().to(join_class))
-                    .wrap(middlewares::RequireRole::new(UserRole::USER)),
+                    .wrap(middlewares::RequireRole::new(&UserRole::User)),
             )
             .service(
                 web::resource("/{class_student_id}")

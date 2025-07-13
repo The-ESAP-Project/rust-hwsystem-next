@@ -3,6 +3,7 @@ use once_cell::sync::Lazy;
 
 use crate::domain::SystemService;
 use crate::middlewares;
+use crate::models::users::entities::UserRole;
 
 // 懒加载的全局 SystemService 实例
 static SYSTEM_SERVICE: Lazy<SystemService> = Lazy::new(SystemService::new_lazy);
@@ -19,7 +20,7 @@ pub fn configure_system_routes(cfg: &mut web::ServiceConfig) {
             .wrap(middlewares::RequireJWT)
             .service(
                 web::scope("")
-                    .wrap(middlewares::RequireRole::new("admin"))
+                    .wrap(middlewares::RequireRole::new_any(UserRole::admin_roles()))
                     .route("/settings", web::get().to(get_settings)),
             ),
     );

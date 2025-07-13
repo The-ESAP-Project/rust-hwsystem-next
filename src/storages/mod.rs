@@ -68,12 +68,17 @@ pub trait Storage: Send + Sync {
 
     // 班级学生管理方法
     async fn join_class(&self, user_id: i64, class_id: i64) -> Result<ClassStudent>;
+    async fn list_user_classes_with_pagination(
+        &self,
+        user_id: i64,
+        query: ClassListQuery,
+    ) -> Result<ClassListResponse>;
     async fn get_user_class_role(
         &self,
         user_id: i64,
         class_id: i64,
     ) -> Result<Option<ClassStudent>>;
-    async fn get_class_and_user_student_by_id_and_code(
+    async fn get_class_and_class_student_by_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,

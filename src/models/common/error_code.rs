@@ -39,6 +39,7 @@ pub enum ErrorCode {
     ClassCreationFailed = 5002,    // 班级创建失败
     ClassUpdateFailed = 5003,      // 班级更新失败
     ClassDeleteFailed = 5004,      // 班级删除失败
+    ClassPermissionDenied = 5005,  // 班级权限被拒绝
     ClassJoinFailed = 5010,        // 加入班级失败
     ClassInviteCodeInvalid = 5011, // 班级邀请码无效
     ClassAlreadyJoined = 5012,     // 已经加入该班级

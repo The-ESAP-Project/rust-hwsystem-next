@@ -107,6 +107,14 @@ impl Storage for SqliteStorage {
         class_students::join_class(self, user_id, class_id).await
     }
 
+    async fn list_user_classes_with_pagination(
+        &self,
+        user_id: i64,
+        query: ClassListQuery,
+    ) -> Result<ClassListResponse> {
+        class_students::list_user_classes_with_pagination(self, user_id, query).await
+    }
+
     async fn get_user_class_role(
         &self,
         user_id: i64,
@@ -115,13 +123,13 @@ impl Storage for SqliteStorage {
         class_students::get_user_class_role(self, user_id, class_id).await
     }
 
-    async fn get_class_and_user_student_by_id_and_code(
+    async fn get_class_and_class_student_by_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,
         user_id: i64,
     ) -> Result<(Option<Class>, Option<ClassStudent>)> {
-        class_students::get_class_and_user_student_by_id_and_code(
+        class_students::get_class_and_class_student_by_id_and_code(
             self,
             class_id,
             invite_code,

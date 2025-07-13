@@ -17,17 +17,17 @@ impl UserRole {
     pub const TEACHER: &'static str = "teacher";
     pub const ADMIN: &'static str = "admin";
 
-    pub fn admin_roles() -> &'static [&'static str] {
-        &[Self::ADMIN]
+    pub fn admin_roles() -> &'static [&'static UserRole] {
+        &[&Self::Admin]
     }
-    pub fn teacher_roles() -> &'static [&'static str] {
-        &[Self::TEACHER, Self::ADMIN]
+    pub fn teacher_roles() -> &'static [&'static UserRole] {
+        &[&Self::Teacher, &Self::Admin]
     }
-    pub fn user_roles() -> &'static [&'static str] {
-        &[Self::USER, Self::TEACHER, Self::ADMIN]
+    pub fn user_roles() -> &'static [&'static UserRole] {
+        &[&Self::User, &Self::Teacher]
     }
-    pub fn all_roles() -> &'static [&'static str] {
-        &[Self::USER, Self::TEACHER, Self::ADMIN]
+    pub fn all_roles() -> &'static [&'static UserRole] {
+        &[&Self::User, &Self::Teacher, &Self::Admin]
     }
 }
 
@@ -38,9 +38,9 @@ impl<'de> Deserialize<'de> for UserRole {
     {
         let s = String::deserialize(deserializer)?;
         match s.as_str() {
-            "user" => Ok(UserRole::User),
-            "teacher" => Ok(UserRole::Teacher),
-            "admin" => Ok(UserRole::Admin),
+            UserRole::USER => Ok(UserRole::User),
+            UserRole::TEACHER => Ok(UserRole::Teacher),
+            UserRole::ADMIN => Ok(UserRole::Admin),
             _ => Err(serde::de::Error::custom(format!(
                 "无效的用户角色: '{s}'. 支持的角色: user, teacher, admin"
             ))),
@@ -51,9 +51,9 @@ impl<'de> Deserialize<'de> for UserRole {
 impl std::fmt::Display for UserRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            UserRole::User => write!(f, "user"),
-            UserRole::Teacher => write!(f, "teacher"),
-            UserRole::Admin => write!(f, "admin"),
+            UserRole::User => write!(f, "{}", UserRole::USER),
+            UserRole::Teacher => write!(f, "{}", UserRole::TEACHER),
+            UserRole::Admin => write!(f, "{}", UserRole::ADMIN),
         }
     }
 }

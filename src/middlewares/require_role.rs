@@ -45,36 +45,39 @@ use tracing::info;
 
 use crate::{
     middlewares::RequireJWT,
-    models::{ErrorCode, users::entities},
+    models::{
+        ErrorCode,
+        users::entities::{self, UserRole},
+    },
 };
 
 #[derive(Clone)]
 pub struct RequireRole {
-    required_roles: Vec<String>,
+    required_roles: Vec<UserRole>,
     require_all: bool, // true表示需要所有角色，false表示任一角色即可
 }
 
 impl RequireRole {
     /// 创建需要特定角色的中间件
-    pub fn new(role: &str) -> Self {
+    pub fn new(role: &UserRole) -> Self {
         Self {
-            required_roles: vec![role.to_string()],
+            required_roles: vec![role.clone()],
             require_all: true,
         }
     }
 
     /// 创建需要任一角色的中间件
-    pub fn new_any(roles: &[&str]) -> Self {
+    pub fn new_any(roles: &[&UserRole]) -> Self {
         Self {
-            required_roles: roles.iter().map(|r| r.to_string()).collect(),
+            required_roles: roles.iter().map(|r| (*r).clone()).collect(),
             require_all: false,
         }
     }
 
     /// 创建需要所有角色的中间件
-    pub fn new_all(roles: &[&str]) -> Self {
+    pub fn new_all(roles: &[&UserRole]) -> Self {
         Self {
-            required_roles: roles.iter().map(|r| r.to_string()).collect(),
+            required_roles: roles.iter().map(|r| (*r).clone()).collect(),
             require_all: true,
         }
     }
@@ -113,7 +116,7 @@ where
 
 pub struct RequireRoleMiddleware<S> {
     service: Rc<S>,
-    required_roles: Vec<String>,
+    required_roles: Vec<UserRole>,
     require_all: bool,
 }
 
@@ -150,12 +153,12 @@ where
                         // 需要所有角色（通常用于单一角色验证）
                         required_roles
                             .iter()
-                            .all(|role| user_role.as_deref() == Some(role.as_str()))
+                            .all(|role| user_role.as_ref() == Some(role))
                     } else {
                         // 需要任一角色
                         required_roles
                             .iter()
-                            .any(|role| user_role.as_deref() == Some(role.as_str()))
+                            .any(|role| user_role.as_ref() == Some(role))
                     };
 
                     if has_permission {

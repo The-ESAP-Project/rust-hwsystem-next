@@ -111,6 +111,15 @@ impl Storage for PostgresqlStorage {
         unimplemented!("join_class not implemented for PostgresqlStorage")
     }
 
+    async fn list_user_classes_with_pagination(
+        &self,
+        user_id: i64,
+        query: ClassListQuery,
+    ) -> Result<ClassListResponse> {
+        // class_students::list_user_classes_with_pagination(self, user_id, query).await
+        unimplemented!("list_user_classes_with_pagination not implemented for PostgresqlStorage")
+    }
+
     async fn get_user_class_role(
         &self,
         user_id: i64,
@@ -120,7 +129,7 @@ impl Storage for PostgresqlStorage {
         unimplemented!("get_user_class_role not implemented for PostgresqlStorage")
     }
 
-    async fn get_class_and_user_student_by_id_and_code(
+    async fn get_class_and_class_student_by_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,
