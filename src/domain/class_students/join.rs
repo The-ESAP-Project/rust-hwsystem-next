@@ -19,7 +19,6 @@ pub async fn join_class(
     let storage = service.get_storage(request);
     let invite_code = &join_data.invite_code;
 
-    // 新方法：根据 class_id 和 invite_code 校验班级和用户角色
     let (class, user_student) = match storage
         .get_class_and_user_student_by_id_and_code(class_id, invite_code, user_id)
         .await
@@ -43,7 +42,7 @@ pub async fn join_class(
         )));
     }
     if user_student.is_some() {
-        return Ok(HttpResponse::Ok().json(ApiResponse::error(
+        return Ok(HttpResponse::Conflict().json(ApiResponse::error(
             ErrorCode::ClassAlreadyJoined,
             class.unwrap(),
             "User has already joined the class",

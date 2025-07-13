@@ -168,12 +168,13 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 );
 
                 -- 创建作业表
-                CREATE TABLE assignments (
+                CREATE TABLE homework (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     class_id INTEGER NOT NULL,
                     title TEXT NOT NULL,
                     description TEXT,
+                    files_jsonb BLOB,  -- file_submission_token JSONB
                     due_date INTEGER,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,
@@ -184,15 +185,16 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 -- 创建提交表
                 CREATE TABLE submissions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    assignment_id INTEGER NOT NULL,
+                    homework_id INTEGER NOT NULL,
                     creator_id INTEGER NOT NULL,
                     content TEXT NOT NULL,
+                    files_jsonb BLOB,  -- file_submission_token JSONB
                     submitted_at INTEGER NOT NULL,
-                    FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
+                    FOREIGN KEY (homework_id) REFERENCES homework(id) ON DELETE CASCADE,
                     FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
-                -- 创建文件表
+                -- 创建文件关联表
                 CREATE TABLE files (
                     submission_token TEXT PRIMARY KEY,
                     file_name TEXT NOT NULL,
@@ -204,6 +206,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 );
 
                 -- 插入初始管理员用户 (用户名: admin, 密码: admin123)
+                -- 到时候要更改为随机密码
                 INSERT INTO users (username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at)
                 VALUES ('admin', 'admin@example.com', '$argon2id$v=19$m=65536,t=3,p=4$3pcWjxCi/qihfYIXNadQ0g$uITChD8gDEHSt6eREb/enzd7jmjfOF8KCg+zDBQvMUs', 'admin', 'active', 'Administrator', NULL, NULL, 1704067200, 1704067200);
 
@@ -220,6 +223,12 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 CREATE INDEX idx_classes_invite_code ON classes(invite_code);
 
                 -- 班级学生关联表索引
+                CREATE INDEX idx_class_students_class_id ON class_students(class_id);
+                CREATE INDEX idx_class_students_student_id ON class_students(student_id);
+                CREATE INDEX idx_class_students_role ON class_students(role);
+
+                -- 创建文件关联表索引
+                CREATE INDEX idx_files_user_id ON files(user_id);
             ".to_string(),
         },
     ]

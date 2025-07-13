@@ -6,7 +6,12 @@ use crate::middlewares;
 use crate::models::class_student::requests::JoinClassRequest;
 use crate::models::users::entities::UserRole;
 use crate::models::{ApiResponse, ErrorCode};
-use crate::utils::SafeI64;
+use crate::utils::SafeIDI64;
+
+use crate::define_safe_i64_extractor;
+
+// 用于从请求路径中安全地提取 class_student_id
+define_safe_i64_extractor!(SafeClassStudentID, "class_student_id");
 
 // 懒加载的全局 CLASS_SERVICE 实例
 static CLASS_SERVICE: Lazy<ClassStudentService> = Lazy::new(ClassStudentService::new_lazy);
@@ -14,7 +19,7 @@ static CLASS_SERVICE: Lazy<ClassStudentService> = Lazy::new(ClassStudentService:
 // HTTP处理程序
 pub async fn join_class(
     req: HttpRequest,
-    path: SafeI64,
+    path: SafeIDI64,
     join_data: web::Json<JoinClassRequest>,
 ) -> ActixResult<HttpResponse> {
     let class_id = path.0;
@@ -25,7 +30,7 @@ pub async fn join_class(
 
 pub async fn update_student(
     req: HttpRequest,
-    path: web::Path<(SafeI64, SafeI64)>,
+    path: web::Path<(SafeIDI64, SafeClassStudentID)>,
     // update_data: web::Json<UpdateStudentRequest>,
 ) -> ActixResult<HttpResponse> {
     Ok(
@@ -48,7 +53,7 @@ pub fn configure_class_students_routes(cfg: &mut web::ServiceConfig) {
                     .wrap(middlewares::RequireRole::new(UserRole::USER)),
             )
             .service(
-                web::resource("/{id}")
+                web::resource("/{class_student_id}")
                     .route(web::put().to(update_student))
                     .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
             ),
