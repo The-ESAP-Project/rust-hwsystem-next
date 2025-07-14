@@ -175,7 +175,8 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     content TEXT,
                     attachments BLOB,  -- file_submission_token JSONB
                     max_score REAL NOT NULL,
-                    due_date INTEGER,
+                    deadline INTEGER,
+                    allow_late_submission BOOLEAN NOT NULL DEFAULT 0,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,
                     FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
