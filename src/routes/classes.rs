@@ -5,7 +5,7 @@ use crate::domain::ClassService;
 use crate::middlewares;
 use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
 use crate::models::users::entities::UserRole;
-use crate::utils::SafeIDI64;
+use crate::utils::SafeClassIdI64;
 
 // 懒加载的全局 CLASS_SERVICE 实例
 static CLASS_SERVICE: Lazy<ClassService> = Lazy::new(ClassService::new_lazy);
@@ -27,10 +27,6 @@ pub async fn create_class(
         .await
 }
 
-pub async fn get_class(req: HttpRequest, id: SafeIDI64) -> ActixResult<HttpResponse> {
-    CLASS_SERVICE.get_class(&req, id.0).await
-}
-
 pub async fn get_class_by_code(
     req: HttpRequest,
     code: web::Path<String>,
@@ -40,18 +36,22 @@ pub async fn get_class_by_code(
         .await
 }
 
+pub async fn get_class(req: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
+    CLASS_SERVICE.get_class(&req, class_id.0).await
+}
+
 pub async fn update_class(
     req: HttpRequest,
-    id: SafeIDI64,
+    class_id: SafeClassIdI64,
     update_data: web::Json<UpdateClassRequest>,
 ) -> ActixResult<HttpResponse> {
     CLASS_SERVICE
-        .update_class(&req, id.0, update_data.into_inner())
+        .update_class(&req, class_id.0, update_data.into_inner())
         .await
 }
 
-pub async fn delete_class(req: HttpRequest, id: SafeIDI64) -> ActixResult<HttpResponse> {
-    CLASS_SERVICE.delete_class(&req, id.0).await
+pub async fn delete_class(req: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
+    CLASS_SERVICE.delete_class(&req, class_id.0).await
 }
 
 // 配置路由
@@ -77,7 +77,7 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
                 ),
             )
             .service(
-                web::resource("/{id}")
+                web::resource("/{class_id}")
                     .route(
                         web::get()
                             .to(get_class)

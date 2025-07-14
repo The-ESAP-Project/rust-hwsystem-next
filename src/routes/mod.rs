@@ -4,7 +4,7 @@ pub mod users;
 
 pub mod classes;
 
-pub mod class_students;
+pub mod class_users;
 
 pub mod files;
 
@@ -13,7 +13,7 @@ pub mod homeworks;
 pub mod system;
 
 pub use auth::configure_auth_routes;
-pub use class_students::configure_class_students_routes;
+pub use class_users::configure_class_users_routes;
 pub use classes::configure_classes_routes;
 pub use files::configure_file_routes;
 pub use homeworks::configure_homeworks_routes;

@@ -1,14 +1,17 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use tracing::error;
 
-use super::ClassStudentService;
+use super::ClassUserService;
 use crate::{
     middlewares::RequireJWT,
-    models::{ApiResponse, ErrorCode, class_student::requests::JoinClassRequest},
+    models::{
+        ApiResponse, ErrorCode,
+        class_users::{entities::ClassUserRole, requests::JoinClassRequest},
+    },
 };
 
 pub async fn join_class(
-    service: &ClassStudentService,
+    service: &ClassUserService,
     request: &HttpRequest,
     class_id: i64,
     join_data: JoinClassRequest,
@@ -56,7 +59,10 @@ pub async fn join_class(
         )));
     }
 
-    match storage.join_class(user_id, class_id).await {
+    match storage
+        .join_class(user_id, class_id, ClassUserRole::Student)
+        .await
+    {
         Ok(class_student) => Ok(HttpResponse::Ok().json(ApiResponse::success(
             class_student,
             "Class joined successfully",

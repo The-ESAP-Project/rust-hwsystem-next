@@ -104,7 +104,7 @@ async fn main() -> std::io::Result<()> {
             )) // 设置最大请求体大小
             .configure(routes::configure_auth_routes) // 配置认证相关路由
             .configure(routes::configure_user_routes) // 配置用户相关路由
-            .configure(routes::configure_class_students_routes) //配置班级成员相关路由
+            .configure(routes::configure_class_users_routes) //配置班级成员相关路由
             .configure(routes::configure_classes_routes) // 配置班级相关路由
             .configure(routes::configure_homeworks_routes) // 配置作业相关路由
             .configure(routes::configure_file_routes) // 配置文件相关路由

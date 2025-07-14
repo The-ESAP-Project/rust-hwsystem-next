@@ -14,7 +14,7 @@ pub mod files;
 pub mod classes;
 
 // 班级成员模块
-pub mod class_student;
+pub mod class_users;
 
 // 作业模块
 pub mod homeworks;

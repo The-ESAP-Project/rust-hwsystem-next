@@ -1,6 +1,6 @@
 use super::PostgresqlStorage;
 use crate::models::{
-    class_student::entities::ClassStudent,
+    class_users::entities::{ClassUser, ClassUserRole},
     classes::{
         entities::Class,
         requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
@@ -106,9 +106,24 @@ impl Storage for PostgresqlStorage {
     }
 
     /// 班级学生管理方法
-    async fn join_class(&self, user_id: i64, class_id: i64) -> Result<ClassStudent> {
-        // class_students::join_class(self, user_id, join_request).await
+    async fn join_class(
+        &self,
+        user_id: i64,
+        class_id: i64,
+        role: ClassUserRole,
+    ) -> Result<ClassUser> {
+        // class_users::join_class(self, user_id, join_request).await
         unimplemented!("join_class not implemented for PostgresqlStorage")
+    }
+
+    async fn leave_class(&self, user_id: i64, class_id: i64) -> Result<bool> {
+        // class_users::leave_class(self, user_id, class_id).await
+        unimplemented!("leave_class not implemented for PostgresqlStorage")
+    }
+
+    async fn list_class_users(&self, class_id: i64) -> Result<Vec<ClassUser>> {
+        // class_users::list_class_users(self, class_id).await
+        unimplemented!("list_class_users not implemented for PostgresqlStorage")
     }
 
     async fn list_user_classes_with_pagination(
@@ -116,17 +131,24 @@ impl Storage for PostgresqlStorage {
         user_id: i64,
         query: ClassListQuery,
     ) -> Result<ClassListResponse> {
-        // class_students::list_user_classes_with_pagination(self, user_id, query).await
+        // class_users::list_user_classes_with_pagination(self, user_id, query).await
         unimplemented!("list_user_classes_with_pagination not implemented for PostgresqlStorage")
     }
 
-    async fn get_user_class_role(
+    async fn get_user_class_role(&self, user_id: i64, class_id: i64) -> Result<Option<ClassUser>> {
+        // class_users::get_user_class_role(self, user_id, invite_code).await
+        unimplemented!("get_user_class_role not implemented for PostgresqlStorage")
+    }
+
+    async fn get_class_student_by_user_id_and_class_id(
         &self,
         user_id: i64,
         class_id: i64,
-    ) -> Result<Option<ClassStudent>> {
-        // class_students::get_user_class_role(self, user_id, invite_code).await
-        unimplemented!("get_user_class_role not implemented for PostgresqlStorage")
+    ) -> Result<Option<ClassUser>> {
+        // class_users::get_class_student_by_user_id_and_class_id(self, user_id, class_id).await
+        unimplemented!(
+            "get_class_student_by_user_id_and_class_id not implemented for PostgresqlStorage"
+        )
     }
 
     async fn get_class_and_class_student_by_id_and_code(
@@ -134,8 +156,8 @@ impl Storage for PostgresqlStorage {
         class_id: i64,
         invite_code: &str,
         user_id: i64,
-    ) -> Result<(Option<Class>, Option<ClassStudent>)> {
-        // class_students::get_class_and_user_role_by_id_and_code(self, class_id, invite_code, user_id).await
+    ) -> Result<(Option<Class>, Option<ClassUser>)> {
+        // class_users::get_class_and_user_role_by_id_and_code(self, class_id, invite_code, user_id).await
         unimplemented!(
             "get_class_and_user_role_by_id_and_code not implemented for PostgresqlStorage"
         )

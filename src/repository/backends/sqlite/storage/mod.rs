@@ -1,4 +1,4 @@
-pub mod class_students;
+pub mod class_users;
 pub mod classes;
 pub mod file;
 pub mod homeworks;

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tracing::error;
 
 use crate::models::{
-    class_student::entities::ClassStudent,
+    class_users::entities::{ClassUser, ClassUserRole},
     classes::{
         entities::Class,
         requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
@@ -67,23 +67,31 @@ pub trait Storage: Send + Sync {
     async fn delete_class(&self, class_id: i64) -> Result<bool>;
 
     // 班级学生管理方法
-    async fn join_class(&self, user_id: i64, class_id: i64) -> Result<ClassStudent>;
+    async fn join_class(
+        &self,
+        user_id: i64,
+        class_id: i64,
+        role: ClassUserRole,
+    ) -> Result<ClassUser>;
+    async fn leave_class(&self, user_id: i64, class_id: i64) -> Result<bool>;
+    async fn list_class_users(&self, class_id: i64) -> Result<Vec<ClassUser>>;
     async fn list_user_classes_with_pagination(
         &self,
         user_id: i64,
         query: ClassListQuery,
     ) -> Result<ClassListResponse>;
-    async fn get_user_class_role(
+    async fn get_user_class_role(&self, user_id: i64, class_id: i64) -> Result<Option<ClassUser>>;
+    async fn get_class_student_by_user_id_and_class_id(
         &self,
         user_id: i64,
         class_id: i64,
-    ) -> Result<Option<ClassStudent>>;
+    ) -> Result<Option<ClassUser>>;
     async fn get_class_and_class_student_by_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,
         user_id: i64,
-    ) -> Result<(Option<Class>, Option<ClassStudent>)>;
+    ) -> Result<(Option<Class>, Option<ClassUser>)>;
 
     // 作业管理方法
     async fn list_homeworks_with_pagination(

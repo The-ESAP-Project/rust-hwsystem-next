@@ -162,7 +162,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 );
 
                 -- 创建班级学生关联表
-                CREATE TABLE IF NOT EXISTS class_students (
+                CREATE TABLE IF NOT EXISTS class_users (
                     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                     class_id BIGINT NOT NULL,
                     student_id BIGINT NOT NULL,

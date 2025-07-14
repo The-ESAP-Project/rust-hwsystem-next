@@ -1,4 +1,4 @@
-use crate::models::{class_student::entities::ClassUserRole, common::PaginationQuery};
+use crate::models::{class_users::entities::ClassUserRole, common::PaginationQuery};
 use serde::Deserialize;
 
 // 加入班级请求
@@ -13,7 +13,7 @@ pub struct UpdateStudentRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ClassStudentQueryParams {
+pub struct ClassUserQueryParams {
     #[serde(flatten)]
     pub pagination: PaginationQuery,
     pub search: Option<String>,
@@ -21,7 +21,7 @@ pub struct ClassStudentQueryParams {
 
 // 班级列表查询参数（用于存储层）
 #[derive(Debug, Clone, Deserialize)]
-pub struct ClassStudentQuery {
+pub struct ClassUserQuery {
     pub page: Option<i64>,
     pub size: Option<i64>,
     pub teacher_id: Option<i64>,

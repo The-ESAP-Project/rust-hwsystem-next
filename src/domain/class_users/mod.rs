@@ -5,14 +5,14 @@ pub mod update;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::models::class_student::requests::{JoinClassRequest, UpdateStudentRequest};
+use crate::models::class_users::requests::{JoinClassRequest, UpdateStudentRequest};
 use crate::repository::Storage;
 
-pub struct ClassStudentService {
+pub struct ClassUserService {
     storage: Option<Arc<dyn Storage>>,
 }
 
-impl ClassStudentService {
+impl ClassUserService {
     pub fn new_lazy() -> Self {
         Self { storage: None }
     }
@@ -40,12 +40,12 @@ impl ClassStudentService {
     }
 
     // 列出班级学生
-    pub async fn list_class_students(
+    pub async fn list_class_users(
         &self,
         req: &HttpRequest,
         class_id: i64,
     ) -> ActixResult<HttpResponse> {
-        list::list_class_students(self, req, class_id).await
+        list::list_class_users(self, req, class_id).await
     }
 
     // 更新学生信息

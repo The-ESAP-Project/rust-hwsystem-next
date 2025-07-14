@@ -13,6 +13,22 @@ pub enum ClassUserRole {
     Teacher,             // 教师
 }
 
+impl ClassUserRole {
+    pub const STUDENT: &'static str = "student";
+    pub const TEACHER: &'static str = "teacher";
+    pub const CLASSREPRESENTATIVE: &'static str = "class_representative";
+
+    pub fn class_teacher_roles() -> &'static [&'static ClassUserRole] {
+        &[&Self::Teacher]
+    }
+    pub fn class_representative_roles() -> &'static [&'static ClassUserRole] {
+        &[&Self::ClassRepresentative, &Self::Teacher]
+    }
+    pub fn all_roles() -> &'static [&'static ClassUserRole] {
+        &[&Self::Student, &Self::ClassRepresentative, &Self::Teacher]
+    }
+}
+
 impl<'de> Deserialize<'de> for ClassUserRole {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -66,7 +82,7 @@ sqlx_enum_type!(
 );
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-pub struct ClassStudent {
+pub struct ClassUser {
     pub id: i64,
     pub class_id: i64,
     pub student_id: i64,
@@ -74,7 +90,7 @@ pub struct ClassStudent {
     pub joined_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl ClassStudent {
+impl ClassUser {
     pub fn from_row_prefix(
         prefix: &str,
         row: &sqlx::sqlite::SqliteRow,

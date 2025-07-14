@@ -9,6 +9,7 @@
  * use actix_web::{web, App, HttpServer};
  * use crate::middlewares::require_jwt::RequireJWT;
  * use crate::middlewares::require_role::RequireRole;
+ * use crate::models::users::entities::UserRole;
  *
  * HttpServer::new(|| {
  *     App::new()
@@ -17,7 +18,7 @@
  *                 .wrap(RequireJWT)  // 先验证JWT
  *                 .service(
  *                     web::scope("/admin")
- *                         .wrap(RequireRole::new("admin"))  // 再验证角色
+ *                         .wrap(RequireRole::new(&UserRole::Admin)))  // 再验证角色
  *                         .route("/users", web::get().to(admin_users_handler))
  *                 )
  *         )
@@ -27,17 +28,16 @@
  * 或者验证多个角色：
  *
  * ```rust
- * .wrap(RequireRole::new_any(&["admin", "moderator"]))  // 任一角色即可
+ * .wrap(RequireRole::new_any(UserRole::admin_roles()))  // 任一角色即可
  * ```
  */
 
 use actix_service::{Service, Transform};
 use actix_web::{
-    Error, HttpMessage, HttpResponse,
+    Error, HttpMessage,
     body::EitherBody,
     dev::{ServiceRequest, ServiceResponse},
     http::StatusCode,
-    http::header::CONTENT_TYPE,
 };
 use futures_util::future::{LocalBoxFuture, Ready, ready};
 use std::rc::Rc;
@@ -50,6 +50,8 @@ use crate::{
         users::entities::{self, UserRole},
     },
 };
+
+use super::create_error_response;
 
 #[derive(Clone)]
 pub struct RequireRole {
@@ -73,17 +75,6 @@ impl RequireRole {
             require_all: false,
         }
     }
-}
-
-// 辅助函数：创建错误响应
-fn create_error_response(status: StatusCode, message: &str) -> HttpResponse {
-    HttpResponse::build(status)
-        .insert_header((CONTENT_TYPE, "application/json; charset=utf-8"))
-        .json(serde_json::json!({
-            "code": ErrorCode::Unauthorized as i32,
-            "message": message,
-            "timestamp": chrono::Utc::now().to_rfc3339(),
-        }))
 }
 
 impl<S, B> Transform<S, ServiceRequest> for RequireRole
@@ -162,8 +153,12 @@ where
                             user_sub, user_role, required_roles
                         );
                         Ok(req.into_response(
-                            create_error_response(StatusCode::FORBIDDEN, "Access denied.")
-                                .map_into_right_body(),
+                            create_error_response(
+                                StatusCode::FORBIDDEN,
+                                ErrorCode::Unauthorized,
+                                "Access denied.",
+                            )
+                            .map_into_right_body(),
                         ))
                     }
                 }
@@ -172,8 +167,12 @@ where
                         "Role check failed: No user claims found in request. Make sure RequireJWT middleware is applied first."
                     );
                     Ok(req.into_response(
-                        create_error_response(StatusCode::UNAUTHORIZED, "Authentication required")
-                            .map_into_right_body(),
+                        create_error_response(
+                            StatusCode::UNAUTHORIZED,
+                            ErrorCode::Unauthorized,
+                            "Authentication required",
+                        )
+                        .map_into_right_body(),
                     ))
                 }
             }

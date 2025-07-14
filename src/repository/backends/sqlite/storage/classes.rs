@@ -2,6 +2,7 @@ use sqlx::Row;
 
 use super::SqliteStorage;
 use crate::errors::{HWSystemError, Result};
+use crate::models::class_users::entities::ClassUserRole;
 use crate::models::classes::requests::{CreateClassRequest, UpdateClassRequest};
 use crate::models::{
     PaginationInfo, classes::entities::Class, classes::requests::ClassListQuery,
@@ -32,6 +33,10 @@ pub async fn create_class(storage: &SqliteStorage, class: CreateClassRequest) ->
     .fetch_one(&storage.pool)
     .await
     .map_err(|e| HWSystemError::database_operation(format!("Failed to create class: {e}")))?;
+
+    super::class_users::join_class(storage, class.teacher_id, result.id, ClassUserRole::Teacher)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
 
     Ok(result)
 }

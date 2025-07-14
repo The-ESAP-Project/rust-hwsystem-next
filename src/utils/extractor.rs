@@ -34,3 +34,4 @@ macro_rules! define_safe_i64_extractor {
 }
 
 define_safe_i64_extractor!(SafeIDI64, "id");
+define_safe_i64_extractor!(SafeClassIdI64, "class_id");

@@ -125,11 +125,11 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
         .clone();
 
     // 从缓存中获取用户信息
-    match cache.get_raw(token).await {
+    match cache.get_raw(&format!("user:{token}")).await {
         CacheResult::Found(json) => match serde_json::from_str::<entities::User>(&json) {
             Ok(user) => return Ok(user),
             Err(_) => {
-                cache.remove(token).await;
+                cache.remove(&format!("user:{token}")).await;
                 info!("Failed to deserialize user from cache for token: {}", token);
             }
         },
@@ -168,7 +168,7 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
     let app_config = AppConfig::get();
     cache
         .insert_raw(
-            token.to_string(),
+            format!("user:{token}"),
             serde_json::to_string(&user).unwrap(),
             app_config.cache.default_ttl,
         )

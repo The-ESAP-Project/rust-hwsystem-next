@@ -157,7 +157,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 );
 
                 -- 创建班级学生关联表
-                CREATE TABLE class_students (
+                CREATE TABLE class_users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     class_id INTEGER NOT NULL,
                     student_id INTEGER NOT NULL,
@@ -236,9 +236,9 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 CREATE INDEX idx_classes_invite_code ON classes(invite_code);
 
                 -- 班级学生关联表索引
-                CREATE INDEX idx_class_students_class_id ON class_students(class_id);
-                CREATE INDEX idx_class_students_student_id ON class_students(student_id);
-                CREATE INDEX idx_class_students_role ON class_students(role);
+                CREATE INDEX idx_class_users_class_id ON class_users(class_id);
+                CREATE INDEX idx_class_users_student_id ON class_users(student_id);
+                CREATE INDEX idx_class_users_role ON class_users(role);
 
                 -- 创建文件关联表索引
                 CREATE INDEX idx_files_citation_count ON files(citation_count);
@@ -268,10 +268,10 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at)
                 VALUES (5, 'Test Class 2', 'This is another test class', 'TEST456', 1704067200, 1704067200);
 
-                INSERT INTO class_students (class_id, student_id, role, joined_at)
+                INSERT INTO class_users (class_id, student_id, role, joined_at)
                 VALUES (1, 2, 'student', 1704067200);
 
-                INSERT INTO class_students (class_id, student_id, role, joined_at)
+                INSERT INTO class_users (class_id, student_id, role, joined_at)
                 VALUES (2, 3, 'student', 1704067200);
 
                 -- 正式环境需要删除这些测试数据

@@ -1,12 +1,12 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use crate::{
-    domain::ClassStudentService,
-    models::{ApiResponse, ErrorCode, class_student::requests::UpdateStudentRequest},
+    domain::ClassUserService,
+    models::{ApiResponse, ErrorCode, class_users::requests::UpdateStudentRequest},
 };
 
 pub async fn update_student(
-    service: &ClassStudentService,
+    service: &ClassUserService,
     request: &HttpRequest,
     class_id: i64,
     class_student_id: i64,
