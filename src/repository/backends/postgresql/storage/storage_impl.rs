@@ -1,6 +1,9 @@
 use super::PostgresqlStorage;
 use crate::models::{
-    class_users::entities::{ClassUser, ClassUserRole},
+    class_users::{
+        entities::{ClassUser, ClassUserRole},
+        requests::{ClassUserQuery, ClassUserQueryParams}, responses::ClassUserListResponse,
+    },
     classes::{
         entities::Class,
         requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
@@ -121,7 +124,11 @@ impl Storage for PostgresqlStorage {
         unimplemented!("leave_class not implemented for PostgresqlStorage")
     }
 
-    async fn list_class_users(&self, class_id: i64) -> Result<Vec<ClassUser>> {
+    async fn list_class_users_with_pagination(
+        &self,
+        class_id: i64,
+        query: ClassUserQuery,
+    ) -> Result<ClassUserListResponse> {
         // class_users::list_class_users(self, class_id).await
         unimplemented!("list_class_users not implemented for PostgresqlStorage")
     }
@@ -151,7 +158,7 @@ impl Storage for PostgresqlStorage {
         )
     }
 
-    async fn get_class_and_class_student_by_id_and_code(
+    async fn get_class_and_class_student_by_class_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,

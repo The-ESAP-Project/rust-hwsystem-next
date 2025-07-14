@@ -5,7 +5,9 @@ pub mod update;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::models::class_users::requests::{JoinClassRequest, UpdateStudentRequest};
+use crate::models::class_users::requests::{
+    ClassUserQueryParams, JoinClassRequest, UpdateClassUserRequest,
+};
 use crate::repository::Storage;
 
 pub struct ClassUserService {
@@ -39,23 +41,24 @@ impl ClassUserService {
         join::join_class(self, req, class_id, join_data).await
     }
 
-    // 列出班级学生
-    pub async fn list_class_users(
+    // 列出班级用户
+    pub async fn list_class_users_with_pagination(
         &self,
         req: &HttpRequest,
         class_id: i64,
+        query: ClassUserQueryParams,
     ) -> ActixResult<HttpResponse> {
-        list::list_class_users(self, req, class_id).await
+        list::list_class_users_with_pagination(self, req, class_id, query).await
     }
 
-    // 更新学生信息
-    pub async fn update_student(
+    // 更新用户信息
+    pub async fn update_user(
         &self,
         req: &HttpRequest,
         class_id: i64,
-        class_student_id: i64,
-        update_data: UpdateStudentRequest,
+        class_user_id: i64,
+        update_data: UpdateClassUserRequest,
     ) -> ActixResult<HttpResponse> {
-        update::update_student(self, req, class_id, class_student_id, update_data).await
+        update::update_user(self, req, class_id, class_user_id, update_data).await
     }
 }

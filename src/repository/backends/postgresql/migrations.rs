@@ -165,10 +165,10 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 CREATE TABLE IF NOT EXISTS class_users (
                     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                     class_id BIGINT NOT NULL,
-                    student_id BIGINT NOT NULL,
+                    user_id BIGINT NOT NULL,
                     joined_at TIMESTAMPTZ NOT NULL,
                     FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
-                    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
                 -- 创建作业表

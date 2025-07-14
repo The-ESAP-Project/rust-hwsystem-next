@@ -1,7 +1,10 @@
 use super::SqliteStorage;
 use crate::{
     models::{
-        class_users::entities::{ClassUser, ClassUserRole},
+        class_users::{
+            entities::{ClassUser, ClassUserRole},
+            requests::ClassUserQuery, responses::ClassUserListResponse,
+        },
         classes::{
             entities::Class,
             requests::{ClassListQuery, CreateClassRequest, UpdateClassRequest},
@@ -116,8 +119,12 @@ impl Storage for SqliteStorage {
         class_users::leave_class(self, user_id, class_id).await
     }
 
-    async fn list_class_users(&self, class_id: i64) -> Result<Vec<ClassUser>> {
-        class_users::list_class_users(self, class_id).await
+    async fn list_class_users_with_pagination(
+        &self,
+        class_id: i64,
+        query: ClassUserQuery,
+    ) -> Result<ClassUserListResponse> {
+        class_users::list_class_users_with_pagination(self, class_id, query).await
     }
 
     async fn list_user_classes_with_pagination(
@@ -140,13 +147,13 @@ impl Storage for SqliteStorage {
         class_users::get_class_student_by_user_id_and_class_id(self, user_id, class_id).await
     }
 
-    async fn get_class_and_class_student_by_id_and_code(
+    async fn get_class_and_class_student_by_class_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,
         user_id: i64,
     ) -> Result<(Option<Class>, Option<ClassUser>)> {
-        class_users::get_class_and_class_student_by_id_and_code(
+        class_users::get_class_and_class_student_by_class_id_and_code(
             self,
             class_id,
             invite_code,

@@ -196,6 +196,7 @@ where
 
             if has_permission {
                 // 权限通过，插入 class_student 到扩展，继续后续处理
+                tracing::debug!("Class user {} has permission", class_student.user_id);
                 req.extensions_mut().insert(class_student);
                 let res = srv.call(req).await?.map_into_left_body();
                 Ok(res)
@@ -233,8 +234,12 @@ async fn get_class_student_by_user_id_and_class_id(
         .get_ref()
         .clone();
 
-    storage
+    match storage
         .get_class_student_by_user_id_and_class_id(user_id, class_id)
         .await
-        .unwrap_or_default()
+    {
+        Ok(Some(class_student)) => Some(class_student),
+        Ok(None) => None,
+        Err(_) => None,
+    }
 }

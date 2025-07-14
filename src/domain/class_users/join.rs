@@ -30,7 +30,7 @@ pub async fn join_class(
     let invite_code = &join_data.invite_code;
 
     let (class, user_student) = match storage
-        .get_class_and_class_student_by_id_and_code(class_id, invite_code, user_id)
+        .get_class_and_class_student_by_class_id_and_code(class_id, invite_code, user_id)
         .await
     {
         Ok(res) => res,
@@ -44,6 +44,8 @@ pub async fn join_class(
             );
         }
     };
+
+    tracing::debug!(class = ?class, user_student = ?user_student);
 
     if class.is_none() {
         return Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(

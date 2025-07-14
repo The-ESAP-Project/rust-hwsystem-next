@@ -8,7 +8,7 @@ pub struct JoinClassRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct UpdateStudentRequest {
+pub struct UpdateClassUserRequest {
     pub role: ClassUserRole, // 更新学生角色
 }
 
@@ -24,6 +24,5 @@ pub struct ClassUserQueryParams {
 pub struct ClassUserQuery {
     pub page: Option<i64>,
     pub size: Option<i64>,
-    pub teacher_id: Option<i64>,
     pub search: Option<String>,
 }

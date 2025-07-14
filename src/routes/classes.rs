@@ -81,7 +81,7 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
                     .route(
                         web::get()
                             .to(get_class)
-                            // 仅管理员可用
+                            // 仅管理员可用，获取对应班级详情
                             .wrap(middlewares::RequireRole::new_any(UserRole::admin_roles())),
                     )
                     .route(
