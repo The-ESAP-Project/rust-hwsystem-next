@@ -29,8 +29,8 @@ pub async fn join_class(
     let storage = service.get_storage(request);
     let invite_code = &join_data.invite_code;
 
-    let (class, user_student) = match storage
-        .get_class_and_class_student_by_class_id_and_code(class_id, invite_code, user_id)
+    let (class, class_user) = match storage
+        .get_class_and_class_user_by_class_id_and_code(class_id, invite_code, user_id)
         .await
     {
         Ok(res) => res,
@@ -45,15 +45,13 @@ pub async fn join_class(
         }
     };
 
-    tracing::debug!(class = ?class, user_student = ?user_student);
-
     if class.is_none() {
         return Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(
             ErrorCode::ClassInviteCodeInvalid,
             "Class not found or invite code is invalid",
         )));
     }
-    if user_student.is_some() {
+    if class_user.is_some() {
         return Ok(HttpResponse::Conflict().json(ApiResponse::error(
             ErrorCode::ClassAlreadyJoined,
             class.unwrap(),
@@ -65,8 +63,8 @@ pub async fn join_class(
         .join_class(user_id, class_id, ClassUserRole::Student)
         .await
     {
-        Ok(class_student) => Ok(HttpResponse::Ok().json(ApiResponse::success(
-            class_student,
+        Ok(class_user) => Ok(HttpResponse::Ok().json(ApiResponse::success(
+            class_user,
             "Class joined successfully",
         ))),
         Err(e) => {

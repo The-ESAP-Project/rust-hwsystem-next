@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{str::FromStr, string};
+use std::str::FromStr;
 
 use crate::sqlx_enum_type;
 use sqlx::Row;
@@ -86,7 +86,6 @@ pub struct ClassUser {
     pub id: i64,
     pub class_id: i64,
     pub user_id: i64,
-    #[sqlx(skip)]
     pub profile_name: Option<String>,
     pub role: ClassUserRole,
     pub joined_at: chrono::DateTime<chrono::Utc>,

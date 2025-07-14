@@ -45,4 +45,5 @@ pub enum ErrorCode {
     ClassInviteCodeInvalid = 5011, // 班级邀请码无效
     ClassAlreadyJoined = 5012,     // 已经加入该班级
     ClassJoinForbidden = 5013,     // 加入班级被禁止
+    ClassUserNotFound = 5014,      // 班级用户未找到
 }

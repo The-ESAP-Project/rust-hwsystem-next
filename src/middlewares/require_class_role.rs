@@ -166,38 +166,37 @@ where
             }
 
             // 4. 查询用户在班级中的成员关系和角色
-            let class_student =
-                match get_class_student_by_user_id_and_class_id(&req, user_claims.id, class_id)
-                    .await
-                {
-                    Some(cs) => cs,
-                    None => {
-                        return Ok(req.into_response(
-                            create_error_response(
-                                StatusCode::FORBIDDEN,
-                                ErrorCode::ClassPermissionDenied,
-                                "No permission for this class",
-                            )
-                            .map_into_right_body(),
-                        ));
-                    }
-                };
+            let class_user = match get_class_user_by_user_id_and_class_id(
+                &req,
+                user_claims.id,
+                class_id,
+            )
+            .await
+            {
+                Some(cs) => cs,
+                None => {
+                    return Ok(req.into_response(
+                        create_error_response(
+                            StatusCode::FORBIDDEN,
+                            ErrorCode::ClassPermissionDenied,
+                            "No permission for this class",
+                        )
+                        .map_into_right_body(),
+                    ));
+                }
+            };
 
             // 5. 判断是否拥有所需角色
             let has_permission = if require_all {
-                required_roles
-                    .iter()
-                    .all(|role| &class_student.role == role)
+                required_roles.iter().all(|role| &class_user.role == role)
             } else {
-                required_roles
-                    .iter()
-                    .any(|role| &class_student.role == role)
+                required_roles.iter().any(|role| &class_user.role == role)
             };
 
             if has_permission {
-                // 权限通过，插入 class_student 到扩展，继续后续处理
-                tracing::debug!("Class user {} has permission", class_student.user_id);
-                req.extensions_mut().insert(class_student);
+                // 权限通过，插入 class_user 到扩展，继续后续处理
+                tracing::debug!("Class user {} has permission", class_user.user_id);
+                req.extensions_mut().insert(class_user);
                 let res = srv.call(req).await?.map_into_left_body();
                 Ok(res)
             } else {
@@ -216,14 +215,14 @@ where
 
 // 辅助函数：从请求中提取用户信息
 impl RequireClassRole {
-    /// 从请求扩展中提取用户 Class_Student 信息
+    /// 从请求扩展中提取用户 Class_User 信息
     /// 此函数应该在应用了RequireClassRole中间件的路由处理程序中使用
-    pub fn extract_user_class_student(req: &actix_web::HttpRequest) -> Option<ClassUser> {
+    pub fn extract_user_class_user(req: &actix_web::HttpRequest) -> Option<ClassUser> {
         req.extensions().get::<ClassUser>().cloned()
     }
 }
 
-async fn get_class_student_by_user_id_and_class_id(
+async fn get_class_user_by_user_id_and_class_id(
     req: &ServiceRequest,
     user_id: i64,
     class_id: i64,
@@ -235,10 +234,10 @@ async fn get_class_student_by_user_id_and_class_id(
         .clone();
 
     match storage
-        .get_class_student_by_user_id_and_class_id(user_id, class_id)
+        .get_class_user_by_user_id_and_class_id(user_id, class_id)
         .await
     {
-        Ok(Some(class_student)) => Some(class_student),
+        Ok(Some(class_user)) => Some(class_user),
         Ok(None) => None,
         Err(_) => None,
     }

@@ -1,3 +1,5 @@
+pub mod delete;
+pub mod get;
 pub mod join;
 pub mod list;
 pub mod update;
@@ -51,6 +53,16 @@ impl ClassUserService {
         list::list_class_users_with_pagination(self, req, class_id, query).await
     }
 
+    // 获取班级用户信息
+    pub async fn get_class_student(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+        class_user_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        get::get_class_student(self, req, class_id, class_user_id).await
+    }
+
     // 更新用户信息
     pub async fn update_user(
         &self,
@@ -60,5 +72,15 @@ impl ClassUserService {
         update_data: UpdateClassUserRequest,
     ) -> ActixResult<HttpResponse> {
         update::update_user(self, req, class_id, class_user_id, update_data).await
+    }
+
+    // 删除用户
+    pub async fn delete_class_user(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+        class_user_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        delete::delete_class_user(self, req, class_id, class_user_id).await
     }
 }

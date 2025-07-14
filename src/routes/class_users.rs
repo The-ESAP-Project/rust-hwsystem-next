@@ -30,17 +30,6 @@ pub async fn join_class(
         .await
 }
 
-pub async fn get_class_student(
-    req: HttpRequest,
-    path: SafeClassUserID,
-) -> ActixResult<HttpResponse> {
-    // let class_user_id = path.0;
-    // CLASS_STUDENT_SERVICE
-    //     .get_class_student(&req, class_user_id)
-    //     .await
-    unimplemented!("get_class_student not implemented yet");
-}
-
 pub async fn list_class_users_with_pagination(
     req: HttpRequest,
     path: SafeClassIdI64,
@@ -48,6 +37,17 @@ pub async fn list_class_users_with_pagination(
 ) -> ActixResult<HttpResponse> {
     CLASS_STUDENT_SERVICE
         .list_class_users_with_pagination(&req, path.0, query.into_inner())
+        .await
+}
+
+pub async fn get_class_student(
+    req: HttpRequest,
+    path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
+) -> ActixResult<HttpResponse> {
+    let class_id = path.0.0;
+    let class_user_id = path.1.0;
+    CLASS_STUDENT_SERVICE
+        .get_class_student(&req, class_id, class_user_id)
         .await
 }
 
@@ -68,16 +68,14 @@ pub async fn delete_class_user(
     req: HttpRequest,
     path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
 ) -> ActixResult<HttpResponse> {
-    // let class_id = path.0.0;
-    // let class_user_id = path.1.0;
-    // CLASS_STUDENT_SERVICE
-    //     .get_class_student(&req, class_user_id)
-    //     .await
-    unimplemented!("get_class_student not implemented yet");
+    let class_id = path.0.0;
+    let class_user_id = path.1.0;
+    CLASS_STUDENT_SERVICE
+        .delete_class_user(&req, class_id, class_user_id)
+        .await
 }
 
 // 配置路由
-// TODO: 路由需要进一步优化，并且允许当前创建的用户访问自己的资源
 pub fn configure_class_users_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api/v1/classes/{class_id}/students")
@@ -116,8 +114,8 @@ pub fn configure_class_users_routes(cfg: &mut web::ServiceConfig) {
                     )
                     .route(
                         web::delete()
-                            .to(delete_class_user)
-                            .wrap(middlewares::RequireRole::new_any(UserRole::teacher_roles())),
+                            // 删除班级指定用户，用户自己或者班级教师权限
+                            .to(delete_class_user),
                     ),
             ),
     );

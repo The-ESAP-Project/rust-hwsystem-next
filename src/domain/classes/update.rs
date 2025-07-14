@@ -54,7 +54,7 @@ pub async fn update_class(
     };
 
     // 权限校验
-    if let Err(resp) = check_class_update_permission(role, uid, &class).await {
+    if let Err(resp) = check_class_update_permission(role, uid, &class) {
         return Ok(resp);
     }
 
@@ -72,7 +72,7 @@ pub async fn update_class(
 }
 
 /// 权限校验辅助函数
-async fn check_class_update_permission(
+fn check_class_update_permission(
     role: Option<UserRole>,
     uid: i64,
     class: &Class,

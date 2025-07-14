@@ -7,7 +7,8 @@ use tracing::error;
 use crate::models::{
     class_users::{
         entities::{ClassUser, ClassUserRole},
-        requests::ClassUserQuery, responses::ClassUserListResponse,
+        requests::ClassUserQuery,
+        responses::ClassUserListResponse,
     },
     classes::{
         entities::Class,
@@ -88,12 +89,12 @@ pub trait Storage: Send + Sync {
         query: ClassListQuery,
     ) -> Result<ClassListResponse>;
     async fn get_user_class_role(&self, user_id: i64, class_id: i64) -> Result<Option<ClassUser>>;
-    async fn get_class_student_by_user_id_and_class_id(
+    async fn get_class_user_by_user_id_and_class_id(
         &self,
         user_id: i64,
         class_id: i64,
     ) -> Result<Option<ClassUser>>;
-    async fn get_class_and_class_student_by_class_id_and_code(
+    async fn get_class_and_class_user_by_class_id_and_code(
         &self,
         class_id: i64,
         invite_code: &str,
