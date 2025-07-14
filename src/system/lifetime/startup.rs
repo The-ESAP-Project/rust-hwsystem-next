@@ -1,5 +1,5 @@
 use crate::cache::{ObjectCache, register::get_object_cache_plugin};
-use crate::storages::{Storage, StorageFactory};
+use crate::repository::{Storage, StorageFactory};
 use crate::system::app_config::AppConfig;
 use std::sync::Arc;
 use tracing::{debug, warn};
@@ -76,7 +76,7 @@ pub async fn prepare_server_startup() -> StartupContext {
         .expect("Failed to install rustls crypto provider");
 
     if cfg!(debug_assertions) {
-        crate::storages::register::debug_storage_registry();
+        crate::repository::register::debug_storage_registry();
         crate::cache::register::debug_object_cache_registry();
         debug!("Debug mode: Storage and cache registries are enabled");
     }

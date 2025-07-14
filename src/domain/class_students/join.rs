@@ -13,8 +13,15 @@ pub async fn join_class(
     class_id: i64,
     join_data: JoinClassRequest,
 ) -> ActixResult<HttpResponse> {
-    let user_id = RequireJWT::extract_user_id(request)
-        .ok_or_else(|| actix_web::error::ErrorUnauthorized("User not authenticated"))?;
+    let user_id = match RequireJWT::extract_user_id(request) {
+        Some(id) => id,
+        None => {
+            return Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
+                ErrorCode::Unauthorized,
+                "Unauthorized: missing user id",
+            )));
+        }
+    };
 
     let storage = service.get_storage(request);
     let invite_code = &join_data.invite_code;

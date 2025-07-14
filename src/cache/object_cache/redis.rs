@@ -21,7 +21,7 @@ impl RedisObjectCache {
 
         debug!(
             "RedisObjectCache created with prefix: '{}', TTL: {}s",
-            redis_config.key_prefix, redis_config.default_ttl
+            redis_config.key_prefix, config.cache.default_ttl
         );
 
         let client = redis::Client::open(redis_config.url.clone())
@@ -53,7 +53,7 @@ impl RedisObjectCache {
         Ok(Self {
             client,
             key_prefix: redis_config.key_prefix.clone(),
-            ttl: redis_config.default_ttl,
+            ttl: config.cache.default_ttl,
         })
     }
 
@@ -99,7 +99,7 @@ impl ObjectCache for RedisObjectCache {
         }
     }
 
-    async fn insert_raw(&self, key: String, value: String, ttl: u32) {
+    async fn insert_raw(&self, key: String, value: String, ttl: u64) {
         let redis_key = self.make_key(&key);
 
         let mut conn = match self.get_connection().await {
@@ -111,7 +111,7 @@ impl ObjectCache for RedisObjectCache {
         };
 
         // 使用传入的 TTL，如果为 0 则使用默认 TTL
-        let effective_ttl = if ttl == 0 { self.ttl } else { ttl as u64 };
+        let effective_ttl = if ttl == 0 { self.ttl } else { ttl };
 
         match conn
             .set_ex::<String, String, ()>(redis_key, value, effective_ttl)

@@ -1,10 +1,12 @@
 pub mod join;
+pub mod list;
+pub mod update;
 
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::models::class_student::requests::JoinClassRequest;
-use crate::storages::Storage;
+use crate::models::class_student::requests::{JoinClassRequest, UpdateStudentRequest};
+use crate::repository::Storage;
 
 pub struct ClassStudentService {
     storage: Option<Arc<dyn Storage>>,
@@ -35,5 +37,25 @@ impl ClassStudentService {
         join_data: JoinClassRequest,
     ) -> ActixResult<HttpResponse> {
         join::join_class(self, req, class_id, join_data).await
+    }
+
+    // 列出班级学生
+    pub async fn list_class_students(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        list::list_class_students(self, req, class_id).await
+    }
+
+    // 更新学生信息
+    pub async fn update_student(
+        &self,
+        req: &HttpRequest,
+        class_id: i64,
+        class_student_id: i64,
+        update_data: UpdateStudentRequest,
+    ) -> ActixResult<HttpResponse> {
+        update::update_student(self, req, class_id, class_student_id, update_data).await
     }
 }

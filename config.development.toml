@@ -23,3 +23,5 @@ timeout = 30
 
 [cache]
 type = "moka"
+# 默认 TTL (秒)
+default_ttl = 3600

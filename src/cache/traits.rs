@@ -20,7 +20,7 @@ pub trait ObjectCache: Send + Sync {
     async fn get_raw(&self, key: &str) -> CacheResult<String>;
 
     /// 插入原始 JSON 字符串
-    async fn insert_raw(&self, key: String, value: String, ttl: u32);
+    async fn insert_raw(&self, key: String, value: String, ttl: u64);
 
     /// 移除指定键
     async fn remove(&self, key: &str);
@@ -41,7 +41,7 @@ pub trait TypedObjectCache {
         &self,
         key: String,
         value: T,
-        ttl: u32,
+        ttl: u64,
     ) -> impl std::future::Future<Output = ()> + Send
     where
         T: Serialize + Send;
@@ -87,7 +87,7 @@ impl<C: ObjectCache + ?Sized> TypedObjectCache for C {
         }
     }
 
-    async fn insert<T>(&self, key: String, value: T, ttl: u32) -> ()
+    async fn insert<T>(&self, key: String, value: T, ttl: u64) -> ()
     where
         T: Serialize + Send,
     {

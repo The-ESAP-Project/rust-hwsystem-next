@@ -15,12 +15,12 @@ use crate::{
             responses::UserListResponse,
         },
     },
-    storages::backends::sqlite::storage::class_students,
+    repository::backends::sqlite::storage::class_students,
 };
 
 use super::{classes, file, homeworks, user};
 use crate::errors::Result;
-use crate::storages::Storage;
+use crate::repository::Storage;
 use async_trait::async_trait;
 
 #[async_trait]

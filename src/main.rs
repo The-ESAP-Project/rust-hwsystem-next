@@ -10,8 +10,8 @@ mod domain;
 mod errors;
 mod middlewares;
 mod models;
+mod repository;
 mod routes;
-mod storages;
 mod system;
 mod utils;
 

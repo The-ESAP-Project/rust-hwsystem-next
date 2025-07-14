@@ -8,7 +8,7 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
 use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
-use crate::storages::Storage;
+use crate::repository::Storage;
 
 pub struct UserService {
     storage: Option<Arc<dyn Storage>>,

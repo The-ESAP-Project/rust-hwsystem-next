@@ -5,7 +5,7 @@ use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::storages::Storage;
+use crate::repository::Storage;
 
 pub struct FileService {
     storage: Option<Arc<dyn Storage>>,

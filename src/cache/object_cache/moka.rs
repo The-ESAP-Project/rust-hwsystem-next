@@ -23,9 +23,7 @@ impl MokaCacheWrapper {
         let config = AppConfig::get();
         let inner = Cache::builder()
             .max_capacity(config.cache.memory.max_capacity)
-            .time_to_live(std::time::Duration::from_secs(
-                config.cache.memory.default_ttl,
-            ))
+            .time_to_live(std::time::Duration::from_secs(config.cache.default_ttl))
             .build();
 
         debug!(
@@ -40,13 +38,15 @@ impl MokaCacheWrapper {
 impl ObjectCache for MokaCacheWrapper {
     async fn get_raw(&self, key: &str) -> CacheResult<String> {
         if let Some(value) = self.inner.get(key).await {
+            debug!("Successfully retrieved key: {}", key);
             CacheResult::Found(value)
         } else {
+            debug!("Key not found in cache: {}", key);
             CacheResult::NotFound
         }
     }
 
-    async fn insert_raw(&self, key: String, value: String, ttl: u32) {
+    async fn insert_raw(&self, key: String, value: String, ttl: u64) {
         // Moka 缓存使用配置的 TTL，这里的 ttl 参数会被忽略
         // 因为 Moka 在创建时就设置了全局的 TTL 策略
         self.inner.insert(key, value).await;

@@ -8,7 +8,7 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
 use crate::models::classes::requests::{ClassQueryParams, CreateClassRequest, UpdateClassRequest};
-use crate::storages::Storage;
+use crate::repository::Storage;
 
 pub struct ClassService {
     storage: Option<Arc<dyn Storage>>,

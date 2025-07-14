@@ -17,7 +17,7 @@ use crate::models::{
 
 use super::{file, homeworks, user};
 use crate::errors::Result;
-use crate::storages::Storage;
+use crate::repository::Storage;
 use async_trait::async_trait;
 
 #[async_trait]

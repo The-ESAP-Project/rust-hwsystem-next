@@ -82,7 +82,7 @@ pub fn configure_classes_routes(cfg: &mut web::ServiceConfig) {
                         web::get()
                             .to(get_class)
                             // 仅管理员可用
-                            .wrap(middlewares::RequireRole::new(&UserRole::Admin)),
+                            .wrap(middlewares::RequireRole::new_any(UserRole::admin_roles())),
                     )
                     .route(
                         web::put()

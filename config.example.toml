@@ -57,22 +57,20 @@ timeout = 30
 [cache]
 # 缓存类型: moka, redis
 type = "redis"
+# 默认 TTL (秒)
+default_ttl = 3600
 
 [cache.redis]
 # Redis 连接 URL
 url = "redis://127.0.0.1:6379/"
 # Redis 键前缀
 key_prefix = "hwsystem:"
-# 默认 TTL (秒)
-default_ttl = 3600
 # 连接池大小
 pool_size = 10
 
 [cache.memory]
 # 内存缓存大小限制
 max_capacity = 10000
-# 默认 TTL (秒)
-default_ttl = 3600
 
 [cors]
 # 允许的源 (空数组表示允许所有)

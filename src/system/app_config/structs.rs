@@ -70,6 +70,7 @@ pub struct DatabaseConfig {
 pub struct CacheConfig {
     #[serde(rename = "type")]
     pub cache_type: String,
+    pub default_ttl: u64,
     pub redis: RedisConfig,
     pub memory: MemoryConfig,
 }
@@ -79,15 +80,13 @@ pub struct CacheConfig {
 pub struct RedisConfig {
     pub url: String,
     pub key_prefix: String,
-    pub default_ttl: u64,
-    pub pool_size: u32,
+    pub pool_size: u64,
 }
 
 /// 内存缓存配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryConfig {
     pub max_capacity: u64,
-    pub default_ttl: u64,
 }
 
 /// CORS 配置

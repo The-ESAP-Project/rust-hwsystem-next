@@ -73,14 +73,6 @@ impl RequireRole {
             require_all: false,
         }
     }
-
-    /// 创建需要所有角色的中间件
-    pub fn new_all(roles: &[&UserRole]) -> Self {
-        Self {
-            required_roles: roles.iter().map(|r| (*r).clone()).collect(),
-            require_all: true,
-        }
-    }
 }
 
 // 辅助函数：创建错误响应

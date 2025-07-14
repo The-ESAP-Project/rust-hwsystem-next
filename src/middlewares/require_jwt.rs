@@ -62,9 +62,11 @@
  * 确保在环境变量中设置了 `JWT_SECRET`，JWT服务将使用此密钥来验证令牌。
  */
 
+use crate::cache::{CacheResult, ObjectCache};
 use crate::models::users::entities::UserRole;
 use crate::models::{ErrorCode, users::entities};
-use crate::storages::Storage;
+use crate::repository::Storage;
+use crate::system::app_config::AppConfig;
 use actix_service::{Service, Transform};
 use actix_web::{
     Error, HttpMessage, HttpResponse,
@@ -116,6 +118,26 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
         "Invalid JWT token".to_string()
     })?;
 
+    let cache = req
+        .app_data::<actix_web::web::Data<Arc<dyn ObjectCache>>>()
+        .expect("Cache not found in app data")
+        .get_ref()
+        .clone();
+
+    // 从缓存中获取用户信息
+    match cache.get_raw(token).await {
+        CacheResult::Found(json) => match serde_json::from_str::<entities::User>(&json) {
+            Ok(user) => return Ok(user),
+            Err(_) => {
+                cache.remove(token).await;
+                info!("Failed to deserialize user from cache for token: {}", token);
+            }
+        },
+        _ => {
+            info!("User not found in cache for token: {}", token);
+        }
+    };
+
     let storage = req
         .app_data::<actix_web::web::Data<Arc<dyn Storage>>>()
         .expect("Storage not found in app data")
@@ -141,6 +163,16 @@ async fn extract_and_validate_jwt(req: &ServiceRequest) -> Result<entities::User
     if user.status != entities::UserStatus::Active {
         return Err("User is not active".to_string());
     }
+
+    // 将用户信息存入缓存
+    let app_config = AppConfig::get();
+    cache
+        .insert_raw(
+            token.to_string(),
+            serde_json::to_string(&user).unwrap(),
+            app_config.cache.default_ttl,
+        )
+        .await;
 
     Ok(user)
 }
@@ -241,23 +273,5 @@ impl RequireJWT {
         req.extensions()
             .get::<entities::User>()
             .map(|user| user.role.clone())
-    }
-
-    /// 检查用户是否具有指定角色
-    /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn has_role(req: &actix_web::HttpRequest, required_role: &str) -> bool {
-        req.extensions()
-            .get::<entities::User>()
-            .map(|user| user.role.to_string() == required_role)
-            .unwrap_or(false)
-    }
-
-    /// 检查用户是否具有任一指定角色
-    /// 此函数应该在应用了RequireJWT中间件的路由处理程序中使用
-    pub fn has_any_role(req: &actix_web::HttpRequest, roles: &[&str]) -> bool {
-        req.extensions()
-            .get::<entities::User>()
-            .map(|user| roles.contains(&user.role.to_string().as_str()))
-            .unwrap_or(false)
     }
 }

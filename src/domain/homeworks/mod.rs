@@ -4,7 +4,7 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
 use crate::models::homeworks::requests::HomeworkListQuery;
-use crate::storages::Storage;
+use crate::repository::Storage;
 use crate::system::app_config::AppConfig;
 
 pub struct HomeworkService {

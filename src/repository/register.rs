@@ -1,5 +1,5 @@
 use crate::errors::Result;
-use crate::storages::Storage;
+use crate::repository::Storage;
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, sync::RwLock};
 

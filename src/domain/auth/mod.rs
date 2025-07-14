@@ -5,7 +5,7 @@ pub mod token;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::storages::Storage;
+use crate::repository::Storage;
 use crate::system::app_config::AppConfig;
 
 pub struct AuthService {

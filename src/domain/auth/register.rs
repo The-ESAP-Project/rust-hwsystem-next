@@ -65,7 +65,7 @@ pub async fn handle_register(
 }
 
 async fn check_username_exists(
-    storage: &std::sync::Arc<dyn crate::storages::Storage>,
+    storage: &std::sync::Arc<dyn crate::repository::Storage>,
     username: &str,
 ) -> Result<(), HttpResponse> {
     match storage.get_user_by_username(username).await {
@@ -84,7 +84,7 @@ async fn check_username_exists(
 }
 
 async fn check_email_exists(
-    storage: &std::sync::Arc<dyn crate::storages::Storage>,
+    storage: &std::sync::Arc<dyn crate::repository::Storage>,
     email: &str,
 ) -> Result<(), HttpResponse> {
     match storage.get_user_by_email(email).await {

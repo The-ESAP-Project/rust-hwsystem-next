@@ -10,7 +10,7 @@ use crate::{
         classes::requests::{ClassListQuery, ClassQueryParams},
         users::entities::UserRole,
     },
-    storages::Storage,
+    repository::Storage,
 };
 
 pub async fn list_classes(
