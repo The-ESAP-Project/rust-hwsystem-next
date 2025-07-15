@@ -40,14 +40,14 @@ pub async fn list_class_users_with_pagination(
         .await
 }
 
-pub async fn get_class_student(
+pub async fn get_class_user(
     req: HttpRequest,
     path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
 ) -> ActixResult<HttpResponse> {
     let class_id = path.0.0;
     let class_user_id = path.1.0;
     CLASS_STUDENT_SERVICE
-        .get_class_student(&req, class_id, class_user_id)
+        .get_class_user(&req, class_id, class_user_id)
         .await
 }
 
@@ -101,10 +101,10 @@ pub fn configure_class_users_routes(cfg: &mut web::ServiceConfig) {
                 web::resource("/{class_user_id}")
                     .route(
                         web::get()
-                            .to(get_class_student)
+                            .to(get_class_user)
                             // 获取班级指定学生详细信息
                             .wrap(middlewares::RequireClassRole::new_any(
-                                ClassUserRole::class_representative_roles(),
+                                ClassUserRole::all_roles(),
                             )),
                     )
                     .route(

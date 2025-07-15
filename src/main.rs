@@ -39,12 +39,23 @@ async fn main() -> std::io::Result<()> {
     let stdout_log = std::io::stdout();
     let (non_blocking_writer, _guard) = tracing_appender::non_blocking(stdout_log);
     let filter = tracing_subscriber::EnvFilter::new(&config.app.log_level);
-    tracing_subscriber::fmt()
-        .with_writer(non_blocking_writer)
-        .with_env_filter(filter)
+    let tracing_format = tracing_subscriber::fmt::format()
         .with_level(true)
-        .with_ansi(true)
-        .init();
+        .with_ansi(true);
+
+    let tracing_builder = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(non_blocking_writer)
+        .event_format(tracing_format);
+
+    if config.is_development() {
+        tracing_builder
+            .with_file(true)
+            .with_line_number(true)
+            .init();
+    } else {
+        tracing_builder.json().init();
+    }
 
     // 打印信息
     warn!(

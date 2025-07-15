@@ -54,13 +54,13 @@ impl ClassUserService {
     }
 
     // 获取班级用户信息
-    pub async fn get_class_student(
+    pub async fn get_class_user(
         &self,
         req: &HttpRequest,
         class_id: i64,
         class_user_id: i64,
     ) -> ActixResult<HttpResponse> {
-        get::get_class_student(self, req, class_id, class_user_id).await
+        get::get_class_user(self, req, class_id, class_user_id).await
     }
 
     // 更新用户信息
