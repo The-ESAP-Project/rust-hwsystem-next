@@ -64,14 +64,14 @@ impl ClassUserService {
     }
 
     // 更新用户信息
-    pub async fn update_user(
+    pub async fn update_class_user(
         &self,
         req: &HttpRequest,
         class_id: i64,
         class_user_id: i64,
         update_data: UpdateClassUserRequest,
     ) -> ActixResult<HttpResponse> {
-        update::update_user(self, req, class_id, class_user_id, update_data).await
+        update::update_class_user(self, req, class_id, class_user_id, update_data).await
     }
 
     // 删除用户

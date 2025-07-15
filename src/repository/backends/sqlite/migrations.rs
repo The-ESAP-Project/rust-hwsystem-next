@@ -162,6 +162,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     class_id INTEGER NOT NULL,
                     user_id INTEGER NOT NULL,
                     role TEXT NOT NULL,
+                    updated_at INTEGER NOT NULL,
                     joined_at INTEGER NOT NULL,
                     FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -274,23 +275,23 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at)
                 VALUES (3, 'Test Class 2', 'This is another test class', 'TEST456', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (1, 2, 'teacher', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (1, 2, 'teacher', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (1, 4, 'class_representative', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (1, 4, 'class_representative', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (1, 5, 'student', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (1, 5, 'student', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (2, 3, 'teacher', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (2, 3, 'teacher', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (2, 6, 'class_representative', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (2, 6, 'class_representative', 1704067200, 1704067200);
 
-                INSERT INTO class_users (class_id, user_id, role, joined_at)
-                VALUES (2, 7, 'student', 1704067200);
+                INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
+                VALUES (2, 7, 'student', 1704067200, 1704067200);
 
                 -- 正式环境需要删除这些测试数据
                 ".to_string(),

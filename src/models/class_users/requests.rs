@@ -9,7 +9,7 @@ pub struct JoinClassRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateClassUserRequest {
-    pub role: ClassUserRole, // 更新学生角色
+    pub role: Option<ClassUserRole>, // 更新用户角色
 }
 
 #[derive(Debug, Deserialize)]

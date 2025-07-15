@@ -77,7 +77,7 @@ pub async fn update_class(
     class_id: i64,
     update: UpdateClassRequest,
 ) -> Result<Option<Class>> {
-    // 先检查用户是否存在
+    // 先检查班级是否存在
     if get_class_by_id(storage, class_id).await?.is_none() {
         return Ok(None);
     }
@@ -97,7 +97,7 @@ pub async fn update_class(
     }
 
     if updates.is_empty() {
-        // 没有更新内容，直接返回当前用户
+        // 没有更新内容，直接返回当前班级
         return get_class_by_id(storage, class_id).await;
     }
 

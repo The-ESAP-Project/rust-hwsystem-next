@@ -2,7 +2,7 @@ use super::PostgresqlStorage;
 use crate::models::{
     class_users::{
         entities::{ClassUser, ClassUserRole},
-        requests::ClassUserQuery,
+        requests::{ClassUserQuery, UpdateClassUserRequest},
         responses::ClassUserListResponse,
     },
     classes::{
@@ -125,6 +125,16 @@ impl Storage for PostgresqlStorage {
         unimplemented!("leave_class not implemented for PostgresqlStorage")
     }
 
+    async fn update_class_user(
+        &self,
+        class_id: i64,
+        class_user_id: i64,
+        update_data: UpdateClassUserRequest,
+    ) -> Result<Option<ClassUser>> {
+        // class_users::update_class_user_role(self, class_id, class_user_id, update_data).await
+        unimplemented!("update_class_user_role not implemented for PostgresqlStorage")
+    }
+
     async fn list_class_users_with_pagination(
         &self,
         class_id: i64,
@@ -141,11 +151,6 @@ impl Storage for PostgresqlStorage {
     ) -> Result<ClassListResponse> {
         // class_users::list_user_classes_with_pagination(self, user_id, query).await
         unimplemented!("list_user_classes_with_pagination not implemented for PostgresqlStorage")
-    }
-
-    async fn get_user_class_role(&self, user_id: i64, class_id: i64) -> Result<Option<ClassUser>> {
-        // class_users::get_user_class_role(self, user_id, invite_code).await
-        unimplemented!("get_user_class_role not implemented for PostgresqlStorage")
     }
 
     async fn get_class_user_by_user_id_and_class_id(

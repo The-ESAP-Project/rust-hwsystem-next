@@ -88,6 +88,7 @@ pub struct ClassUser {
     pub user_id: i64,
     pub profile_name: Option<String>,
     pub role: ClassUserRole,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub joined_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -102,6 +103,7 @@ impl ClassUser {
             user_id: row.try_get(&*format!("{prefix}user_id"))?,
             profile_name: row.try_get(&*format!("{prefix}profile_name"))?,
             role: row.try_get(&*format!("{prefix}role"))?,
+            updated_at: row.try_get(&*format!("{prefix}updated_at"))?,
             joined_at: row.try_get(&*format!("{prefix}joined_at"))?,
         })
     }

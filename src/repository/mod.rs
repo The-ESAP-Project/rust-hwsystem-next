@@ -7,7 +7,7 @@ use tracing::error;
 use crate::models::{
     class_users::{
         entities::{ClassUser, ClassUserRole},
-        requests::ClassUserQuery,
+        requests::{ClassUserQuery, UpdateClassUserRequest},
         responses::ClassUserListResponse,
     },
     classes::{
@@ -78,6 +78,12 @@ pub trait Storage: Send + Sync {
         role: ClassUserRole,
     ) -> Result<ClassUser>;
     async fn leave_class(&self, user_id: i64, class_id: i64) -> Result<bool>;
+    async fn update_class_user(
+        &self,
+        class_id: i64,
+        class_user_id: i64,
+        update_data: UpdateClassUserRequest,
+    ) -> Result<Option<ClassUser>>;
     async fn list_class_users_with_pagination(
         &self,
         class_id: i64,
@@ -88,7 +94,6 @@ pub trait Storage: Send + Sync {
         user_id: i64,
         query: ClassListQuery,
     ) -> Result<ClassListResponse>;
-    async fn get_user_class_role(&self, user_id: i64, class_id: i64) -> Result<Option<ClassUser>>;
     async fn get_class_user_by_user_id_and_class_id(
         &self,
         user_id: i64,

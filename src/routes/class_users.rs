@@ -60,7 +60,7 @@ pub async fn update_class_user(
     let class_user_id = path.1.0;
 
     CLASS_STUDENT_SERVICE
-        .update_user(&req, class_id, class_user_id, update_data.into_inner())
+        .update_class_user(&req, class_id, class_user_id, update_data.into_inner())
         .await
 }
 
