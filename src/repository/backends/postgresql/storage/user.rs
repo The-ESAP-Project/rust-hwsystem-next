@@ -25,8 +25,8 @@ pub async fn create_user(storage: &PostgresqlStorage, user: CreateUserRequest) -
         .bind(&user.password) // 密码哈希应该在 Service 层完成
         .bind(user.role.to_string())
         .bind(UserStatus::Active.to_string())
-        .bind(user.profile.as_ref().map(|p| &p.profile_name))
-        .bind(user.profile.as_ref().and_then(|p| p.avatar_url.as_deref()))
+        .bind(user.profile.profile_name)
+        .bind(user.profile.avatar_url)
         .bind(now.timestamp()) // 使用时间戳
         .bind(now.timestamp()) // 使用时间戳
         .fetch_one(&storage.pool)

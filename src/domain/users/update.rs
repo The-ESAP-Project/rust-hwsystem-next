@@ -1,7 +1,10 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::UserService;
-use crate::models::{ApiResponse, ErrorCode, users::requests::UpdateUserRequest};
+use crate::models::{
+    ApiResponse, ErrorCode,
+    users::{requests::UpdateUserRequest, responses::UserResponse},
+};
 
 pub async fn update_user(
     service: &UserService,
@@ -27,7 +30,7 @@ pub async fn update_user(
 
     match storage.update_user(user_id, update_data).await {
         Ok(Some(user)) => Ok(HttpResponse::Ok().json(ApiResponse::success(
-            user,
+            UserResponse { user },
             "User information updated successfully",
         ))),
         Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(

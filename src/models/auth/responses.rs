@@ -9,3 +9,19 @@ pub struct LoginResponse {
     pub user: User,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
+
+#[derive(Debug, Serialize)]
+pub struct RefreshTokenResponse {
+    pub access_token: String,
+    pub expires_in: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserInfoResponse {
+    pub user: User,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TokenVerificationResponse {
+    pub is_valid: bool,
+}

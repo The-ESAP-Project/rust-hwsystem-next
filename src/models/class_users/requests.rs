@@ -13,7 +13,7 @@ pub struct UpdateClassUserRequest {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ClassUserQueryParams {
+pub struct ClassUserListParams {
     #[serde(flatten)]
     pub pagination: PaginationQuery,
     pub search: Option<String>,

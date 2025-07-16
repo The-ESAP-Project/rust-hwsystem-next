@@ -3,12 +3,12 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use super::UserService;
 use crate::models::{
     ApiResponse, ErrorCode,
-    users::requests::{UserListQuery, UserQueryParams},
+    users::requests::{UserListParams, UserListQuery},
 };
 
 pub async fn list_users(
     service: &UserService,
-    query: UserQueryParams,
+    query: UserListParams,
     request: &HttpRequest,
 ) -> ActixResult<HttpResponse> {
     let storage = service.get_storage(request);

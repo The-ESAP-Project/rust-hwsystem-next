@@ -1,6 +1,8 @@
-# 硬件系统配置文件
+# 作业系统配置文件
 
 [app]
+# 系统名称
+system_name = "Homework Management System"
 # 应用环境: development, production
 environment = "development"
 # 日志级别

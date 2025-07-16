@@ -15,6 +15,7 @@ pub struct AppConfig {
 /// 应用设置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
+    pub system_name: String,
     pub environment: String,
     pub log_level: String,
 }

@@ -19,6 +19,9 @@ pub mod class_users;
 // 作业模块
 pub mod homeworks;
 
+// 系统模块
+pub mod system;
+
 // 重新导出通用类型
 pub use common::{ApiResponse, ErrorCode, PaginationInfo};
 

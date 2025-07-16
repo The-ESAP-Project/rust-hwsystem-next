@@ -1,6 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 use super::UserService;
+use crate::models::users::responses::UserResponse;
 use crate::models::{ApiResponse, ErrorCode};
 
 pub async fn get_user(
@@ -12,7 +13,7 @@ pub async fn get_user(
 
     match storage.get_user_by_id(user_id).await {
         Ok(Some(user)) => Ok(HttpResponse::Ok().json(ApiResponse::success(
-            user,
+            UserResponse { user },
             "User information retrieved successfully",
         ))),
         Ok(None) => Ok(HttpResponse::NotFound().json(ApiResponse::error_empty(

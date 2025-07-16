@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 // 用户查询参数（来自HTTP请求）
 #[derive(Debug, Deserialize)]
-pub struct UserQueryParams {
+pub struct UserListParams {
     #[serde(flatten)]
     pub pagination: PaginationQuery,
     pub role: Option<UserRole>,
@@ -19,7 +19,7 @@ pub struct CreateUserRequest {
     pub email: String,
     pub password: String,
     pub role: UserRole,
-    pub profile: Option<UserProfile>,
+    pub profile: UserProfile,
 }
 
 // 用户更新请求

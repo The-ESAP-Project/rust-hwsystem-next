@@ -2,7 +2,10 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use tracing::error;
 
 use super::UserService;
-use crate::models::{ApiResponse, ErrorCode, users::requests::CreateUserRequest};
+use crate::models::{
+    ApiResponse, ErrorCode,
+    users::{requests::CreateUserRequest, responses::UserResponse},
+};
 use crate::utils::password::hash_password;
 use crate::utils::validate::{validate_email, validate_username};
 
@@ -38,7 +41,8 @@ pub async fn create_user(
     let storage = service.get_storage(request);
 
     match storage.create_user(user_data).await {
-        Ok(user) => Ok(HttpResponse::Created().json(ApiResponse::success(user, "用户创建成功"))),
+        Ok(user) => Ok(HttpResponse::Created()
+            .json(ApiResponse::success(UserResponse { user }, "用户创建成功"))),
         Err(e) => {
             let msg = format!("User creation failed: {e}");
             error!("{}", msg);

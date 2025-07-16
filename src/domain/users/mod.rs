@@ -7,7 +7,7 @@ pub mod update;
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
 
-use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserQueryParams};
+use crate::models::users::requests::{CreateUserRequest, UpdateUserRequest, UserListParams};
 use crate::repository::Storage;
 
 pub struct UserService {
@@ -34,7 +34,7 @@ impl UserService {
     // 获取用户列表
     pub async fn list_users(
         &self,
-        query: UserQueryParams,
+        query: UserListParams,
         request: &HttpRequest,
     ) -> ActixResult<HttpResponse> {
         list::list_users(self, query, request).await
