@@ -2,17 +2,26 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Homework {
+    // 唯一 ID
     pub id: i64,
+    // 关联的班级 ID
+    pub class_id: i64,
+    // 作业标题
     pub title: String,
-    pub description: Option<String>,
+    // 作业描述
     pub content: Option<String>,
-    pub deadline: Option<i64>,
-    pub max_score: i32,
-    pub allow_late_submission: i32,
+    // 作业附件
     pub attachments: Option<String>,
-    pub submission_count: i32,
-    pub status: String,
+    // 作业最高分数
+    pub max_score: f64,
+    // 作业截止时间
+    pub deadline: Option<chrono::DateTime<chrono::Utc>>,
+    // 是否允许迟交
+    pub allow_late_submission: bool,
+    // 创建者 ID
     pub created_by: i64,
-    pub created_at: i64,
-    pub updated_at: i64,
+    // 作业创建时间
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    // 作业更新时间
+    pub updated_at: chrono::DateTime<chrono::Utc>,
 }

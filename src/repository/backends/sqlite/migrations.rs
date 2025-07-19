@@ -172,15 +172,17 @@ pub fn get_all_migrations() -> Vec<Migration> {
                 CREATE TABLE homeworks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     class_id INTEGER NOT NULL,
+                    created_by INTEGER NOT NULL,
                     title TEXT NOT NULL,
                     content TEXT,
-                    attachments BLOB,  -- file_submission_token JSONB
+                    attachments TEXT,
                     max_score REAL NOT NULL,
                     deadline INTEGER,
                     allow_late_submission BOOLEAN NOT NULL DEFAULT 0,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,
-                    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+                    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
                 );
 
                 -- 创建提交表
@@ -189,7 +191,7 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     homework_id INTEGER NOT NULL,
                     creator_id INTEGER NOT NULL,
                     content TEXT NOT NULL,
-                    attachments BLOB,  -- file_submission_token JSONB
+                    attachments TEXT,
                     submitted_at INTEGER NOT NULL,
                     FOREIGN KEY (homework_id) REFERENCES homeworks(id) ON DELETE CASCADE,
                     FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
