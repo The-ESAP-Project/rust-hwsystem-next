@@ -11,11 +11,11 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 pub async fn get_class_user(
     service: &ClassUserService,
-    req: &HttpRequest,
+    request: &HttpRequest,
     class_id: i64,
     class_user_id: i64,
 ) -> ActixResult<HttpResponse> {
-    let user_claims = match RequireJWT::extract_user_claims(req) {
+    let user_claims = match RequireJWT::extract_user_claims(request) {
         Some(claims) => claims,
         None => {
             return Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
@@ -25,7 +25,7 @@ pub async fn get_class_user(
         }
     };
 
-    let class_user = RequireClassRole::extract_user_class_user(req);
+    let class_user = RequireClassRole::extract_user_class_user(request);
 
     // 权限校验
     if let Err(resp) =
@@ -34,7 +34,7 @@ pub async fn get_class_user(
         return Ok(resp);
     }
 
-    let storage = service.get_storage(req);
+    let storage = service.get_storage(request);
 
     // 查询目标班级用户信息
     let target_user = if let Some(ref cu) = class_user {

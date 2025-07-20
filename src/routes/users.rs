@@ -12,35 +12,35 @@ static USER_SERVICE: Lazy<UserService> = Lazy::new(UserService::new_lazy);
 
 // HTTP处理程序
 pub async fn list_users(
-    req: HttpRequest,
+    request: HttpRequest,
     query: web::Query<UserListParams>,
 ) -> ActixResult<HttpResponse> {
-    USER_SERVICE.list_users(query.into_inner(), &req).await
+    USER_SERVICE.list_users(query.into_inner(), &request).await
 }
 
 pub async fn create_user(
-    req: HttpRequest,
+    request: HttpRequest,
     user_data: web::Json<CreateUserRequest>,
 ) -> ActixResult<HttpResponse> {
-    USER_SERVICE.create_user(user_data.into_inner(), &req).await
+    USER_SERVICE.create_user(user_data.into_inner(), &request).await
 }
 
-pub async fn get_user(req: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
-    USER_SERVICE.get_user(user_id.0, &req).await
+pub async fn get_user(request: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
+    USER_SERVICE.get_user(user_id.0, &request).await
 }
 
 pub async fn update_user(
-    req: HttpRequest,
+    request: HttpRequest,
     user_id: SafeIDI64,
     update_data: web::Json<UpdateUserRequest>,
 ) -> ActixResult<HttpResponse> {
     USER_SERVICE
-        .update_user(user_id.0, update_data.into_inner(), &req)
+        .update_user(user_id.0, update_data.into_inner(), &request)
         .await
 }
 
-pub async fn delete_user(req: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
-    USER_SERVICE.delete_user(user_id.0, &req).await
+pub async fn delete_user(request: HttpRequest, user_id: SafeIDI64) -> ActixResult<HttpResponse> {
+    USER_SERVICE.delete_user(user_id.0, &request).await
 }
 
 // 配置路由

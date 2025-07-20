@@ -10,10 +10,10 @@ use crate::models::users::requests::CreateUserRequest;
 static AUTH_SERVICE: Lazy<AuthService> = Lazy::new(AuthService::new_lazy);
 
 pub async fn login(
-    req: HttpRequest,
+    request: HttpRequest,
     user_data: web::Json<LoginRequest>,
 ) -> ActixResult<HttpResponse> {
-    AUTH_SERVICE.login(user_data.into_inner(), &req).await
+    AUTH_SERVICE.login(user_data.into_inner(), &request).await
 }
 
 pub async fn refresh_token(request: HttpRequest) -> ActixResult<HttpResponse> {
@@ -21,10 +21,10 @@ pub async fn refresh_token(request: HttpRequest) -> ActixResult<HttpResponse> {
 }
 
 pub async fn register(
-    req: HttpRequest,
+    request: HttpRequest,
     user_data: web::Json<CreateUserRequest>,
 ) -> ActixResult<HttpResponse> {
-    AUTH_SERVICE.register(user_data.into_inner(), &req).await
+    AUTH_SERVICE.register(user_data.into_inner(), &request).await
 }
 
 pub async fn verify_token(request: HttpRequest) -> ActixResult<HttpResponse> {

@@ -42,42 +42,42 @@ impl ClassService {
 
     pub async fn create_class(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_data: CreateClassRequest,
     ) -> ActixResult<HttpResponse> {
-        create::create_class(self, req, class_data).await
+        create::create_class(self, request, class_data).await
     }
 
     // 根据班级 ID 获取班级信息
-    pub async fn get_class(&self, req: &HttpRequest, class_id: i64) -> ActixResult<HttpResponse> {
-        get::get_class(self, req, class_id).await
+    pub async fn get_class(&self, request: &HttpRequest, class_id: i64) -> ActixResult<HttpResponse> {
+        get::get_class(self, request, class_id).await
     }
 
     // 根据班级邀请码获取班级信息
     pub async fn get_class_by_code(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         code: String,
     ) -> ActixResult<HttpResponse> {
-        get::get_class_by_code(self, req, code).await
+        get::get_class_by_code(self, request, code).await
     }
 
     // 更新班级信息
     pub async fn update_class(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         update_data: UpdateClassRequest,
     ) -> ActixResult<HttpResponse> {
-        update::update_class(self, req, class_id, update_data).await
+        update::update_class(self, request, class_id, update_data).await
     }
 
     // 根据班级 ID 删除班级
     pub async fn delete_class(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
     ) -> ActixResult<HttpResponse> {
-        delete::delete_class(self, req, class_id).await
+        delete::delete_class(self, request, class_id).await
     }
 }

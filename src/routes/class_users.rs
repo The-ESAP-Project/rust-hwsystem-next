@@ -20,39 +20,39 @@ static CLASS_STUDENT_SERVICE: Lazy<ClassUserService> = Lazy::new(ClassUserServic
 
 // HTTP处理程序
 pub async fn join_class(
-    req: HttpRequest,
+    request: HttpRequest,
     path: SafeClassIdI64,
     join_data: web::Json<JoinClassRequest>,
 ) -> ActixResult<HttpResponse> {
     let class_id = path.0;
     CLASS_STUDENT_SERVICE
-        .join_class(&req, class_id, join_data.into_inner())
+        .join_class(&request, class_id, join_data.into_inner())
         .await
 }
 
 pub async fn list_class_users_with_pagination(
-    req: HttpRequest,
+    request: HttpRequest,
     path: SafeClassIdI64,
     query: web::Query<ClassUserListParams>,
 ) -> ActixResult<HttpResponse> {
     CLASS_STUDENT_SERVICE
-        .list_class_users_with_pagination(&req, path.0, query.into_inner())
+        .list_class_users_with_pagination(&request, path.0, query.into_inner())
         .await
 }
 
 pub async fn get_class_user(
-    req: HttpRequest,
+    request: HttpRequest,
     path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
 ) -> ActixResult<HttpResponse> {
     let class_id = path.0.0;
     let class_user_id = path.1.0;
     CLASS_STUDENT_SERVICE
-        .get_class_user(&req, class_id, class_user_id)
+        .get_class_user(&request, class_id, class_user_id)
         .await
 }
 
 pub async fn update_class_user(
-    req: HttpRequest,
+    request: HttpRequest,
     path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
     update_data: web::Json<UpdateClassUserRequest>,
 ) -> ActixResult<HttpResponse> {
@@ -60,18 +60,18 @@ pub async fn update_class_user(
     let class_user_id = path.1.0;
 
     CLASS_STUDENT_SERVICE
-        .update_class_user(&req, class_id, class_user_id, update_data.into_inner())
+        .update_class_user(&request, class_id, class_user_id, update_data.into_inner())
         .await
 }
 
 pub async fn delete_class_user(
-    req: HttpRequest,
+    request: HttpRequest,
     path: web::Path<(SafeClassIdI64, SafeClassUserID)>,
 ) -> ActixResult<HttpResponse> {
     let class_id = path.0.0;
     let class_user_id = path.1.0;
     CLASS_STUDENT_SERVICE
-        .delete_class_user(&req, class_id, class_user_id)
+        .delete_class_user(&request, class_id, class_user_id)
         .await
 }
 

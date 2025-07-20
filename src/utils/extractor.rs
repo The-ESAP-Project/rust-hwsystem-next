@@ -9,11 +9,11 @@ macro_rules! define_safe_i64_extractor {
             type Future = std::future::Ready<Result<Self, Self::Error>>;
 
             fn from_request(
-                req: &actix_web::HttpRequest,
+                request: &actix_web::HttpRequest,
                 _: &mut actix_web::dev::Payload,
             ) -> Self::Future {
                 use actix_web::{HttpResponse, error};
-                let id_str = req.match_info().get($key).unwrap_or("");
+                let id_str = request.match_info().get($key).unwrap_or("");
                 match id_str.parse::<i64>() {
                     Ok(id) => std::future::ready(Ok(Self(id))),
                     Err(_) => {

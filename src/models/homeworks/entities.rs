@@ -18,6 +18,9 @@ pub struct Homework {
     pub deadline: Option<chrono::DateTime<chrono::Utc>>,
     // 是否允许迟交
     pub allow_late_submission: bool,
+    #[sqlx(skip)]
+    // 作业提交数量
+    pub submission_count: Option<i64>,
     // 创建者 ID
     pub created_by: i64,
     // 作业创建时间

@@ -179,8 +179,8 @@ impl JwtUtils {
     }
 
     /// 从请求中提取 Refresh Token
-    pub fn extract_refresh_token_from_cookie(req: &actix_web::HttpRequest) -> Option<String> {
-        req.cookie("refresh_token")
+    pub fn extract_refresh_token_from_cookie(request: &actix_web::HttpRequest) -> Option<String> {
+        request.cookie("refresh_token")
             .map(|cookie| cookie.value().to_string())
     }
 }

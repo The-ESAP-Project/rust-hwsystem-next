@@ -16,7 +16,7 @@ use crate::system::app_config::AppConfig;
 
 pub async fn handle_upload(
     service: &FileService,
-    req: &HttpRequest,
+    request: &HttpRequest,
     mut payload: Multipart,
 ) -> ActixResult<HttpResponse> {
     // 获取配置
@@ -110,9 +110,9 @@ pub async fn handle_upload(
         )));
     }
 
-    let storage = service.get_storage(req);
+    let storage = service.get_storage(request);
 
-    let user_id = RequireJWT::extract_user_id(req)
+    let user_id = RequireJWT::extract_user_id(request)
         .ok_or_else(|| actix_web::error::ErrorUnauthorized("User not authenticated"))?;
 
     let db_file = match storage

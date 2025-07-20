@@ -7,14 +7,14 @@ use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 
 pub async fn delete_class_user(
     service: &ClassUserService,
-    req: &HttpRequest,
+    request: &HttpRequest,
     class_id: i64,
     class_user_id: i64,
 ) -> ActixResult<HttpResponse> {
-    let user_role = RequireJWT::extract_user_role(req);
-    let storage = service.get_storage(req);
+    let user_role = RequireJWT::extract_user_role(request);
+    let storage = service.get_storage(request);
 
-    let uid = match RequireJWT::extract_user_id(req) {
+    let uid = match RequireJWT::extract_user_id(request) {
         Some(id) => id,
         None => {
             return Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(

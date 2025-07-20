@@ -1,4 +1,8 @@
+pub mod create;
+pub mod delete;
+pub mod get;
 pub mod list;
+pub mod update;
 
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
 use std::sync::Arc;
@@ -30,6 +34,39 @@ impl HomeworkService {
 
     pub(crate) fn get_config(&self) -> &AppConfig {
         AppConfig::get()
+    }
+
+    pub async fn create_homework(
+        &self,
+        request: &HttpRequest,
+        body: create::CreateHomeworkRequest,
+    ) -> ActixResult<HttpResponse> {
+        create::create_homework(self, request, body).await
+    }
+
+    pub async fn get_homework(
+        &self,
+        request: &HttpRequest,
+        homework_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        get::get_homework(self, request, homework_id).await
+    }
+
+    pub async fn update_homework(
+        &self,
+        request: &HttpRequest,
+        homework_id: i64,
+        body: update::UpdateHomeworkRequest,
+    ) -> ActixResult<HttpResponse> {
+        update::update_homework(self, request, homework_id, body).await
+    }
+
+    pub async fn delete_homework(
+        &self,
+        request: &HttpRequest,
+        homework_id: i64,
+    ) -> ActixResult<HttpResponse> {
+        delete::delete_homework(self, request, homework_id).await
     }
 
     pub async fn list_homeworks(

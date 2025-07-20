@@ -12,46 +12,46 @@ static CLASS_SERVICE: Lazy<ClassService> = Lazy::new(ClassService::new_lazy);
 
 // HTTP处理程序
 pub async fn list_classes(
-    req: HttpRequest,
+    request: HttpRequest,
     query: web::Query<ClassQueryParams>,
 ) -> ActixResult<HttpResponse> {
-    CLASS_SERVICE.list_classes(&req, query.into_inner()).await
+    CLASS_SERVICE.list_classes(&request, query.into_inner()).await
 }
 
 pub async fn create_class(
-    req: HttpRequest,
+    request: HttpRequest,
     class_data: web::Json<CreateClassRequest>,
 ) -> ActixResult<HttpResponse> {
     CLASS_SERVICE
-        .create_class(&req, class_data.into_inner())
+        .create_class(&request, class_data.into_inner())
         .await
 }
 
 pub async fn get_class_by_code(
-    req: HttpRequest,
+    request: HttpRequest,
     code: web::Path<String>,
 ) -> ActixResult<HttpResponse> {
     CLASS_SERVICE
-        .get_class_by_code(&req, code.into_inner())
+        .get_class_by_code(&request, code.into_inner())
         .await
 }
 
-pub async fn get_class(req: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
-    CLASS_SERVICE.get_class(&req, class_id.0).await
+pub async fn get_class(request: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
+    CLASS_SERVICE.get_class(&request, class_id.0).await
 }
 
 pub async fn update_class(
-    req: HttpRequest,
+    request: HttpRequest,
     class_id: SafeClassIdI64,
     update_data: web::Json<UpdateClassRequest>,
 ) -> ActixResult<HttpResponse> {
     CLASS_SERVICE
-        .update_class(&req, class_id.0, update_data.into_inner())
+        .update_class(&request, class_id.0, update_data.into_inner())
         .await
 }
 
-pub async fn delete_class(req: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
-    CLASS_SERVICE.delete_class(&req, class_id.0).await
+pub async fn delete_class(request: HttpRequest, class_id: SafeClassIdI64) -> ActixResult<HttpResponse> {
+    CLASS_SERVICE.delete_class(&request, class_id.0).await
 }
 
 // 配置路由

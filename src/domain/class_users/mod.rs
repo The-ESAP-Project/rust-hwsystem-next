@@ -36,51 +36,51 @@ impl ClassUserService {
     // 加入班级
     pub async fn join_class(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         join_data: JoinClassRequest,
     ) -> ActixResult<HttpResponse> {
-        join::join_class(self, req, class_id, join_data).await
+        join::join_class(self, request, class_id, join_data).await
     }
 
     // 列出班级用户
     pub async fn list_class_users_with_pagination(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         query: ClassUserListParams,
     ) -> ActixResult<HttpResponse> {
-        list::list_class_users_with_pagination(self, req, class_id, query).await
+        list::list_class_users_with_pagination(self, request, class_id, query).await
     }
 
     // 获取班级用户信息
     pub async fn get_class_user(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         class_user_id: i64,
     ) -> ActixResult<HttpResponse> {
-        get::get_class_user(self, req, class_id, class_user_id).await
+        get::get_class_user(self, request, class_id, class_user_id).await
     }
 
     // 更新用户信息
     pub async fn update_class_user(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         class_user_id: i64,
         update_data: UpdateClassUserRequest,
     ) -> ActixResult<HttpResponse> {
-        update::update_class_user(self, req, class_id, class_user_id, update_data).await
+        update::update_class_user(self, request, class_id, class_user_id, update_data).await
     }
 
     // 删除用户
     pub async fn delete_class_user(
         &self,
-        req: &HttpRequest,
+        request: &HttpRequest,
         class_id: i64,
         class_user_id: i64,
     ) -> ActixResult<HttpResponse> {
-        delete::delete_class_user(self, req, class_id, class_user_id).await
+        delete::delete_class_user(self, request, class_id, class_user_id).await
     }
 }
