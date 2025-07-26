@@ -67,11 +67,8 @@ impl Storage for SqliteStorage {
     }
 
     /// 作业模块
-    async fn list_homeworks_with_pagination(
-        &self,
-        query: HomeworkListQuery,
-    ) -> Result<HomeworkListResponse> {
-        homeworks::list_homeworks_with_pagination(self, query).await
+    async fn list_homeworks_with_pagination(&self, user_id: i64, query: HomeworkListQuery) -> Result<HomeworkListResponse> {
+        homeworks::list_homeworks_with_pagination(self, user_id, query).await
     }
 
     /// 班级模块

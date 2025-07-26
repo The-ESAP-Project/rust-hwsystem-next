@@ -3,7 +3,6 @@ use crate::errors::{HWSystemError, Result};
 use crate::models::common::pagination::PaginationInfo;
 use crate::models::homeworks::{
     entities::Homework, requests::HomeworkListQuery, responses::HomeworkListResponse,
-    responses::HomeworkResponse,
 };
 use chrono::{TimeZone, Utc};
 use serde_json::json;
