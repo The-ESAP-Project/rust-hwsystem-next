@@ -27,6 +27,8 @@ pub async fn get_class_user(
 
     let class_user = RequireClassRole::extract_user_class_user(req);
 
+    println!("{:?}", class_user);
+
     // 权限校验
     if let Err(resp) =
         check_class_user_get_permission(&user_claims, &class_user, class_id, class_user_id)

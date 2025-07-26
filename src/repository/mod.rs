@@ -133,6 +133,7 @@ pub trait Storage: Send + Sync {
     // 作业管理方法
     async fn list_homeworks_with_pagination(
         &self,
+        user_id: i64,
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse>;
 }
