@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use sqlx::types::Json;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Homework {
@@ -13,7 +15,7 @@ pub struct Homework {
     // 作业内容
     pub content: Option<String>,
     // 作业附件
-    pub attachments: String,
+    pub attachments: Json<Vec<String>>,
     // 作业最高分数
     pub max_score: f32,
     // 作业截止时间
@@ -26,6 +28,6 @@ pub struct Homework {
     pub created_at: chrono::DateTime<chrono::Utc>,
     // 作业更新时间
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    // 作业状态
     pub status: String,
-
 }

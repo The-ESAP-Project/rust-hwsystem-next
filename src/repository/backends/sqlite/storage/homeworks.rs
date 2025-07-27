@@ -18,8 +18,8 @@ pub async fn list_homeworks_with_pagination(
 ) -> Result<HomeworkListResponse> {
 
     // 分页参数
-    let page = query.page.unwrap_or(1).max(1);
-    let size = query.size.unwrap_or(10).clamp(1, 100);
+    let page = query.pagination.page.max(1);
+    let size = query.pagination.size.clamp(1, 100);
     let offset = (page - 1) * size;
 
     // 查询用户加入的班级

@@ -18,7 +18,6 @@ pub async fn list_homeworks(
         }
     };
     let user_id = user_claims.id;
-    println!("user_id: {}", user_id);
     let storage = service.get_storage(request);
 
     match storage.list_homeworks_with_pagination(user_id, query).await {
