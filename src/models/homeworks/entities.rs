@@ -23,8 +23,8 @@ impl FromStr for HomeworkStatus {
             "expired" => Ok(HomeworkStatus::Expired),
             "submitted" => Ok(HomeworkStatus::Submitted),
             "marked" => Ok(HomeworkStatus::Marked),
-            "" => Err("状态不能为空".to_string()),
-            _ => Err(format!("无效的作业状态: {s}")),
+            "" => Err("Status cannot be empty".to_string()),
+            _ => Err(format!("Invalid homework status: {s}"))
         }
     }
 }
@@ -69,14 +69,19 @@ impl Attachments {
 #[derive(Debug)]
 pub struct JsonAttachments(Option<JsonValue>);
 
-impl<'r> sqlx::Decode<'r, sqlx::Postgres> for JsonAttachments {
+impl<'r> sqlx::Decode<'r, sqlx::Postgres> for Attachments {
     fn decode(value: sqlx::postgres::PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
         let json = <Option<JsonValue> as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
-        Ok(JsonAttachments(json))
+        if let Some(json) = json {
+            let attachments: Vec<String> = serde_json::from_value(json)?;
+            Ok(Attachments(attachments))
+        } else {
+            Ok(Attachments(vec![]))
+        }
     }
 }
 
-impl sqlx::Type<sqlx::Postgres> for JsonAttachments {
+impl sqlx::Type<sqlx::Postgres> for Attachments {
     fn type_info() -> sqlx::postgres::PgTypeInfo {
         sqlx::postgres::PgTypeInfo::with_name("JSONB")
     }

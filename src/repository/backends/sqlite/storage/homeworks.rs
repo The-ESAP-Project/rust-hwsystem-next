@@ -59,7 +59,6 @@ pub async fn list_homeworks_with_pagination(
     let count_sql = format!(
         "SELECT COUNT(DISTINCT h.id) as total
          FROM homeworks h
-         LEFT JOIN class_users cu ON h.class_id = cu.class_id
          {}",
         where_clause
     );
@@ -72,13 +71,12 @@ pub async fn list_homeworks_with_pagination(
     let total: i64 = count_query
         .fetch_one(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("统计作业数量失败: {e}")))?
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?
         .get(0);
 
     let query_sql = format!(
         "SELECT DISTINCT h.*
          FROM homeworks h
-         LEFT JOIN class_users cu ON h.class_id = cu.class_id
          {}
          ORDER BY h.created_at DESC LIMIT ? OFFSET ?",
         where_clause
@@ -93,7 +91,7 @@ pub async fn list_homeworks_with_pagination(
     let items = query
         .fetch_all(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("获取作业列表失败: {e}")))?;
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?
 
     Ok(HomeworkListResponse {
         items,
