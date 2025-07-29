@@ -91,7 +91,7 @@ pub async fn list_homeworks_with_pagination(
     let items = query
         .fetch_all(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?;
 
     Ok(HomeworkListResponse {
         items,
