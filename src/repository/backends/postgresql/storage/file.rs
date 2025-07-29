@@ -37,5 +37,8 @@ pub async fn get_file_by_token(storage: &PostgresqlStorage, file_id: &str) -> Re
         .await
         .map_err(|e| HWSystemError::database_operation(format!("查询文件失败: {e}")))?;
 
-    Ok(result)
+    match result {
+        Some(row) => Ok(Some(row)),
+        None => Ok(None),
+    }
 }
