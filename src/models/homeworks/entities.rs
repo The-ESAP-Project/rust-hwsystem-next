@@ -1,33 +1,128 @@
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use sqlx::types::Json;
+use sqlx::{FromRow, types::JsonValue};
+use std::str::FromStr;
+use crate::sqlx_enum_type;
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+// 作业状态
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum HomeworkStatus {
+    Pending,    // 待提交
+    Expired,    // 已过期
+    Submitted,  // 已提交
+    Marked,     // 已批改
+}
+
+impl<'de> Deserialize<'de> for HomeworkStatus {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "pending" => Ok(HomeworkStatus::Pending),
+            "expired" => Ok(HomeworkStatus::Expired),
+            "submitted" => Ok(HomeworkStatus::Submitted),
+            "marked" => Ok(HomeworkStatus::Marked),
+            _ => Err(serde::de::Error::custom(format!(
+                "无效的作业状态: '{s}'. 支持: pending, expired, submitted, marked"
+            ))),
+        }
+    }
+}
+
+impl std::fmt::Display for HomeworkStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HomeworkStatus::Pending => write!(f, "pending"),
+            HomeworkStatus::Expired => write!(f, "expired"),
+            HomeworkStatus::Submitted => write!(f, "submitted"),
+            HomeworkStatus::Marked => write!(f, "marked"),
+        }
+    }
+}
+
+impl FromStr for HomeworkStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pending" => Ok(HomeworkStatus::Pending),
+            "expired" => Ok(HomeworkStatus::Expired),
+            "submitted" => Ok(HomeworkStatus::Submitted),
+            "marked" => Ok(HomeworkStatus::Marked),
+            _ => Err(format!("无效的作业状态: {s}")),
+        }
+    }
+}
+
+sqlx_enum_type!(sqlx::Postgres, sqlx::postgres::PgValueRef<'r>, HomeworkStatus);
+sqlx_enum_type!(sqlx::Sqlite, sqlx::sqlite::SqliteValueRef<'r>, HomeworkStatus);
+
+// 附件字段封装
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Attachments(pub Vec<String>);
+
+impl Attachments {
+    pub fn into_inner(self) -> Vec<String> {
+        self.0
+    }
+
+    pub fn as_inner(&self) -> &Vec<String> {
+        &self.0
+    }
+}
+
+// 创建 JSON 包装类型
+#[derive(Debug)]
+pub struct JsonAttachments(Option<JsonValue>);
+
+impl<'r> sqlx::Decode<'r, sqlx::Postgres> for JsonAttachments {
+    fn decode(value: sqlx::postgres::PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let json = <Option<JsonValue> as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
+        Ok(JsonAttachments(json))
+    }
+}
+
+impl sqlx::Type<sqlx::Postgres> for JsonAttachments {
+    fn type_info() -> sqlx::postgres::PgTypeInfo {
+        sqlx::postgres::PgTypeInfo::with_name("JSONB")
+    }
+}
+
+impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for Attachments {
+    fn decode(value: sqlx::sqlite::SqliteValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let json = <Option<JsonValue> as sqlx::Decode<sqlx::Sqlite>>::decode(value)?;
+        if let Some(json) = json {
+            let attachments: Vec<String> = serde_json::from_value(json)?;
+            Ok(Attachments(attachments))
+        } else {
+            Ok(Attachments(vec![]))
+        }
+    }
+}
+
+impl sqlx::Type<sqlx::Sqlite> for Attachments {
+    fn type_info() -> sqlx::sqlite::SqliteTypeInfo {
+        <str as sqlx::Type<sqlx::Sqlite>>::type_info()
+    }
+}
+
+// Homework 实体
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Homework {
-    // 唯一 ID
     pub id: i64,
-    // 关联的班级 ID
     pub class_id: i64,
-    // 作业标题
     pub title: String,
-    // 作业描述
     pub description: String,
-    // 作业内容
     pub content: Option<String>,
-    // 作业附件
-    pub attachments: Json<Vec<String>>,
-    // 作业最高分数
+
+    #[sqlx(rename = "attachments")]
+    pub attachments: Option<Attachments>,
+
     pub max_score: f32,
-    // 作业截止时间
     pub deadline: Option<chrono::DateTime<chrono::Utc>>,
-    // 是否允许迟交
     pub allow_late_submission: bool,
-    // 创建者 ID
     pub created_by: i64,
-    // 作业创建时间
     pub created_at: chrono::DateTime<chrono::Utc>,
-    // 作业更新时间
     pub updated_at: chrono::DateTime<chrono::Utc>,
-    // 作业状态
-    pub status: String,
+    pub status: HomeworkStatus,
 }

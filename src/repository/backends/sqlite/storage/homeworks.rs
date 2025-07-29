@@ -5,11 +5,11 @@ use crate::models::{
     homeworks::{
         entities::Homework,
         requests::HomeworkListQuery,
-        responses::{HomeworkListResponse},
+        responses::HomeworkListResponse,
     },
 };
-use actix_web::HttpRequest;
-use sqlx::Row;
+use sqlx::sqlite::SqliteRow;
+use sqlx::{Row, FromRow};
 
 pub async fn list_homeworks_with_pagination(
     storage: &SqliteStorage,
@@ -52,7 +52,11 @@ pub async fn list_homeworks_with_pagination(
         // 查询分页数据
         if total > 0 {
             let query_list = format!(
-                "SELECT * FROM homeworks WHERE class_id IN ({}) ORDER BY id DESC LIMIT ? OFFSET ?",
+                "SELECT id, class_id, title, description, content, 
+                json(attachments) as attachments, max_score, deadline,
+                allow_late_submission, created_by, created_at, updated_at, status 
+                FROM homeworks WHERE class_id IN ({}) 
+                ORDER BY id DESC LIMIT ? OFFSET ?",
                 class_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
             );
             let mut list_query = sqlx::query_as::<_, Homework>(&query_list);
