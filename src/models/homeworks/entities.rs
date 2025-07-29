@@ -4,7 +4,8 @@ use std::str::FromStr;
 use crate::sqlx_enum_type;
 
 // 作业状态
-#[derive(Debug, Clone, Serialize, PartialEq)]
+// src/models/homeworks/entities.rs
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum HomeworkStatus {
     Pending,    // 待提交
@@ -13,18 +14,17 @@ pub enum HomeworkStatus {
     Marked,     // 已批改
 }
 
-impl<'de> Deserialize<'de> for HomeworkStatus {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        match s.as_str() {
+impl FromStr for HomeworkStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
             "pending" => Ok(HomeworkStatus::Pending),
             "expired" => Ok(HomeworkStatus::Expired),
             "submitted" => Ok(HomeworkStatus::Submitted),
             "marked" => Ok(HomeworkStatus::Marked),
-            _ => Err(serde::de::Error::custom(format!(
-                "无效的作业状态: '{s}'. 支持: pending, expired, submitted, marked"
-            ))),
+            "" => Err("状态不能为空".to_string()),
+            _ => Err(format!("无效的作业状态: {s}")),
         }
     }
 }
@@ -36,20 +36,6 @@ impl std::fmt::Display for HomeworkStatus {
             HomeworkStatus::Expired => write!(f, "expired"),
             HomeworkStatus::Submitted => write!(f, "submitted"),
             HomeworkStatus::Marked => write!(f, "marked"),
-        }
-    }
-}
-
-impl FromStr for HomeworkStatus {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "pending" => Ok(HomeworkStatus::Pending),
-            "expired" => Ok(HomeworkStatus::Expired),
-            "submitted" => Ok(HomeworkStatus::Submitted),
-            "marked" => Ok(HomeworkStatus::Marked),
-            _ => Err(format!("无效的作业状态: {s}")),
         }
     }
 }

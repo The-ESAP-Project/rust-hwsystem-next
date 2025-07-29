@@ -1,32 +1,32 @@
+// src/domain/homeworks/list.rs
+use actix_web::HttpRequest;
 use crate::models::{ApiResponse, ErrorCode, homeworks::requests::HomeworkListQuery};
-use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
-use crate::middlewares::RequireJWT;
+use crate::middlewares::require_jwt::RequireJWT;
+use crate::models::users::entities::UserRole;
 use super::HomeworkService;
+use actix_web::{HttpResponse, Result as ActixResult};
 
 pub async fn list_homeworks(
     service: &HomeworkService,
     request: &HttpRequest,
     query: HomeworkListQuery,
-) -> ActixResult<HttpResponse> {
-    let user_claims = match RequireJWT::extract_user_claims(request) {
+) -> HttpResponse {
+    let claims = match RequireJWT::extract_user_claims(request) {
         Some(claims) => claims,
-        None => {
-            return Ok(HttpResponse::Unauthorized().json(ApiResponse::error_empty(
-                ErrorCode::Unauthorized,
-                "Unauthorized: missing user claims",
-            )));
-        }
+        None => return HttpResponse::Unauthorized().json(ApiResponse::error_empty(
+            ErrorCode::Unauthorized,
+            "Unauthorized access"
+        ))
     };
-    let user_id = user_claims.id;
-    let storage = service.get_storage(request);
 
-    match storage.list_homeworks_with_pagination(user_id, query).await {
-        Ok(resp) => Ok(HttpResponse::Ok().json(ApiResponse::success(resp, "获取作业列表成功"))),
-        Err(e) => Ok(
-            HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
-                format!("获取作业列表失败: {e}"),
-            )),
-        ),
+    let storage = service.get_storage(request);
+    println!("claims.id: {:?}", claims.id);
+    println!("claims.role: {:?}", claims.role);
+    match storage.list_homeworks_with_pagination(claims.id, claims.role, query).await {
+        Ok(resp) => HttpResponse::Ok().json(ApiResponse::success(resp, "Get homework list successfully")),
+        Err(e) => HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+            ErrorCode::InternalServerError,
+            format!("获取作业列表失败: {e}")
+        ))
     }
 }

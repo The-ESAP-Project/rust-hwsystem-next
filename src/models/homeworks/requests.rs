@@ -6,5 +6,5 @@ use super::entities::HomeworkStatus;
 pub struct HomeworkListQuery {
     #[serde(flatten)]
     pub pagination: PaginationQuery,
-    pub status: Option<HomeworkStatus>,
+    pub status: Option<String>,
 }

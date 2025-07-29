@@ -1,3 +1,4 @@
+use crate::repository::UserRole;
 use super::PostgresqlStorage;
 use crate::models::{
     class_users::{
@@ -67,6 +68,7 @@ impl Storage for PostgresqlStorage {
     async fn list_homeworks_with_pagination(
         &self,
         user_id: i64,
+        user_role: UserRole,
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse> {
         homeworks::list_homeworks_with_pagination(self, query).await

@@ -1,6 +1,7 @@
 #[macro_use]
 mod macros;
 
+use crate::models::users::entities::UserRole;
 use std::sync::Arc;
 use tracing::error;
 
@@ -134,6 +135,7 @@ pub trait Storage: Send + Sync {
     async fn list_homeworks_with_pagination(
         &self,
         user_id: i64,
+        user_role: UserRole,
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse>;
 }
