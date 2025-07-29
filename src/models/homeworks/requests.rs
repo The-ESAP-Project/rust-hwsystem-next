@@ -1,9 +1,10 @@
 use serde::Deserialize;
 use crate::models::common::PaginationQuery;
+use super::entities::HomeworkStatus;
 
 #[derive(Debug, Deserialize)]
 pub struct HomeworkListQuery {
     #[serde(flatten)]
     pub pagination: PaginationQuery,
-    pub status: Option<String>,
+    pub status: Option<HomeworkStatus>,
 }

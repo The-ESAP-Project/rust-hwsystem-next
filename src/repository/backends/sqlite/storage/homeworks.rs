@@ -16,13 +16,10 @@ pub async fn list_homeworks_with_pagination(
     user_id: i64,
     query: HomeworkListQuery,
 ) -> Result<HomeworkListResponse> {
-
-    // 分页参数
     let page = query.pagination.page.max(1);
     let size = query.pagination.size.clamp(1, 100);
     let offset = (page - 1) * size;
 
-    // 查询用户加入的班级
     let class_ids: Vec<i64> = sqlx::query_scalar(
         "SELECT class_id FROM class_users WHERE user_id = ?"
     )
@@ -35,10 +32,16 @@ pub async fn list_homeworks_with_pagination(
     let mut total = 0;
 
     if !class_ids.is_empty() {
+        // 构建状态筛选条件
+        let status_condition = query.status.as_ref()
+            .map(|s| format!("AND status = '{}'", s))
+            .unwrap_or_default();
+
         // 查询总数
         let query_total = format!(
-            "SELECT COUNT(*) FROM homeworks WHERE class_id IN ({})",
-            class_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+            "SELECT COUNT(*) FROM homeworks WHERE class_id IN ({}) {}",
+            class_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", "),
+            status_condition
         );
         let mut total_query = sqlx::query_scalar::<_, i64>(&query_total);
         for id in &class_ids {
@@ -49,15 +52,15 @@ pub async fn list_homeworks_with_pagination(
             .await
             .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?;
 
-        // 查询分页数据
         if total > 0 {
             let query_list = format!(
-                "SELECT id, class_id, title, description, content, 
+                "SELECT id, class_id, title, description, content,
                 json(attachments) as attachments, max_score, deadline,
-                allow_late_submission, created_by, created_at, updated_at, status 
-                FROM homeworks WHERE class_id IN ({}) 
+                allow_late_submission, created_by, created_at, updated_at, status
+                FROM homeworks WHERE class_id IN ({}) {}
                 ORDER BY id DESC LIMIT ? OFFSET ?",
-                class_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ")
+                class_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", "),
+                status_condition
             );
             let mut list_query = sqlx::query_as::<_, Homework>(&query_list);
             for id in &class_ids {
