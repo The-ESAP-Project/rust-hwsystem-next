@@ -106,7 +106,7 @@ pub trait Storage: Send + Sync {
         update_data: UpdateClassUserRequest,
     ) -> Result<Option<ClassUser>>;
     // 列出班级用户
-    async fn list_class_users_with_pagination( 
+    async fn list_class_users_with_pagination(
         &self,
         class_id: i64,
         query: ClassUserQuery,

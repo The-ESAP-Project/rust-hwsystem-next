@@ -1,6 +1,6 @@
+use super::entities::Homework;
 use crate::models::common::pagination::PaginationInfo;
 use serde::Serialize;
-use super::entities::Homework;
 
 #[derive(Debug, Serialize)]
 pub struct HomeworkListResponse {

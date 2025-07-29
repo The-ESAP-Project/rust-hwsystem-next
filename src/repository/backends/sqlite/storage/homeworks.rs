@@ -1,17 +1,13 @@
-use crate::models::homeworks::entities::HomeworkStatus;
-use crate::models::users::entities::UserRole;
 use super::SqliteStorage;
 use crate::errors::{HWSystemError, Result};
+use crate::models::homeworks::entities::HomeworkStatus;
+use crate::models::users::entities::UserRole;
 use crate::models::{
     PaginationInfo,
-    homeworks::{
-        entities::Homework,
-        requests::HomeworkListQuery,
-        responses::HomeworkListResponse,
-    },
+    homeworks::{entities::Homework, requests::HomeworkListQuery, responses::HomeworkListResponse},
 };
 use sqlx::sqlite::SqliteRow;
-use sqlx::{Row, FromRow};
+use sqlx::{FromRow, Row};
 use std::str::FromStr;
 pub async fn list_homeworks_with_pagination(
     storage: &SqliteStorage,
@@ -30,12 +26,12 @@ pub async fn list_homeworks_with_pagination(
     match user_role {
         UserRole::Admin => {
             // 管理员可以查看所有作业，不需要额外条件
-        },
+        }
         UserRole::Teacher => {
             // 教师只能查看其所在班级的作业
             conditions.push("h.class_id IN (SELECT class_id FROM class_users WHERE user_id = ? AND role = 'teacher')");
             params.push(user_id.to_string());
-        },
+        }
         UserRole::User => {
             // 学生只能查看其所在班级的作业
             conditions.push("h.class_id IN (SELECT class_id FROM class_users WHERE user_id = ?)");

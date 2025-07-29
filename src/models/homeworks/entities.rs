@@ -1,17 +1,17 @@
+use crate::sqlx_enum_type;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, types::JsonValue};
 use std::str::FromStr;
-use crate::sqlx_enum_type;
 
 // 作业状态
 // src/models/homeworks/entities.rs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum HomeworkStatus {
-    Pending,    // 待提交
-    Expired,    // 已过期
-    Submitted,  // 已提交
-    Marked,     // 已批改
+    Pending,   // 待提交
+    Expired,   // 已过期
+    Submitted, // 已提交
+    Marked,    // 已批改
 }
 
 impl FromStr for HomeworkStatus {
@@ -40,8 +40,16 @@ impl std::fmt::Display for HomeworkStatus {
     }
 }
 
-sqlx_enum_type!(sqlx::Postgres, sqlx::postgres::PgValueRef<'r>, HomeworkStatus);
-sqlx_enum_type!(sqlx::Sqlite, sqlx::sqlite::SqliteValueRef<'r>, HomeworkStatus);
+sqlx_enum_type!(
+    sqlx::Postgres,
+    sqlx::postgres::PgValueRef<'r>,
+    HomeworkStatus
+);
+sqlx_enum_type!(
+    sqlx::Sqlite,
+    sqlx::sqlite::SqliteValueRef<'r>,
+    HomeworkStatus
+);
 
 // 附件字段封装
 #[derive(Debug, Clone, Serialize, Deserialize)]

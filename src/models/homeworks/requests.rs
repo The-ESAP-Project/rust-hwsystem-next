@@ -1,6 +1,6 @@
-use serde::Deserialize;
-use crate::models::common::PaginationQuery;
 use super::entities::HomeworkStatus;
+use crate::models::common::PaginationQuery;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct HomeworkListQuery {

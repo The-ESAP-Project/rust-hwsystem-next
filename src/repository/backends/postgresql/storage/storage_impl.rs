@@ -1,4 +1,3 @@
-use crate::repository::UserRole;
 use super::PostgresqlStorage;
 use crate::models::{
     class_users::{
@@ -19,6 +18,7 @@ use crate::models::{
         responses::UserListResponse,
     },
 };
+use crate::repository::UserRole;
 
 use super::{file, homeworks, user};
 use crate::errors::Result;
