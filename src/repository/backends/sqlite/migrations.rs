@@ -29,9 +29,9 @@ impl SqliteMigrationManager {
                 checksum TEXT
             )",
         )
-        .execute(&self.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
+            .execute(&self.pool)
+            .await
+            .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
 
         Ok(())
     }
@@ -209,6 +209,25 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     FOREIGN KEY (grader_id) REFERENCES users(id) ON DELETE SET NULL
                 );
 
+                -- 添加视图以获取作业状态
+                CREATE VIEW homework_status AS
+                SELECT
+                    h.id AS homework_id,
+                    h.deadline,
+                    h.allow_late_submission,
+                    s.id AS submission_id,
+                    s.creator_id AS student_id,
+                    g.id AS grade_id,
+                    CASE
+                        WHEN g.id IS NOT NULL THEN 'graded'
+                        WHEN s.id IS NOT NULL THEN 'submitted'
+                        WHEN (h.deadline < strftime('%s', 'now') AND h.allow_late_submission = 0) THEN 'expired'
+                        ELSE 'pending'
+                    END AS status
+                FROM homeworks h
+                LEFT JOIN submissions s ON h.id = s.homework_id
+                LEFT JOIN grades g ON s.id = g.submission_id;
+
                 -- 创建文件关联表
                 CREATE TABLE files (
                     submission_token TEXT PRIMARY KEY,
@@ -294,6 +313,34 @@ pub fn get_all_migrations() -> Vec<Migration> {
 
                 INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
                 VALUES (2, 7, 'student', 1704067200, 1704067200);
+
+                INSERT INTO homeworks (class_id, created_by, title, content, max_score, deadline, allow_late_submission, created_at, updated_at) VALUES
+                                      (1, 1, '数学作业', '完成第10章的练习题', 100, 1634574000, 0, 1633498000, 1633498000),
+                                      (1, 1, '物理作业', '解决实验报告中的问题', 80, 1634574000, 1, 1633584400, 1633584400),
+                                      (2, 2, '化学作业', '完成实验报告', 90, 1634660400, 0, 1633672800, 1633672800),
+                                      (2, 2, '生物作业', '编写研究报告', 75, 1634660400, 1, 1633759200, 1633759200),
+                                      (3, 3, '历史作业', '阅读并回答问题', 120, 1634746800, 0, 1633845600, 1633845600),
+                                      (3, 3, '地理作业', '绘制地图', 110, 1634746800, 1, 1633932000, 1633932000),
+                                      (4, 4, '英语作业', '翻译文章', 100, 1633498000, 0, 1633498000, 1633498000),
+                                      (4, 4, '法语作业', '写一篇短文', 85, 1633584400, 1, 1633584400, 1633584400);
+
+                INSERT INTO submissions (homework_id, creator_id, content, attachments, submitted_at) VALUES
+                                        (1, 5, '数学作业答案', '', 1634574000),
+                                        (1, 6, '数学作业答案', '', 1634574000),
+                                        (2, 5, '物理作业答案', '', 1634574000),
+                                        (3, 6, '化学作业答案', '', 1634660400),
+                                        (3, 7, '化学作业答案', '', 1634660400),
+                                        (4, 8, '英语作业答案', '', 1633498000),
+                                        (4, 9, '英语作业答案', '', 1633584400);
+
+                INSERT INTO grades (submission_id, grader_id, score, comment, graded_at) VALUES
+                                   (1, 1, 95, '很好', 1634574000),
+                                   (2, 1, 85, '基本正确', 1634574000),
+                                   (3, 2, 88, '需要改进', 1634574000),
+                                   (4, 2, 70, '部分正确', 1634660400),
+                                   (5, 2, 90, '优秀', 1634660400),
+                                   (6, 3, 92, '不错', 1633498000),
+                                   (7, 3, 87, '还需要努力', 1633584400);
 
                 -- 正式环境需要删除这些测试数据
                 ".to_string(),

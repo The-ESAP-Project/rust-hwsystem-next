@@ -75,8 +75,16 @@ pub async fn list_homeworks_with_pagination(
         .get(0);
 
     let query_sql = format!(
-        "SELECT DISTINCT h.*
+        "SELECT DISTINCT h.*,
+         COALESCE(hs.status,
+             CASE
+                 WHEN h.deadline < strftime('%s', 'now') AND h.allow_late_submission = 0
+                 THEN 'expired'
+                 ELSE 'pending'
+             END
+         ) as status
          FROM homeworks h
+         LEFT JOIN homework_status hs ON h.id = hs.homework_id AND hs.student_id = ?
          {}
          ORDER BY h.created_at DESC LIMIT ? OFFSET ?",
         where_clause
@@ -86,6 +94,9 @@ pub async fn list_homeworks_with_pagination(
     for param in &params {
         query = query.bind(param);
     }
+
+    // 在参数列表最前面添加 user_id
+    query = query.bind(user_id);
     query = query.bind(size).bind(offset);
 
     let items = query
