@@ -24,6 +24,7 @@ use crate::{
 
 use super::{classes, file, homeworks, user};
 use crate::errors::Result;
+use crate::models::users::entities::UserRole;
 use crate::repository::Storage;
 use async_trait::async_trait;
 
@@ -69,9 +70,11 @@ impl Storage for SqliteStorage {
     /// 作业模块
     async fn list_homeworks_with_pagination(
         &self,
+        user_id: i64,
+        user_role: UserRole,
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse> {
-        homeworks::list_homeworks_with_pagination(self, query).await
+        homeworks::list_homeworks_with_pagination(self, user_id, &user_role, query).await
     }
 
     /// 班级模块

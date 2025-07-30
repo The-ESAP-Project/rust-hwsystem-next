@@ -1,6 +1,7 @@
 #[macro_use]
 mod macros;
 
+use crate::models::users::entities::UserRole;
 use std::sync::Arc;
 use tracing::error;
 
@@ -105,7 +106,7 @@ pub trait Storage: Send + Sync {
         update_data: UpdateClassUserRequest,
     ) -> Result<Option<ClassUser>>;
     // 列出班级用户
-    async fn list_class_users_with_pagination( 
+    async fn list_class_users_with_pagination(
         &self,
         class_id: i64,
         query: ClassUserQuery,
@@ -133,6 +134,8 @@ pub trait Storage: Send + Sync {
     // 作业管理方法
     async fn list_homeworks_with_pagination(
         &self,
+        user_id: i64,
+        user_role: UserRole,
         query: HomeworkListQuery,
     ) -> Result<HomeworkListResponse>;
 }
