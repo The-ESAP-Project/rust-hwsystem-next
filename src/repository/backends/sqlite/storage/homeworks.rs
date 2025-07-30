@@ -82,7 +82,7 @@ pub async fn list_homeworks_with_pagination(
         where_clause
     );
 
-    let mut query = sqlx::query_as::<sqlx::Sqlite, Homework>(&query_sql);
+    let mut query = sqlx::query_as::<_, Homework>(&query_sql);
     for param in &params {
         query = query.bind(param);
     }

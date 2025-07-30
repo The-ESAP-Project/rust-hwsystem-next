@@ -21,18 +21,18 @@ pub async fn create_class(storage: &SqliteStorage, class: CreateClassRequest) ->
     };
 
     let result = sqlx::query_as::<sqlx::Sqlite, Class>(
-        "INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at) 
+        "INSERT INTO classes (teacher_id, class_name, description, invite_code, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
     )
-    .bind(class.teacher_id)
-    .bind(&class.class_name)
-    .bind(&class.description)
-    .bind(&invite_code)
-    .bind(now.timestamp()) // 使用时间戳
-    .bind(now.timestamp()) // 使用时间戳
-    .fetch_one(&storage.pool)
-    .await
-    .map_err(|e| HWSystemError::database_operation(format!("Failed to create class: {e}")))?;
+        .bind(class.teacher_id)
+        .bind(&class.class_name)
+        .bind(&class.description)
+        .bind(&invite_code)
+        .bind(now.timestamp()) // 使用时间戳
+        .bind(now.timestamp()) // 使用时间戳
+        .fetch_one(&storage.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to create class: {e}")))?;
 
     super::class_users::join_class(storage, class.teacher_id, result.id, ClassUserRole::Teacher)
         .await
@@ -171,7 +171,7 @@ pub async fn list_classes_with_pagination(
 
     // 查询数据
     let data_sql = format!(
-        "SELECT * 
+        "SELECT *
             FROM classes{where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
     );
 
