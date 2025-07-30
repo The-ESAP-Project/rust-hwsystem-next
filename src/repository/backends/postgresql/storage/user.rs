@@ -103,54 +103,39 @@ pub async fn list_users_with_pagination(
     let size = query.size.unwrap_or(10).clamp(1, 100);
     let offset = (page - 1) * size;
 
-    // 构建基本查询
+    // Build base query
     let mut conditions = Vec::new();
-    let mut params: Vec<String> = Vec::new();
+    let mut params = Vec::new();
+    let mut param_count = 1;
 
-    // 搜索条件
+    // Search condition
     if let Some(search) = &query.search {
         if !search.trim().is_empty() {
-            conditions.push("(username ILIKE $1 OR email ILIKE $2 OR profile_name ILIKE $3)");
+            conditions.push(format!(
+                "(username LIKE ${} OR email LIKE ${} OR profile_name LIKE ${})",
+                param_count, param_count + 1, param_count + 2
+            ));
             let search_pattern = format!("%{}%", search.trim());
             params.push(search_pattern.clone());
             params.push(search_pattern.clone());
             params.push(search_pattern);
+            param_count += 3;
         }
     }
 
-    // 角色筛选
+    // Role filter
     if let Some(role) = &query.role {
-        conditions.push(if params.is_empty() {
-            "role = $1"
-        } else {
-            // 角色条件参数索引
-            // 索引为 params.len() + 1
-            // 由于search占用了1,2,3号参数，所以角色参数索引要加3
-            // 为避免逻辑复杂，下面重写为动态索引构造
-            // 这里简化用占位符，用 sqlx::QueryBuilder更好
-            // 但此处给个简化版
-            // 先跳过，改用 sqlx::QueryBuilder 建议
-            "role = $4"
-        });
+        conditions.push(format!("role = ${}", param_count));
         params.push(role.to_string());
+        param_count += 1;
     }
 
-    // 状态筛选
+    // Status filter
     if let Some(status) = &query.status {
-        conditions.push(if params.is_empty() {
-            "status = $1"
-        } else {
-            // 同理，状态参数索引依赖之前参数个数，略复杂
-            "status = $5"
-        });
+        conditions.push(format!("status = ${}", param_count));
         params.push(status.to_string());
+        param_count += 1;
     }
-
-    // 如果多个条件，参数编号需要准确，建议用 sqlx::QueryBuilder 动态构造，或者这里简单版本如下：
-
-    // 下面的动态参数编号示例，假设只搜索，无角色和状态筛选
-    // 或者无搜索只有角色和状态等
-    // 实际建议用 sqlx::QueryBuilder
 
     let where_clause = if conditions.is_empty() {
         "".to_string()
@@ -158,8 +143,8 @@ pub async fn list_users_with_pagination(
         format!(" WHERE {}", conditions.join(" AND "))
     };
 
-    // 查询总数
-    let count_sql = format!("SELECT COUNT(*) as total FROM users{where_clause}");
+    // Query total count
+    let count_sql = format!("SELECT COUNT(*) as total FROM users{}", where_clause);
     let mut count_query = sqlx::query(&count_sql);
     for param in &params {
         count_query = count_query.bind(param);
@@ -168,33 +153,27 @@ pub async fn list_users_with_pagination(
     let total_row = count_query
         .fetch_one(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("查询用户总数失败: {e}")))?;
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to query user total count: {e}")))?;
     let total: i64 = total_row.get("total");
 
-    // 查询数据
+    // Query data
     let data_sql = format!(
-        "SELECT id, username, email, password_hash, role, status, profile_name, avatar_url, last_login, created_at, updated_at
-            FROM users{where_clause} ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+        "SELECT * FROM users{} ORDER BY created_at DESC LIMIT ${} OFFSET ${}",
+        where_clause, param_count, param_count + 1
     );
 
     let mut data_query = sqlx::query_as::<sqlx::Postgres, User>(&data_sql);
-
-    // 绑定筛选参数
     for param in &params {
         data_query = data_query.bind(param);
     }
+    data_query = data_query.bind(size as i64).bind(offset as i64);
 
-    // LIMIT 和 OFFSET 参数绑定
-    data_query = data_query.bind(size).bind(offset);
-
-    let rows = data_query
+    let users = data_query
         .fetch_all(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("查询用户列表失败: {e}")))?;
+        .map_err(|e| HWSystemError::database_operation(format!("Failed to query user list: {e}")))?;
 
-    let users = rows;
-
-    let pages = (total + size - 1) / size; // 向上取整
+    let pages = (total + size as i64 - 1) / size as i64; // Ceiling division
 
     Ok(UserListResponse {
         items: users,
