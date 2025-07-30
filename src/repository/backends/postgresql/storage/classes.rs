@@ -51,17 +51,24 @@ pub async fn get_class_by_id(storage: &PostgresqlStorage, class_id: i64) -> Resu
     Ok(result)
 }
 
-pub async fn get_class_by_name(storage: &PostgresqlStorage, class_name: &str) -> Result<Option<Class>> {
-    let result = sqlx::query_as::<sqlx::Postgres, Class>("SELECT * FROM classes WHERE class_name = $1")
-        .bind(class_name)
-        .fetch_optional(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Query class failed: {e}")))?;
+pub async fn get_class_by_name(
+    storage: &PostgresqlStorage,
+    class_name: &str,
+) -> Result<Option<Class>> {
+    let result =
+        sqlx::query_as::<sqlx::Postgres, Class>("SELECT * FROM classes WHERE class_name = $1")
+            .bind(class_name)
+            .fetch_optional(&storage.pool)
+            .await
+            .map_err(|e| HWSystemError::database_operation(format!("Query class failed: {e}")))?;
 
     Ok(result)
 }
 
-pub async fn get_class_by_code(storage: &PostgresqlStorage, class_code: &str) -> Result<Option<Class>> {
+pub async fn get_class_by_code(
+    storage: &PostgresqlStorage,
+    class_code: &str,
+) -> Result<Option<Class>> {
     let result =
         sqlx::query_as::<sqlx::Postgres, Class>("SELECT * FROM classes WHERE invite_code = $1")
             .bind(class_code)
@@ -149,7 +156,11 @@ pub async fn list_classes_with_pagination(
     // Search condition
     if let Some(search) = &query.search {
         if !search.trim().is_empty() {
-            conditions.push(format!("(class_name LIKE ${} OR description LIKE ${})", param_count, param_count + 1));
+            conditions.push(format!(
+                "(class_name LIKE ${} OR description LIKE ${})",
+                param_count,
+                param_count + 1
+            ));
             let search_pattern = format!("%{}%", search.trim());
             params.push(search_pattern.clone());
             params.push(search_pattern);
@@ -189,10 +200,9 @@ pub async fn list_classes_with_pagination(
     }
     data_query = data_query.bind(size as i64).bind(offset as i64);
 
-    let classes = data_query
-        .fetch_all(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to query class list: {e}")))?;
+    let classes = data_query.fetch_all(&storage.pool).await.map_err(|e| {
+        HWSystemError::database_operation(format!("Failed to query class list: {e}"))
+    })?;
 
     Ok(ClassListResponse {
         items: classes,

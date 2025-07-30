@@ -24,14 +24,14 @@ pub async fn join_class(
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *",
     )
-        .bind(class_id)
-        .bind(user_id)
-        .bind(role.to_string())
-        .bind(now)
-        .bind(now)
-        .fetch_one(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
+    .bind(class_id)
+    .bind(user_id)
+    .bind(role.to_string())
+    .bind(now)
+    .bind(now)
+    .fetch_one(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
 
     let class_user = sqlx::query_as::<sqlx::Postgres, ClassUser>(
         "SELECT cu.*, u.profile_name
@@ -39,11 +39,11 @@ pub async fn join_class(
         JOIN users u ON cu.user_id = u.id
         WHERE cu.class_id = $1 AND cu.user_id = $2",
     )
-        .bind(class_id)
-        .bind(user_id)
-        .fetch_one(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
+    .bind(class_id)
+    .bind(user_id)
+    .fetch_one(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
 
     Ok(class_user)
 }
@@ -200,13 +200,13 @@ pub async fn list_user_classes_with_pagination(
     let size = query.size.unwrap_or(10).clamp(1, 100);
     let offset = (page - 1) * size;
 
-    let total = sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM class_users WHERE user_id = $1",
-    )
+    let total = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM class_users WHERE user_id = $1")
         .bind(user_id)
         .fetch_one(&storage.pool)
         .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to count user classes: {e}")))?;
+        .map_err(|e| {
+            HWSystemError::database_operation(format!("Failed to count user classes: {e}"))
+        })?;
 
     let classes = sqlx::query_as::<sqlx::Postgres, Class>(
         "SELECT c.* FROM classes c
@@ -214,12 +214,12 @@ pub async fn list_user_classes_with_pagination(
         WHERE cu.user_id = $1
         LIMIT $2 OFFSET $3",
     )
-        .bind(user_id)
-        .bind(size)
-        .bind(offset)
-        .fetch_all(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to list user classes: {e}")))?;
+    .bind(user_id)
+    .bind(size)
+    .bind(offset)
+    .fetch_all(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to list user classes: {e}")))?;
 
     Ok(ClassListResponse {
         items: classes,
@@ -243,11 +243,11 @@ pub async fn get_class_user_by_user_id_and_class_id(
             JOIN users u ON cu.user_id = u.id
             WHERE cu.user_id = $1 AND cu.class_id = $2",
     )
-        .bind(user_id)
-        .bind(class_id)
-        .fetch_optional(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to get class_user: {e}")))?;
+    .bind(user_id)
+    .bind(class_id)
+    .fetch_optional(&storage.pool)
+    .await
+    .map_err(|e| HWSystemError::database_operation(format!("Failed to get class_user: {e}")))?;
 
     Ok(class_user)
 }
@@ -272,16 +272,16 @@ pub async fn get_class_and_class_user_by_class_id_and_code(
         LEFT JOIN users u ON cu.user_id = u.id
         WHERE c.id = $2 AND c.invite_code = $3",
     )
-        .bind(user_id)
-        .bind(class_id)
-        .bind(invite_code)
-        .fetch_optional(&storage.pool)
-        .await
-        .map_err(|e| {
-            HWSystemError::database_operation(format!(
-                "Failed to get class and user student by id and code: {e}"
-            ))
-        })?;
+    .bind(user_id)
+    .bind(class_id)
+    .bind(invite_code)
+    .fetch_optional(&storage.pool)
+    .await
+    .map_err(|e| {
+        HWSystemError::database_operation(format!(
+            "Failed to get class and user student by id and code: {e}"
+        ))
+    })?;
 
     if let Some(row) = row {
         let class = Class::from_row(&row).map_err(|e| {

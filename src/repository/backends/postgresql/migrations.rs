@@ -31,9 +31,11 @@ impl PostgresqlMigrationManager {
             )
             "#,
         )
-            .execute(&self.pool)
-            .await
-            .map_err(|e| HWSystemError::database_operation(format!("Failed to create migrations table: {e}")))?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            HWSystemError::database_operation(format!("Failed to create migrations table: {e}"))
+        })?;
 
         Ok(())
     }
@@ -43,7 +45,9 @@ impl PostgresqlMigrationManager {
         let result = sqlx::query("SELECT MAX(version) as version FROM schema_migrations")
             .fetch_optional(&self.pool)
             .await
-            .map_err(|e| HWSystemError::database_operation(format!("Failed to query database version: {e}")))?;
+            .map_err(|e| {
+                HWSystemError::database_operation(format!("Failed to query database version: {e}"))
+            })?;
 
         match result {
             Some(row) => {
@@ -56,27 +60,25 @@ impl PostgresqlMigrationManager {
 
     /// Apply a single migration
     pub async fn apply_migration(&self, migration: &Migration) -> Result<()> {
-        info!("Applying migration v{}: {}", migration.version, migration.name);
+        info!(
+            "Applying migration v{}: {}",
+            migration.version, migration.name
+        );
 
-        let mut tx = self
-            .pool
-            .begin()
-            .await
-            .map_err(|e| HWSystemError::database_operation(format!("Failed to begin migration transaction: {e}")))?;
+        let mut tx = self.pool.begin().await.map_err(|e| {
+            HWSystemError::database_operation(format!("Failed to begin migration transaction: {e}"))
+        })?;
 
         // Execute each statement separately (PostgreSQL requires this for some DDL statements)
         for stmt in migration.up_sql.split(';') {
             let trimmed = stmt.trim();
             if !trimmed.is_empty() {
-                sqlx::query(trimmed)
-                    .execute(&mut *tx)
-                    .await
-                    .map_err(|e| {
-                        HWSystemError::database_operation(format!(
-                            "Failed to execute migration v{}: {}",
-                            migration.version, e
-                        ))
-                    })?;
+                sqlx::query(trimmed).execute(&mut *tx).await.map_err(|e| {
+                    HWSystemError::database_operation(format!(
+                        "Failed to execute migration v{}: {}",
+                        migration.version, e
+                    ))
+                })?;
             }
         }
 
@@ -101,14 +103,12 @@ impl PostgresqlMigrationManager {
                 ))
             })?;
 
-        tx.commit()
-            .await
-            .map_err(|e| {
-                HWSystemError::database_operation(format!(
-                    "Failed to commit migration v{}: {}",
-                    migration.version, e
-                ))
-            })?;
+        tx.commit().await.map_err(|e| {
+            HWSystemError::database_operation(format!(
+                "Failed to commit migration v{}: {}",
+                migration.version, e
+            ))
+        })?;
 
         info!("Successfully applied migration v{}", migration.version);
         Ok(())
@@ -136,7 +136,10 @@ impl PostgresqlMigrationManager {
         }
 
         let new_version = self.get_current_version().await?;
-        info!("Database migrations complete, current version: v{}", new_version);
+        info!(
+            "Database migrations complete, current version: v{}",
+            new_version
+        );
 
         Ok(())
     }

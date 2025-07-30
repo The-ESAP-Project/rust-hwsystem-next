@@ -31,7 +31,7 @@ pub async fn list_homeworks(
         }
         Err(e) => HttpResponse::InternalServerError().json(ApiResponse::error_empty(
             ErrorCode::InternalServerError,
-            format!("Failed to get homework list: {e}")
+            format!("Failed to get homework list: {e}"),
         )),
     }
 }

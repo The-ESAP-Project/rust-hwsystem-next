@@ -113,7 +113,9 @@ pub async fn list_users_with_pagination(
         if !search.trim().is_empty() {
             conditions.push(format!(
                 "(username LIKE ${} OR email LIKE ${} OR profile_name LIKE ${})",
-                param_count, param_count + 1, param_count + 2
+                param_count,
+                param_count + 1,
+                param_count + 2
             ));
             let search_pattern = format!("%{}%", search.trim());
             params.push(search_pattern.clone());
@@ -150,16 +152,17 @@ pub async fn list_users_with_pagination(
         count_query = count_query.bind(param);
     }
 
-    let total_row = count_query
-        .fetch_one(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to query user total count: {e}")))?;
+    let total_row = count_query.fetch_one(&storage.pool).await.map_err(|e| {
+        HWSystemError::database_operation(format!("Failed to query user total count: {e}"))
+    })?;
     let total: i64 = total_row.get("total");
 
     // Query data
     let data_sql = format!(
         "SELECT * FROM users{} ORDER BY created_at DESC LIMIT ${} OFFSET ${}",
-        where_clause, param_count, param_count + 1
+        where_clause,
+        param_count,
+        param_count + 1
     );
 
     let mut data_query = sqlx::query_as::<sqlx::Postgres, User>(&data_sql);
@@ -168,10 +171,9 @@ pub async fn list_users_with_pagination(
     }
     data_query = data_query.bind(size as i64).bind(offset as i64);
 
-    let users = data_query
-        .fetch_all(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to query user list: {e}")))?;
+    let users = data_query.fetch_all(&storage.pool).await.map_err(|e| {
+        HWSystemError::database_operation(format!("Failed to query user list: {e}"))
+    })?;
 
     let pages = (total + size as i64 - 1) / size as i64; // Ceiling division
 

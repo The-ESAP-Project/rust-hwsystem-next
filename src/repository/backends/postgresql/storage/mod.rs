@@ -1,9 +1,9 @@
 pub mod class_users;
+mod classes;
 pub mod file;
 pub mod homeworks;
 pub mod storage_impl;
 pub mod user;
-mod classes;
 
 use super::migrations::PostgresqlMigrationManager;
 use crate::errors::{HWSystemError, Result};
