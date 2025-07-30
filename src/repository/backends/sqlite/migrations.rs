@@ -29,9 +29,9 @@ impl SqliteMigrationManager {
                 checksum TEXT
             )",
         )
-            .execute(&self.pool)
-            .await
-            .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
+        .execute(&self.pool)
+        .await
+        .map_err(|e| HWSystemError::database_operation(format!("创建迁移表失败: {e}")))?;
 
         Ok(())
     }

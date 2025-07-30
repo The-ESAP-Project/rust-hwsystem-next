@@ -99,10 +99,9 @@ pub async fn list_homeworks_with_pagination(
     query = query.bind(user_id);
     query = query.bind(size).bind(offset);
 
-    let items = query
-        .fetch_all(&storage.pool)
-        .await
-        .map_err(|e| HWSystemError::database_operation(format!("Failed to count homeworks: {e}")))?;
+    let items = query.fetch_all(&storage.pool).await.map_err(|e| {
+        HWSystemError::database_operation(format!("Failed to count homeworks: {e}"))
+    })?;
 
     Ok(HomeworkListResponse {
         items,

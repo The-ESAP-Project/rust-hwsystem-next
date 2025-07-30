@@ -24,7 +24,7 @@ impl FromStr for HomeworkStatus {
             "submitted" => Ok(HomeworkStatus::Submitted),
             "marked" => Ok(HomeworkStatus::Marked),
             "" => Err("Status cannot be empty".to_string()),
-            _ => Err(format!("Invalid homework status: {s}"))
+            _ => Err(format!("Invalid homework status: {s}")),
         }
     }
 }
