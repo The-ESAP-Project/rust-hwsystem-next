@@ -209,6 +209,25 @@ pub fn get_all_migrations() -> Vec<Migration> {
                     FOREIGN KEY (grader_id) REFERENCES users(id) ON DELETE SET NULL
                 );
 
+                -- 添加视图以获取作业状态
+                CREATE VIEW homework_status AS
+                SELECT
+                    h.id AS homework_id,
+                    h.deadline,
+                    h.allow_late_submission,
+                    s.id AS submission_id,
+                    s.creator_id AS student_id,
+                    g.id AS grade_id,
+                    CASE
+                        WHEN g.id IS NOT NULL THEN 'graded'
+                        WHEN s.id IS NOT NULL THEN 'submitted'
+                        WHEN (h.deadline < strftime('%s', 'now') AND h.allow_late_submission = 0) THEN 'expired'
+                        ELSE 'pending'
+                    END AS status
+                FROM homeworks h
+                LEFT JOIN submissions s ON h.id = s.homework_id
+                LEFT JOIN grades g ON s.id = g.submission_id;
+
                 -- 创建文件关联表
                 CREATE TABLE files (
                     submission_token TEXT PRIMARY KEY,
