@@ -19,7 +19,7 @@ pub async fn join_class(
     let now = chrono::Utc::now().timestamp();
 
     // 插入关联
-    let class_user = sqlx::query_as::<_, ClassUser>(
+    let class_user = sqlx::query_as::<sqlx::Postgres, ClassUser>(
         "INSERT INTO class_users (class_id, user_id, role, updated_at, joined_at)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *",
@@ -33,7 +33,7 @@ pub async fn join_class(
         .await
         .map_err(|e| HWSystemError::database_operation(format!("Failed to join class: {e}")))?;
 
-    let class_user = sqlx::query_as::<_, ClassUser>(
+    let class_user = sqlx::query_as::<sqlx::Postgres, ClassUser>(
         "SELECT cu.*, u.profile_name
         FROM class_users cu
         JOIN users u ON cu.user_id = u.id
@@ -96,7 +96,7 @@ pub async fn update_class_user(
     params.push(class_id.to_string());
     params.push(class_user_id.to_string());
 
-    let mut query_builder = sqlx::query_as::<_, ClassUser>(&sql);
+    let mut query_builder = sqlx::query_as::<sqlx::Postgres, ClassUser>(&sql);
     for param in params {
         query_builder = query_builder.bind(param);
     }
@@ -169,7 +169,7 @@ pub async fn list_class_users_with_pagination(
         {where_clause} ORDER BY created_at DESC LIMIT $1 OFFSET $2"
     );
 
-    let mut data_query = sqlx::query_as::<_, ClassUser>(&data_sql);
+    let mut data_query = sqlx::query_as::<sqlx::Postgres, ClassUser>(&data_sql);
     for param in &params {
         data_query = data_query.bind(param);
     }
@@ -208,7 +208,7 @@ pub async fn list_user_classes_with_pagination(
         .await
         .map_err(|e| HWSystemError::database_operation(format!("Failed to count user classes: {e}")))?;
 
-    let classes = sqlx::query_as::<_, Class>(
+    let classes = sqlx::query_as::<sqlx::Postgres, Class>(
         "SELECT c.* FROM classes c
         JOIN class_users cu ON cu.class_id = c.id
         WHERE cu.user_id = $1
@@ -237,7 +237,7 @@ pub async fn get_class_user_by_user_id_and_class_id(
     user_id: i64,
     class_id: i64,
 ) -> Result<Option<ClassUser>> {
-    let class_user = sqlx::query_as::<_, ClassUser>(
+    let class_user = sqlx::query_as::<sqlx::Postgres, ClassUser>(
         "SELECT cu.*, u.profile_name
             FROM class_users cu
             JOIN users u ON cu.user_id = u.id
