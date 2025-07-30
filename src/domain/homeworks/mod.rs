@@ -1,3 +1,4 @@
+// src/domain/homeworks/mod.rs
 pub mod list;
 
 use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
@@ -5,7 +6,6 @@ use std::sync::Arc;
 
 use crate::models::homeworks::requests::HomeworkListQuery;
 use crate::repository::Storage;
-use crate::system::app_config::AppConfig;
 
 pub struct HomeworkService {
     storage: Option<Arc<dyn Storage>>,
@@ -28,15 +28,18 @@ impl HomeworkService {
         }
     }
 
-    pub(crate) fn get_config(&self) -> &AppConfig {
-        AppConfig::get()
-    }
-
+    // 列出作业
     pub async fn list_homeworks(
         &self,
-        request: &HttpRequest,
+        req: &HttpRequest,
         query: HomeworkListQuery,
     ) -> ActixResult<HttpResponse> {
-        list::list_homeworks(self, request, query).await
+        Ok(list::list_homeworks(self, req, query).await)
     }
+
+    // TODO: 后续可以添加其他作业相关的方法
+    // - create_homework
+    // - get_homework
+    // - update_homework
+    // - delete_homework
 }

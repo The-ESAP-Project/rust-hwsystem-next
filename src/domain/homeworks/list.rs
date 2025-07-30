@@ -1,22 +1,37 @@
-use crate::models::{ApiResponse, ErrorCode, homeworks::requests::HomeworkListQuery};
-use actix_web::{HttpRequest, HttpResponse, Result as ActixResult};
-
+// src/domain/homeworks/list.rs
 use super::HomeworkService;
+use crate::middlewares::require_jwt::RequireJWT;
+use crate::models::users::entities::UserRole;
+use crate::models::{ApiResponse, ErrorCode, homeworks::requests::HomeworkListQuery};
+use actix_web::HttpRequest;
+use actix_web::{HttpResponse, Result as ActixResult};
 
 pub async fn list_homeworks(
     service: &HomeworkService,
     request: &HttpRequest,
     query: HomeworkListQuery,
-) -> ActixResult<HttpResponse> {
-    let storage = service.get_storage(request);
+) -> HttpResponse {
+    let claims = match RequireJWT::extract_user_claims(request) {
+        Some(claims) => claims,
+        None => {
+            return HttpResponse::Unauthorized().json(ApiResponse::error_empty(
+                ErrorCode::Unauthorized,
+                "Unauthorized access",
+            ));
+        }
+    };
 
-    match storage.list_homeworks_with_pagination(query).await {
-        Ok(resp) => Ok(HttpResponse::Ok().json(ApiResponse::success(resp, "获取作业列表成功"))),
-        Err(e) => Ok(
-            HttpResponse::InternalServerError().json(ApiResponse::error_empty(
-                ErrorCode::InternalServerError,
-                format!("获取作业列表失败: {e}"),
-            )),
-        ),
+    let storage = service.get_storage(request);
+    match storage
+        .list_homeworks_with_pagination(claims.id, claims.role, query)
+        .await
+    {
+        Ok(resp) => {
+            HttpResponse::Ok().json(ApiResponse::success(resp, "Get homework list successfully"))
+        }
+        Err(e) => HttpResponse::InternalServerError().json(ApiResponse::error_empty(
+            ErrorCode::InternalServerError,
+            format!("Failed to get homework list: {e}"),
+        )),
     }
 }

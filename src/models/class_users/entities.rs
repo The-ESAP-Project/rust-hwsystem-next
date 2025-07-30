@@ -93,18 +93,23 @@ pub struct ClassUser {
 }
 
 impl ClassUser {
-    pub fn from_row_prefix(
-        prefix: &str,
-        row: &sqlx::sqlite::SqliteRow,
-    ) -> Result<Self, sqlx::Error> {
+    pub fn from_row_prefix<'r, R>(prefix: &str, row: &'r R) -> Result<Self, sqlx::Error>
+    where
+        R: sqlx::Row,
+        ClassUserRole: sqlx::Type<R::Database> + sqlx::Decode<'r, R::Database>,
+        i64: sqlx::Type<R::Database> + sqlx::Decode<'r, R::Database>,
+        String: sqlx::Type<R::Database> + sqlx::Decode<'r, R::Database>,
+        chrono::DateTime<chrono::Utc>: sqlx::Type<R::Database> + sqlx::Decode<'r, R::Database>,
+        for<'c> &'c str: sqlx::ColumnIndex<R>,
+    {
         Ok(Self {
-            id: row.try_get(&*format!("{prefix}id"))?,
-            class_id: row.try_get(&*format!("{prefix}class_id"))?,
-            user_id: row.try_get(&*format!("{prefix}user_id"))?,
-            profile_name: row.try_get(&*format!("{prefix}profile_name"))?,
-            role: row.try_get(&*format!("{prefix}role"))?,
-            updated_at: row.try_get(&*format!("{prefix}updated_at"))?,
-            joined_at: row.try_get(&*format!("{prefix}joined_at"))?,
+            id: row.try_get(format!("{prefix}id").as_str())?,
+            class_id: row.try_get(format!("{prefix}class_id").as_str())?,
+            user_id: row.try_get(format!("{prefix}user_id").as_str())?,
+            profile_name: row.try_get(format!("{prefix}profile_name").as_str())?,
+            role: row.try_get(format!("{prefix}role").as_str())?,
+            updated_at: row.try_get(format!("{prefix}updated_at").as_str())?,
+            joined_at: row.try_get(format!("{prefix}joined_at").as_str())?,
         })
     }
 }
